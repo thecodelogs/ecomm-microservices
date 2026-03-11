@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-Commerce Microservices — Directory Structure</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --panel: #141414;
+    --border: #222;
+    --accent: #00f5c4;
+    --accent2: #7b5ea7;
+    --accent3: #ff6b35;
+    --accent4: #4fc3f7;
+    --yellow: #f7c948;
+    --text: #d4d4d4;
+    --muted: #555;
+    --folder: #f7c948;
+    --file: #88c0d0;
+    --proto: #a3be8c;
+    --config: #ebcb8b;
+    --docker: #4fc3f7;
+    --k8s: #81a1c1;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    padding: 40px 20px;
+    min-height: 100vh;
+    background-image: radial-gradient(ellipse 40% 40% at 90% 5%, rgba(0,245,196,0.04) 0%, transparent 70%);
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.6rem, 4vw, 2.8rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent4));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.72rem;
+    margin-top: 6px;
+    letter-spacing: 0.1em;
+  }
+
+  .stack-badges {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
+  .badge {
+    font-size: 0.65rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.08em;
+  }
+
+  .b1 { background: rgba(0,245,196,0.1); color: var(--accent); border: 1px solid rgba(0,245,196,0.2); }
+  .b2 { background: rgba(255,107,53,0.1); color: var(--accent3); border: 1px solid rgba(255,107,53,0.2); }
+  .b3 { background: rgba(79,195,247,0.1); color: var(--docker); border: 1px solid rgba(79,195,247,0.2); }
+  .b4 { background: rgba(129,161,193,0.1); color: var(--k8s); border: 1px solid rgba(129,161,193,0.2); }
+  .b5 { background: rgba(123,94,167,0.1); color: #b39ddb; border: 1px solid rgba(123,94,167,0.2); }
+
+  .main-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 800px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  .tree-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .tree-panel.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .panel-header {
+    padding: 10px 16px;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ph-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  .panel-body {
+    padding: 16px;
+    font-size: 0.78rem;
+    line-height: 2;
+  }
+
+  .t-folder { color: var(--folder); font-weight: 600; }
+  .t-file   { color: var(--file); }
+  .t-proto  { color: var(--proto); }
+  .t-config { color: var(--config); }
+  .t-docker { color: var(--docker); }
+  .t-k8s    { color: var(--k8s); }
+  .t-env    { color: #bf616a; }
+  .t-md     { color: #81a1c1; }
+
+  .indent1 { padding-left: 16px; }
+  .indent2 { padding-left: 32px; }
+  .indent3 { padding-left: 48px; }
+  .indent4 { padding-left: 64px; }
+
+  .t-muted { color: var(--muted); font-size: 0.68rem; }
+
+  .comment {
+    color: var(--muted);
+    font-size: 0.65rem;
+    margin-left: 10px;
+  }
+
+  .legend {
+    max-width: 1200px;
+    margin: 16px auto 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .legend-title {
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    width: 100%;
+  }
+
+  .legend-item {
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .svc-list {
+    max-width: 1200px;
+    margin: 16px auto 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+  }
+
+  .svc-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 0.7rem;
+  }
+
+  .svc-card .svc-name {
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 0.75rem;
+    margin-bottom: 4px;
+  }
+
+  .svc-card .svc-desc {
+    color: var(--muted);
+    font-size: 0.65rem;
+    line-height: 1.6;
+  }
+
+  .pipe { color: var(--muted); }
+  .tree-sym { color: var(--muted); user-select: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>E-Commerce · Microservices Directory</h1>
+  <p>// project structure — no code, just architecture</p>
+  <div class="stack-badges">
+    <span class="badge b1">gRPC</span>
+    <span class="badge b2">Kafka</span>
+    <span class="badge b3">Docker</span>
+    <span class="badge b4">Kubernetes</span>
+    <span class="badge b5">Protobuf</span>
+  </div>
+</header>
+
+<div class="main-grid">
+
+  <!-- ROOT STRUCTURE -->
+  <div class="tree-panel full-width">
+    <div class="panel-header">
+      <div class="ph-dot" style="background:#00f5c4"></div>
+      Root — ecommerce-platform/
+    </div>
+    <div class="panel-body">
+      <div><span class="t-folder">ecommerce-platform/</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">services/</span><span class="comment">← all microservices live here</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">proto/</span><span class="comment">← shared .proto definitions (gRPC contracts)</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">infra/</span><span class="comment">← Kafka, Docker, K8s configs</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">gateway/</span><span class="comment">← API Gateway service</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">libs/</span><span class="comment">← shared libraries / utilities</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">scripts/</span><span class="comment">← dev, deploy, seed scripts</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-docker">docker-compose.yml</span><span class="comment">← local dev environment</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-env">.env.example</span></div>
+      <div class="indent1"><span class="tree-sym">└── </span><span class="t-md">README.md</span></div>
+    </div>
+  </div>
+
+  <!-- PROTO -->
+  <div class="tree-panel">
+    <div class="panel-header">
+      <div class="ph-dot" style="background:#a3be8c"></div>
+      proto/ — gRPC Contracts
+    </div>
+    <div class="panel-body">
+      <div><span class="t-folder">proto/</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">user/</span></div>
+      <div class="indent2"><span class="tree-sym">└── </span><span class="t-proto">user.proto</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">product/</span></div>
+      <div class="indent2"><span class="tree-sym">└── </span><span class="t-proto">product.proto</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">order/</span></div>
+      <div class="indent2"><span class="tree-sym">└── </span><span class="t-proto">order.proto</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">payment/</span></div>
+      <div class="indent2"><span class="tree-sym">└── </span><span class="t-proto">payment.proto</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">cart/</span></div>
+      <div class="indent2"><span class="tree-sym">└── </span><span class="t-proto">cart.proto</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">shipping/</span></div>
+      <div class="indent2"><span class="tree-sym">└── </span><span class="t-proto">shipping.proto</span></div>
+      <div class="indent1"><span class="tree-sym">└── </span><span class="t-folder">notification/</span></div>
+      <div class="indent2"><span class="tree-sym">└── </span><span class="t-proto">notification.proto</span></div>
+    </div>
+  </div>
+
+  <!-- GATEWAY -->
+  <div class="tree-panel">
+    <div class="panel-header">
+      <div class="ph-dot" style="background:#4fc3f7"></div>
+      gateway/ — API Gateway
+    </div>
+    <div class="panel-body">
+      <div><span class="t-folder">gateway/</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">src/</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-folder">routes/</span><span class="comment">← HTTP route handlers</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-folder">middleware/</span><span class="comment">← auth, rate-limit, logging</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-folder">grpc-clients/</span><span class="comment">← gRPC stubs per service</span></div>
+      <div class="indent2"><span class="tree-sym">└── </span><span class="t-file">server.js</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-docker">Dockerfile</span></div>
+      <div class="indent1"><span class="tree-sym">└── </span><span class="t-config">package.json</span></div>
+    </div>
+  </div>
+
+  <!-- A SINGLE MICROSERVICE PATTERN -->
+  <div class="tree-panel">
+    <div class="panel-header">
+      <div class="ph-dot" style="background:#b39ddb"></div>
+      services/order-service/ — Typical Service Pattern
+    </div>
+    <div class="panel-body">
+      <div><span class="t-folder">order-service/</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">src/</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-folder">grpc/</span></div>
+      <div class="indent3"><span class="tree-sym">├── </span><span class="t-file">server.js</span><span class="comment">← gRPC server setup</span></div>
+      <div class="indent3"><span class="tree-sym">└── </span><span class="t-file">handler.js</span><span class="comment">← RPC method implementations</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-folder">kafka/</span></div>
+      <div class="indent3"><span class="tree-sym">├── </span><span class="t-file">producer.js</span><span class="comment">← emit events (order.placed)</span></div>
+      <div class="indent3"><span class="tree-sym">└── </span><span class="t-file">consumer.js</span><span class="comment">← subscribe to events</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-folder">db/</span></div>
+      <div class="indent3"><span class="tree-sym">├── </span><span class="t-file">models/</span><span class="comment">← DB schemas</span></div>
+      <div class="indent3"><span class="tree-sym">└── </span><span class="t-file">migrations/</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-folder">controllers/</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-folder">services/</span><span class="comment">← business logic</span></div>
+      <div class="indent2"><span class="tree-sym">└── </span><span class="t-file">index.js</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-docker">Dockerfile</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-env">.env.example</span></div>
+      <div class="indent1"><span class="tree-sym">└── </span><span class="t-config">package.json</span></div>
+    </div>
+  </div>
+
+  <!-- ALL SERVICES -->
+  <div class="tree-panel">
+    <div class="panel-header">
+      <div class="ph-dot" style="background:#f7c948"></div>
+      services/ — All Microservices
+    </div>
+    <div class="panel-body">
+      <div><span class="t-folder">services/</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">user-service/</span><span class="comment">← auth, JWT, profiles</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">product-service/</span><span class="comment">← catalog, search</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">cart-service/</span><span class="comment">← Redis-backed cart</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">order-service/</span><span class="comment">← order lifecycle</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">payment-service/</span><span class="comment">← billing, refunds</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">shipping-service/</span><span class="comment">← fulfillment, tracking</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">notification-service/</span><span class="comment">← email, SMS, push</span></div>
+      <div class="indent1"><span class="tree-sym">└── </span><span class="t-folder">analytics-service/</span><span class="comment">← events & reports</span></div>
+      <br>
+      <div class="t-muted">// each service follows the same pattern →</div>
+      <div class="t-muted">// src/grpc/  src/kafka/  src/db/  Dockerfile</div>
+    </div>
+  </div>
+
+  <!-- INFRA / KAFKA -->
+  <div class="tree-panel">
+    <div class="panel-header">
+      <div class="ph-dot" style="background:#ff6b35"></div>
+      infra/ — Kafka + Docker + K8s
+    </div>
+    <div class="panel-body">
+      <div><span class="t-folder">infra/</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">kafka/</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-config">topics.yml</span><span class="comment">← topic definitions</span></div>
+      <div class="indent2"><span class="tree-sym">└── </span><span class="t-config">kafka-config.yml</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">docker/</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-docker">docker-compose.dev.yml</span></div>
+      <div class="indent2"><span class="tree-sym">└── </span><span class="t-docker">docker-compose.infra.yml</span><span class="comment">← kafka, redis, dbs</span></div>
+      <div class="indent1"><span class="tree-sym">└── </span><span class="t-folder">k8s/</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-folder">namespaces/</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-folder">deployments/</span><span class="comment">← one per service</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-folder">services/</span><span class="comment">← ClusterIP / LoadBalancer</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-folder">configmaps/</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-folder">secrets/</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-folder">ingress/</span><span class="comment">← gateway ingress rules</span></div>
+      <div class="indent2"><span class="tree-sym">├── </span><span class="t-folder">kafka/</span><span class="comment">← Strimzi / Helm charts</span></div>
+      <div class="indent2"><span class="tree-sym">└── </span><span class="t-folder">monitoring/</span><span class="comment">← Prometheus, Grafana</span></div>
+    </div>
+  </div>
+
+  <!-- LIBS + SCRIPTS -->
+  <div class="tree-panel">
+    <div class="panel-header">
+      <div class="ph-dot" style="background:#81a1c1"></div>
+      libs/ & scripts/
+    </div>
+    <div class="panel-body">
+      <div><span class="t-folder">libs/</span><span class="comment">← shared across services</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">logger/</span><span class="comment">← centralized logging util</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">kafka-client/</span><span class="comment">← shared producer/consumer wrapper</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">grpc-utils/</span><span class="comment">← interceptors, error handling</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-folder">auth/</span><span class="comment">← JWT verify helpers</span></div>
+      <div class="indent1"><span class="tree-sym">└── </span><span class="t-folder">errors/</span><span class="comment">← common error types</span></div>
+      <br>
+      <div><span class="t-folder">scripts/</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-file">seed-db.sh</span><span class="comment">← populate dev data</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-file">gen-proto.sh</span><span class="comment">← compile .proto files</span></div>
+      <div class="indent1"><span class="tree-sym">├── </span><span class="t-file">deploy.sh</span><span class="comment">← K8s apply all</span></div>
+      <div class="indent1"><span class="tree-sym">└── </span><span class="t-file">create-kafka-topics.sh</span></div>
+    </div>
+  </div>
+
+  <!-- KAFKA TOPICS -->
+  <div class="tree-panel">
+    <div class="panel-header">
+      <div class="ph-dot" style="background:#ff6b35"></div>
+      Kafka Topics Map
+    </div>
+    <div class="panel-body">
+      <div class="t-muted">// event-driven flows via Kafka topics</div>
+      <br>
+      <div><span class="t-proto">order.placed</span></div>
+      <div class="indent1"><span class="t-muted">→ payment-service (charge)</span></div>
+      <div class="indent1"><span class="t-muted">→ notification-service (confirm email)</span></div>
+      <br>
+      <div><span class="t-proto">payment.completed</span></div>
+      <div class="indent1"><span class="t-muted">→ order-service (mark paid)</span></div>
+      <div class="indent1"><span class="t-muted">→ shipping-service (fulfil)</span></div>
+      <br>
+      <div><span class="t-proto">payment.failed</span></div>
+      <div class="indent1"><span class="t-muted">→ order-service (cancel)</span></div>
+      <div class="indent1"><span class="t-muted">→ notification-service (alert user)</span></div>
+      <br>
+      <div><span class="t-proto">order.shipped</span></div>
+      <div class="indent1"><span class="t-muted">→ notification-service (tracking)</span></div>
+      <br>
+      <div><span class="t-proto">user.registered</span></div>
+      <div class="indent1"><span class="t-muted">→ notification-service (welcome)</span></div>
+      <div class="indent1"><span class="t-muted">→ analytics-service (track)</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-title">// color legend</div>
+  <div class="legend-item"><span class="t-folder">■</span> Folder</div>
+  <div class="legend-item"><span class="t-proto">■</span> .proto / gRPC</div>
+  <div class="legend-item"><span class="t-docker">■</span> Docker</div>
+  <div class="legend-item"><span class="t-k8s">■</span> Kubernetes</div>
+  <div class="legend-item"><span class="t-config">■</span> Config / YAML</div>
+  <div class="legend-item"><span class="t-env">■</span> Env / Secrets</div>
+  <div class="legend-item"><span class="t-file">■</span> Source Files</div>
+  <div class="legend-item"><span class="t-md">■</span> Docs</div>
+</div>
+
+</body>
+</html>

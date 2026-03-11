@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-Commerce Microservices Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --accent1: #00f5c4;
+    --accent2: #7b5ea7;
+    --accent3: #ff6b35;
+    --accent4: #4fc3f7;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px;
+    background-image:
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(0,245,196,0.05) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 80% 80%, rgba(123,94,167,0.07) 0%, transparent 60%);
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 50px;
+    animation: fadeDown 0.8s ease both;
+  }
+
+  header h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--accent1), var(--accent4));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header p {
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.8rem;
+    margin-top: 8px;
+    letter-spacing: 0.08em;
+  }
+
+  .arch-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .layer {
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .layer:nth-child(1) { animation-delay: 0.1s; }
+  .layer:nth-child(2) { animation-delay: 0.2s; }
+  .layer:nth-child(3) { animation-delay: 0.3s; }
+  .layer:nth-child(4) { animation-delay: 0.4s; }
+  .layer:nth-child(5) { animation-delay: 0.5s; }
+  .layer:nth-child(6) { animation-delay: 0.6s; }
+
+  .layer-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    padding-left: 4px;
+  }
+
+  .layer-content {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: stretch;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .layer-content::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .layer-clients .layer-content::before { background: linear-gradient(90deg, var(--accent1), transparent); }
+  .layer-gateway .layer-content::before { background: linear-gradient(90deg, var(--accent4), transparent); }
+  .layer-services .layer-content::before { background: linear-gradient(90deg, var(--accent2), transparent); }
+  .layer-messaging .layer-content::before { background: linear-gradient(90deg, var(--accent3), transparent); }
+  .layer-data .layer-content::before { background: linear-gradient(90deg, #f7c948, transparent); }
+  .layer-infra .layer-content::before { background: linear-gradient(90deg, #e05c5c, transparent); }
+
+  .service-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    flex: 1;
+    min-width: 140px;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: default;
+    position: relative;
+  }
+
+  .service-card:hover {
+    border-color: var(--accent1);
+    transform: translateY(-2px);
+  }
+
+  .service-card .icon {
+    font-size: 1.4rem;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .service-card .name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+  }
+
+  .service-card .desc {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  .tag-green { background: rgba(0,245,196,0.12); color: var(--accent1); }
+  .tag-blue  { background: rgba(79,195,247,0.12); color: var(--accent4); }
+  .tag-purple{ background: rgba(123,94,167,0.15); color: #b39ddb; }
+  .tag-orange{ background: rgba(255,107,53,0.12); color: var(--accent3); }
+  .tag-yellow{ background: rgba(247,201,72,0.12); color: #f7c948; }
+  .tag-red   { background: rgba(224,92,92,0.12);  color: #e05c5c; }
+
+  .arrow-down {
+    text-align: center;
+    color: var(--muted);
+    font-size: 1.2rem;
+    line-height: 1;
+    margin: -4px 0;
+    opacity: 0.5;
+  }
+
+  .gateway-single {
+    max-width: 300px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .full-width {
+    flex: 1;
+    min-width: 100%;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .flow-note {
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 30px;
+    padding: 16px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    line-height: 1.8;
+    animation: fadeUp 0.6s 0.7s ease both;
+  }
+
+  .flow-note span { color: var(--accent1); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>E-Commerce Microservices</h1>
+  <p>// brief architecture overview — services, messaging & data layers</p>
+</header>
+
+<div class="arch-wrapper">
+
+  <!-- CLIENT LAYER -->
+  <div class="layer layer-clients">
+    <div class="layer-label">① Client Layer</div>
+    <div class="layer-content">
+      <div class="service-card">
+        <span class="icon">🌐</span>
+        <div class="name">Web App</div>
+        <div class="desc">React / Next.js storefront</div>
+        <span class="tag tag-green">Browser</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">📱</span>
+        <div class="name">Mobile App</div>
+        <div class="desc">iOS / Android native clients</div>
+        <span class="tag tag-green">App Store</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">🔌</span>
+        <div class="name">3rd Party</div>
+        <div class="desc">Partner APIs & integrations</div>
+        <span class="tag tag-green">API</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">↓</div>
+
+  <!-- API GATEWAY -->
+  <div class="layer layer-gateway">
+    <div class="layer-label">② API Gateway / Edge</div>
+    <div class="layer-content" style="justify-content: center;">
+      <div class="service-card gateway-single">
+        <span class="icon">🔀</span>
+        <div class="name">API Gateway</div>
+        <div class="desc">Auth, rate limiting, routing, SSL termination, load balancing</div>
+        <span class="tag tag-blue">Kong / AWS API GW</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">↓</div>
+
+  <!-- CORE SERVICES -->
+  <div class="layer layer-services">
+    <div class="layer-label">③ Core Microservices</div>
+    <div class="layer-content">
+      <div class="service-card">
+        <span class="icon">👤</span>
+        <div class="name">User Service</div>
+        <div class="desc">Auth, profiles, JWT tokens</div>
+        <span class="tag tag-purple">REST</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">📦</span>
+        <div class="name">Product Service</div>
+        <div class="desc">Catalog, search, pricing</div>
+        <span class="tag tag-purple">REST / GraphQL</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">🛒</span>
+        <div class="name">Cart Service</div>
+        <div class="desc">Session-based cart state</div>
+        <span class="tag tag-purple">REST</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">📋</span>
+        <div class="name">Order Service</div>
+        <div class="desc">Order lifecycle & history</div>
+        <span class="tag tag-purple">REST</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">💳</span>
+        <div class="name">Payment Service</div>
+        <div class="desc">Transactions, refunds, billing</div>
+        <span class="tag tag-purple">REST</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">🚚</span>
+        <div class="name">Shipping Service</div>
+        <div class="desc">Fulfillment & tracking</div>
+        <span class="tag tag-purple">REST</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">🔔</span>
+        <div class="name">Notification Service</div>
+        <div class="desc">Email, SMS, push alerts</div>
+        <span class="tag tag-purple">Event-driven</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">📊</span>
+        <div class="name">Analytics Service</div>
+        <div class="desc">Behavior tracking & reports</div>
+        <span class="tag tag-purple">Async</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">↓</div>
+
+  <!-- MESSAGING -->
+  <div class="layer layer-messaging">
+    <div class="layer-label">④ Async Messaging / Event Bus</div>
+    <div class="layer-content" style="justify-content: center;">
+      <div class="service-card gateway-single">
+        <span class="icon">📨</span>
+        <div class="name">Message Broker</div>
+        <div class="desc">Decouples services via events: order.placed → payment, shipping, notifications</div>
+        <span class="tag tag-orange">Kafka / RabbitMQ</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">↓</div>
+
+  <!-- DATA LAYER -->
+  <div class="layer layer-data">
+    <div class="layer-label">⑤ Data Layer (per-service DBs)</div>
+    <div class="layer-content">
+      <div class="service-card">
+        <span class="icon">🐘</span>
+        <div class="name">PostgreSQL</div>
+        <div class="desc">Users, orders, payments — relational data</div>
+        <span class="tag tag-yellow">RDBMS</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">🍃</span>
+        <div class="name">MongoDB</div>
+        <div class="desc">Product catalog — flexible schemas</div>
+        <span class="tag tag-yellow">NoSQL</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">⚡</span>
+        <div class="name">Redis</div>
+        <div class="desc">Cart sessions, caching, rate limiting</div>
+        <span class="tag tag-yellow">Cache</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">🔍</span>
+        <div class="name">Elasticsearch</div>
+        <div class="desc">Full-text product search</div>
+        <span class="tag tag-yellow">Search</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">↓</div>
+
+  <!-- INFRA -->
+  <div class="layer layer-infra">
+    <div class="layer-label">⑥ Infrastructure & Observability</div>
+    <div class="layer-content">
+      <div class="service-card">
+        <span class="icon">☸️</span>
+        <div class="name">Kubernetes</div>
+        <div class="desc">Container orchestration & scaling</div>
+        <span class="tag tag-red">Infra</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">🐳</span>
+        <div class="name">Docker</div>
+        <div class="desc">Containerized service images</div>
+        <span class="tag tag-red">Runtime</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">📈</span>
+        <div class="name">Prometheus + Grafana</div>
+        <div class="desc">Metrics, dashboards & alerting</div>
+        <span class="tag tag-red">Observability</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">🔭</span>
+        <div class="name">Jaeger / Zipkin</div>
+        <div class="desc">Distributed tracing across services</div>
+        <span class="tag tag-red">Tracing</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">📝</span>
+        <div class="name">ELK Stack</div>
+        <div class="desc">Centralized logging & analysis</div>
+        <span class="tag tag-red">Logging</span>
+      </div>
+      <div class="service-card">
+        <span class="icon">🔄</span>
+        <div class="name">CI/CD Pipeline</div>
+        <div class="desc">GitHub Actions / Jenkins deploys</div>
+        <span class="tag tag-red">DevOps</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-note">
+    <span>Request Flow:</span> Client → API Gateway (auth + route) → Microservice → DB<br>
+    <span>Async Flow:</span> Service emits event → Message Broker → Subscribers react independently<br>
+    <span>Pattern:</span> Each service owns its data · No shared DB · Communicate via REST or events
+  </div>
+
+</div>
+
+</body>
+</html>
