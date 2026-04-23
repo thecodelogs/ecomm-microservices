@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package shipping;
+
+option go_package = "github.com/manojnegi/ecomm-microservices/gen/go/shipping/v1;shippingpb";
+
+service ShippingService {
+    rpc ShipOrder(ShipOrderRequest) returns (ShipOrderResponse);
+}
+
+message Address {
+    string id = 1;
+    string user_id = 2;
+    string address_line1 = 3;
+    string address_line2 = 4;
+    string city = 5;
+    string state = 6;
+    string postal_code = 7;
+    string country = 8;
+    string landmark = 9;
+    string phone = 10;
+}
+
+message ShipOrderRequest {
+    string user_id = 1;
+    string product_id = 2;
+    int32 quantity = 3;
+    Address address = 4;
+}
+
+message ShipOrderResponse {
+    string id = 1;
+    string user_id = 2;
+    string product_id = 3;
+    int32 quantity = 4;
+    Address address = 5;
+    string shipping_status = 6;
+    string estimated_delivery = 7;
+}

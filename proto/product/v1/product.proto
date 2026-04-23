@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package product;
+
+option go_package = "github.com/manojnegi/ecomm-microservices/gen/go/product/v1;productpb";
+
+service ProductService {
+    rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
+    rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+}
+
+message Product {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    double price = 4;
+    int32 stock = 5;
+    string category = 6;
+    string image_url = 7;
+}
+
+message CreateProductRequest {
+    string name = 1;
+    string description = 2;
+    double price = 3;
+    int32 stock = 4;
+    string category = 5;
+    string image_url = 6;
+}
+
+message CreateProductResponse {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    double price = 4;
+    int32 stock = 5;
+    string category = 6;
+    string image_url = 7;
+}
+
+message GetProductRequest {
+    string id = 1;
+}
+
+message GetProductResponse {
+    Product product = 1;
+}

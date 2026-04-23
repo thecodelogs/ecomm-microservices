@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package notification;
+
+option go_package = "github.com/manojnegi/ecomm-microservices/gen/go/notification/v1;notificationpb";
+
+service NotificationService {
+  rpc SendNotification(SendNotificationRequest) returns (SendNotificationResponse);
+}
+
+message Notification {
+  string id = 1;
+  string user_id = 2;
+  string message = 3;
+  string type = 4;
+  bool is_read = 5;
+  string created_at = 6;
+}
+
+message SendNotificationRequest {
+  string user_id = 1;
+  string message = 2;
+  string type = 3;
+}
+
+message SendNotificationResponse {
+  string id = 1;
+  string user_id = 2;
+  string message = 3;
+  string type = 4;
+  bool is_read = 5;
+  string created_at = 6;
+}

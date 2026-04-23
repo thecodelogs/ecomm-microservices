@@ -3,11 +3,12 @@ version: "3"
 dotenv: [".env"]
 
 vars:
-  DB_USER: '{{.DB_USER | default "postgres"}}'
-  DB_PASS: '{{.DB_PASS | default "postgres"}}'
-  DB_HOST: '{{.DB_HOST | default "localhost"}}'
-  DB_PORT: '{{.DB_PORT | default "5432"}}'
-  DB_SSLMODE: '{{.DB_SSLMODE | default "disable"}}'
+  DB_USER: "manojnegi"
+  DB_PASS: "123456"
+  DB_HOST: "localhost"
+  DB_PORT: "5432"
+  DB_SSLMODE: "disable"
+  DB_NAME: "ecomm-user-service"
 
 tasks:
   # ──────────────────────────────────────────────

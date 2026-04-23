@@ -199,3 +199,6 @@ migrate create -ext sql -dir ./services/user-service/db/migrations -seq create_u
 migrate -database "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable" -path ./services/user-service/db/migrations up
 
 migrate -database "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable" -path ./services/user-service/db/migrations down
+
+task migrate:user:create -- create_users_table
+task migrate:user:up --

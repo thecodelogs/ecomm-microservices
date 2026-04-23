@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package order;
+
+option go_package = "github.com/manojnegi/ecomm-microservices/gen/go/order/v1;orderpb";
+
+service OrderService {
+    rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+    rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);
+}
+
+message Order {
+    string id = 1;
+    string user_id = 2;
+    string product_id = 3;
+    int32 quantity = 4;
+    double price = 5;
+}
+
+message CreateOrderRequest {
+    string user_id = 1;
+    string product_id = 2;
+    int32 quantity = 3;
+}
+
+message CreateOrderResponse {
+    string id = 1;
+    string user_id = 2;
+    string product_id = 3;
+    int32 quantity = 4;
+    double price = 5;
+}
+
+message GetOrderRequest {
+    string user_id = 1;
+}
+
+message GetOrderResponse {
+    repeated Order orders = 1;
+    double total = 2;
+}

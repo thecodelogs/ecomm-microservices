@@ -3,7 +3,7 @@ syntax = "proto3";
 package payment;
 
 // No need for go_package if we're generating Rust, but good practice to keep it for multi-language repos.
-option go_package = "github.com/manojnegi/ecomm-microservices/gen/go/payment;paymentpb";
+//option go_package = "github.com/manojnegi/ecomm-microservices/gen/go/payment;paymentpb";
 
 service PaymentService {
   rpc ProcessPayment(ProcessPaymentRequest) returns (ProcessPaymentResponse) {}

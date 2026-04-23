@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package cart;
+
+option go_package = "github.com/manojnegi/ecomm-microservices/gen/go/cart/v1;cartpb";
+
+service CartService {
+  rpc AddItem(AddItemRequest) returns (AddItemResponse);
+  rpc GetCart(GetCartRequest) returns (GetCartResponse);
+}
+
+message CartItem {
+  string id = 1;
+  string user_id = 2;
+  string product_id = 3;
+  int32 quantity = 4;
+  double price = 5;
+}
+
+message AddItemRequest {
+  string user_id = 1;
+  string product_id = 2;
+  int32 quantity = 3;
+}
+
+message AddItemResponse {
+  string id = 1;
+  string user_id = 2;
+  string product_id = 3;
+  int32 quantity = 4;
+  double price = 5;
+}
+
+message GetCartRequest {
+  string user_id = 1;
+}
+
+message GetCartResponse {
+  repeated CartItem items = 1;
+  double total = 2;
+}

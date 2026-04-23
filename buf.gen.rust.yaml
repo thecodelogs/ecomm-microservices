@@ -1,0 +1,7 @@
+version: v2
+plugins:
+  - local: protoc-gen-prost
+    out: gen/rust
+
+  - local: protoc-gen-tonic
+    out: gen/rust
