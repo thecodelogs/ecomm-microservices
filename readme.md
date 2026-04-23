@@ -1,7 +1,4 @@
-
-
-E-Commerce · Microservices Directory
-====================================
+# E-Commerce · Microservices Directory
 
 // project structure — no code, just architecture
 
@@ -135,8 +132,6 @@ services/
 
         └── analytics-service/← events & reports
 
-  
-
 // each service follows the same pattern →
 
 // src/grpc/ src/kafka/ src/db/ Dockerfile
@@ -189,8 +184,6 @@ libs/← shared across services
 
             └── errors/← common error types
 
-  
-
 scripts/
 
     ├── seed-db.sh← populate dev data
@@ -201,3 +194,8 @@ scripts/
 
     └── create-kafka-topics.sh
 
+migrate create -ext sql -dir ./services/user-service/db/migrations -seq create_users_table
+
+migrate -database "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable" -path ./services/user-service/db/migrations up
+
+migrate -database "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable" -path ./services/user-service/db/migrations down

@@ -1,0 +1,226 @@
+version: "3"
+
+dotenv: [".env"]
+
+vars:
+  DB_USER: '{{.DB_USER | default "postgres"}}'
+  DB_PASS: '{{.DB_PASS | default "postgres"}}'
+  DB_HOST: '{{.DB_HOST | default "localhost"}}'
+  DB_PORT: '{{.DB_PORT | default "5432"}}'
+  DB_SSLMODE: '{{.DB_SSLMODE | default "disable"}}'
+
+tasks:
+  # ──────────────────────────────────────────────
+  #  Proto Generation
+  # ──────────────────────────────────────────────
+  proto:gen:
+    desc: Generate Go & Rust code from proto files using buf
+    dir: proto
+    cmds:
+      - buf generate
+
+  proto:lint:
+    desc: Lint proto files
+    dir: proto
+    cmds:
+      - buf lint
+
+  proto:format:
+    desc: Format proto files
+    dir: proto
+    cmds:
+      - buf format -w
+
+  # ──────────────────────────────────────────────
+  #  Migrations — User Service
+  # ──────────────────────────────────────────────
+  migrate:user:create:
+    desc: "Create a new migration for user-service (usage: task migrate:user:create -- create_users_table)"
+    cmds:
+      - migrate create -ext sql -dir ./services/user-service/db/migrations -seq {{.CLI_ARGS}}
+
+  migrate:user:up:
+    desc: Run all up migrations for user-service
+    vars:
+      DB_NAME: '{{.DB_NAME | default "userdb"}}'
+    cmds:
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME}}?sslmode={{.DB_SSLMODE}}" -path ./services/user-service/db/migrations up
+
+  migrate:user:down:
+    desc: Rollback the last migration for user-service
+    cmds:
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "userdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/user-service/db/migrations down 1
+
+  migrate:user:down:all:
+    desc: Rollback ALL migrations for user-service
+    cmds:
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "userdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/user-service/db/migrations down
+
+  migrate:user:force:
+    desc: "Force set migration version for user-service (usage: task migrate:user:force -- 1)"
+    cmds:
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "userdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/user-service/db/migrations force {{.CLI_ARGS}}
+
+  migrate:user:version:
+    desc: Print current migration version for user-service
+    cmds:
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "userdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/user-service/db/migrations version
+
+  # ──────────────────────────────────────────────
+  #  Migrations — Product Service
+  # ──────────────────────────────────────────────
+  migrate:product:create:
+    desc: "Create a new migration for product-service (usage: task migrate:product:create -- create_products_table)"
+    cmds:
+      - migrate create -ext sql -dir ./services/product-service/db/migrations -seq {{.CLI_ARGS}}
+
+  migrate:product:up:
+    desc: Run all up migrations for product-service
+    cmds:
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "productdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/product-service/db/migrations up
+
+  migrate:product:down:
+    desc: Rollback the last migration for product-service
+    cmds:
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "productdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/product-service/db/migrations down 1
+
+  migrate:product:force:
+    desc: "Force set migration version for product-service (usage: task migrate:product:force -- 1)"
+    cmds:
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "productdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/product-service/db/migrations force {{.CLI_ARGS}}
+
+  migrate:product:version:
+    desc: Print current migration version for product-service
+    cmds:
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "productdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/product-service/db/migrations version
+
+  # ──────────────────────────────────────────────
+  #  Migrations — Order Service
+  # ──────────────────────────────────────────────
+  migrate:order:create:
+    desc: "Create a new migration for order-service (usage: task migrate:order:create -- create_orders_table)"
+    cmds:
+      - migrate create -ext sql -dir ./services/order-service/db/migrations -seq {{.CLI_ARGS}}
+
+  migrate:order:up:
+    desc: Run all up migrations for order-service
+    cmds:
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "orderdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/order-service/db/migrations up
+
+  migrate:order:down:
+    desc: Rollback the last migration for order-service
+    cmds:
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "orderdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/order-service/db/migrations down 1
+
+  migrate:order:force:
+    desc: "Force set migration version for order-service (usage: task migrate:order:force -- 1)"
+    cmds:
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "orderdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/order-service/db/migrations force {{.CLI_ARGS}}
+
+  migrate:order:version:
+    desc: Print current migration version for order-service
+    cmds:
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "orderdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/order-service/db/migrations version
+
+  # ──────────────────────────────────────────────
+  #  Run Services
+  # ──────────────────────────────────────────────
+  run:user:
+    desc: Run user-service locally
+    dir: services/user-service
+    cmds:
+      - go run ./src/...
+
+  run:product:
+    desc: Run product-service locally
+    dir: services/product-service
+    cmds:
+      - go run ./src/...
+
+  run:order:
+    desc: Run order-service locally
+    dir: services/order-service
+    cmds:
+      - go run ./src/...
+
+  # ──────────────────────────────────────────────
+  #  Build
+  # ──────────────────────────────────────────────
+  build:user:
+    desc: Build user-service binary
+    dir: services/user-service
+    cmds:
+      - go build -o bin/user-service ./src/...
+
+  build:product:
+    desc: Build product-service binary
+    dir: services/product-service
+    cmds:
+      - go build -o bin/product-service ./src/...
+
+  build:order:
+    desc: Build order-service binary
+    dir: services/order-service
+    cmds:
+      - go build -o bin/order-service ./src/...
+
+  build:all:
+    desc: Build all services
+    cmds:
+      - task: build:user
+      - task: build:product
+      - task: build:order
+
+  # ──────────────────────────────────────────────
+  #  Docker
+  # ──────────────────────────────────────────────
+  docker:up:
+    desc: Start all containers with docker-compose
+    cmds:
+      - docker compose up -d
+
+  docker:down:
+    desc: Stop all containers
+    cmds:
+      - docker compose down
+
+  docker:logs:
+    desc: Tail docker-compose logs
+    cmds:
+      - docker compose logs -f
+
+  docker:ps:
+    desc: List running containers
+    cmds:
+      - docker compose ps
+
+  # ──────────────────────────────────────────────
+  #  Dev Utilities
+  # ──────────────────────────────────────────────
+  tidy:
+    desc: Run go mod tidy on all services
+    cmds:
+      - cd services/user-service && go mod tidy
+      - cd services/product-service && go mod tidy
+      - cd services/order-service && go mod tidy
+
+  vet:
+    desc: Run go vet on all services
+    cmds:
+      - cd services/user-service && go vet ./...
+      - cd services/product-service && go vet ./...
+      - cd services/order-service && go vet ./...
+
+  test:
+    desc: Run tests for all services
+    cmds:
+      - cd services/user-service && go test ./...
+      - cd services/product-service && go test ./...
+      - cd services/order-service && go test ./...
+
+  clean:
+    desc: Remove all build artifacts
+    cmds:
+      - rm -rf services/user-service/bin
+      - rm -rf services/product-service/bin
+      - rm -rf services/order-service/bin
