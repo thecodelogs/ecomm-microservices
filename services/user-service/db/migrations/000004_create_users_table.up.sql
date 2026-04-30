@@ -1,8 +1,8 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE IF NOT EXISTS users (
-    id              UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-    role_id         INT          NOT NULL REFERENCES roles(id) ON DELETE RESTRICT,
+    id              UUID         PRIMARY KEY DEFAULT uuidv7(),
+    role_id         UUID         NOT NULL REFERENCES roles(id) ON DELETE RESTRICT,
     email           VARCHAR(255) NOT NULL UNIQUE,
     password_hash   VARCHAR(255) NOT NULL,
     first_name      VARCHAR(100) NOT NULL,

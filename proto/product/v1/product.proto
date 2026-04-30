@@ -6,8 +6,63 @@ option go_package = "github.com/manojnegi/ecomm-microservices/gen/go/product/v1;
 
 service ProductService {
     rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
+    rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse);
+    rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
     rpc GetProduct(GetProductRequest) returns (GetProductResponse);
 }
+
+service CategoryService {
+    rpc CreateCategory(CreateCategoryRequest) returns (CreateCategoryResponse);
+    rpc UpdateCategory(UpdateCategoryRequest) returns (UpdateCategoryResponse);
+    rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse);
+    rpc GetCategory(GetCategoryRequest) returns (GetCategoryResponse);
+}
+
+message Category {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+}
+
+message CreateCategoryRequest {
+    string name = 1;
+    string description = 2;
+}
+
+message CreateCategoryResponse {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+}
+
+message GetCategoryRequest {
+    string id = 1;
+}
+
+message GetCategoryResponse {
+    Category category = 1;
+}
+
+message UpdateCategoryRequest {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+}
+
+message UpdateCategoryResponse {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+}
+
+message DeleteCategoryRequest {
+    string id = 1;
+}
+
+message DeleteCategoryResponse {
+    bool success = 1;
+}
+
 
 message Product {
     string id = 1;
@@ -38,6 +93,33 @@ message CreateProductResponse {
     string image_url = 7;
 }
 
+message UpdateProductRequest {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    double price = 4;
+    int32 stock = 5;
+    string category = 6;
+    string image_url = 7;
+}
+
+message UpdateProductResponse {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    double price = 4;
+    int32 stock = 5;
+    string category = 6;
+    string image_url = 7;
+}
+
+message DeleteProductRequest {
+    string id = 1;
+}
+
+message DeleteProductResponse {
+    bool success = 1;
+}
 message GetProductRequest {
     string id = 1;
 }

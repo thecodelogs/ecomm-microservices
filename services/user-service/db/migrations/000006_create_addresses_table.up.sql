@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS addresses (
-    id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    id            UUID         PRIMARY KEY DEFAULT uuidv7(),
     user_id       UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     label         VARCHAR(50)  NOT NULL DEFAULT 'home',
     address_line1 VARCHAR(255) NOT NULL,

@@ -8,7 +8,9 @@ vars:
   DB_HOST: "localhost"
   DB_PORT: "5432"
   DB_SSLMODE: "disable"
-  DB_NAME: "ecomm-user-service"
+  ORDER_DB_NAME: "ecomm-order-service"
+  PRODUCT_DB_NAME: "ecomm-product-service"
+  USER_DB_NAME: "ecomm-user-service"
 
 tasks:
   # ──────────────────────────────────────────────
@@ -35,6 +37,21 @@ tasks:
   # ──────────────────────────────────────────────
   #  Migrations — User Service
   # ──────────────────────────────────────────────
+
+  migrate:up:
+    desc: Run migrations for all services
+    cmds:
+      - task migrate:user:up
+      - task migrate:product:up
+      - task migrate:order:up
+
+  migrate:drop:
+    desc: Drop migrations for all services
+    cmds:
+      - task migrate:user:drop
+      - task migrate:product:drop
+      - task migrate:order:drop
+
   migrate:user:create:
     desc: "Create a new migration for user-service (usage: task migrate:user:create -- create_users_table)"
     cmds:
@@ -42,30 +59,13 @@ tasks:
 
   migrate:user:up:
     desc: Run all up migrations for user-service
-    vars:
-      DB_NAME: '{{.DB_NAME | default "userdb"}}'
     cmds:
-      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME}}?sslmode={{.DB_SSLMODE}}" -path ./services/user-service/db/migrations up
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.USER_DB_NAME}}?sslmode={{.DB_SSLMODE}}" -path ./services/user-service/db/migrations up
 
-  migrate:user:down:
+  migrate:user:drop:
     desc: Rollback the last migration for user-service
     cmds:
-      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "userdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/user-service/db/migrations down 1
-
-  migrate:user:down:all:
-    desc: Rollback ALL migrations for user-service
-    cmds:
-      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "userdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/user-service/db/migrations down
-
-  migrate:user:force:
-    desc: "Force set migration version for user-service (usage: task migrate:user:force -- 1)"
-    cmds:
-      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "userdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/user-service/db/migrations force {{.CLI_ARGS}}
-
-  migrate:user:version:
-    desc: Print current migration version for user-service
-    cmds:
-      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "userdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/user-service/db/migrations version
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.USER_DB_NAME}}?sslmode={{.DB_SSLMODE}}" -path ./services/user-service/db/migrations drop
 
   # ──────────────────────────────────────────────
   #  Migrations — Product Service
@@ -78,22 +78,12 @@ tasks:
   migrate:product:up:
     desc: Run all up migrations for product-service
     cmds:
-      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "productdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/product-service/db/migrations up
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.PRODUCT_DB_NAME}}?sslmode={{.DB_SSLMODE}}" -path ./services/product-service/db/migrations up
 
-  migrate:product:down:
+  migrate:product:drop:
     desc: Rollback the last migration for product-service
     cmds:
-      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "productdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/product-service/db/migrations down 1
-
-  migrate:product:force:
-    desc: "Force set migration version for product-service (usage: task migrate:product:force -- 1)"
-    cmds:
-      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "productdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/product-service/db/migrations force {{.CLI_ARGS}}
-
-  migrate:product:version:
-    desc: Print current migration version for product-service
-    cmds:
-      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "productdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/product-service/db/migrations version
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.PRODUCT_DB_NAME}}?sslmode={{.DB_SSLMODE}}" -path ./services/product-service/db/migrations drop
 
   # ──────────────────────────────────────────────
   #  Migrations — Order Service
@@ -106,22 +96,12 @@ tasks:
   migrate:order:up:
     desc: Run all up migrations for order-service
     cmds:
-      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "orderdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/order-service/db/migrations up
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.ORDER_DB_NAME}}?sslmode={{.DB_SSLMODE}}" -path ./services/order-service/db/migrations up
 
-  migrate:order:down:
+  migrate:order:drop:
     desc: Rollback the last migration for order-service
     cmds:
-      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "orderdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/order-service/db/migrations down 1
-
-  migrate:order:force:
-    desc: "Force set migration version for order-service (usage: task migrate:order:force -- 1)"
-    cmds:
-      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "orderdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/order-service/db/migrations force {{.CLI_ARGS}}
-
-  migrate:order:version:
-    desc: Print current migration version for order-service
-    cmds:
-      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.DB_NAME | default "orderdb"}}?sslmode={{.DB_SSLMODE}}" -path ./services/order-service/db/migrations version
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.ORDER_DB_NAME}}?sslmode={{.DB_SSLMODE}}" -path ./services/order-service/db/migrations drop
 
   # ──────────────────────────────────────────────
   #  Run Services

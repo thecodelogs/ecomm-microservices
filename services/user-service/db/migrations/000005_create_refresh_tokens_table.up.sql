@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS refresh_tokens (
-    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    id          UUID        PRIMARY KEY DEFAULT uuidv7(),
     user_id     UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token_hash  VARCHAR(64) NOT NULL UNIQUE,
     user_agent  TEXT,

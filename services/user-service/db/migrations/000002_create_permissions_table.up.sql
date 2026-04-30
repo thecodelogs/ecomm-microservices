@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS permissions (
-    id          SERIAL       PRIMARY KEY,
+    id          UUID        PRIMARY KEY DEFAULT uuidv7(),
     resource    VARCHAR(100) NOT NULL,
     action      VARCHAR(50)  NOT NULL,
     description VARCHAR(255),

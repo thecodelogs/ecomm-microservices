@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS roles (
-    id          SERIAL PRIMARY KEY,
-    name        VARCHAR(50)  NOT NULL UNIQUE,
-    description VARCHAR(255),
-    is_default  BOOLEAN      NOT NULL DEFAULT FALSE,
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    id              UUID        PRIMARY KEY DEFAULT uuidv7(),
+    name            VARCHAR(50)  NOT NULL UNIQUE,
+    description     VARCHAR(255),
+    is_default      BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
 -- Seed default roles
