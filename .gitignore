@@ -1,3 +1,4 @@
 gen/
 buf-remote/
 docs.md
+/services/payment-service/target

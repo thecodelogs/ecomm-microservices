@@ -11,6 +11,7 @@ vars:
   ORDER_DB_NAME: "ecomm-order-service"
   PRODUCT_DB_NAME: "ecomm-product-service"
   USER_DB_NAME: "ecomm-user-service"
+  PAYMENT_DB_NAME: "ecomm-payment-service"
 
 tasks:
   # ──────────────────────────────────────────────
@@ -83,7 +84,7 @@ tasks:
   migrate:product:drop:
     desc: Rollback the last migration for product-service
     cmds:
-      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.PRODUCT_DB_NAME}}?sslmode={{.DB_SSLMODE}}" -path ./services/product-service/db/migrations drop
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.PRODUCT_DB_NAME}}?sslmode={{.DB_SSLMODE}}" -path ./services/product-service/db/migrations down
 
   # ──────────────────────────────────────────────
   #  Migrations — Order Service
@@ -102,6 +103,20 @@ tasks:
     desc: Rollback the last migration for order-service
     cmds:
       - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.ORDER_DB_NAME}}?sslmode={{.DB_SSLMODE}}" -path ./services/order-service/db/migrations drop
+
+  # ──────────────────────────────────────────────
+  #  Migrations — Payment Service
+  # ──────────────────────────────────────────────
+
+  migrate:payment:up:
+    desc: Run all up migrations for payment-service
+    cmds:
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.PAYMENT_DB_NAME}}?sslmode={{.DB_SSLMODE}}" -path ./services/payment-service/db/migrations up
+
+  migrate:payment:drop:
+    desc: Rollback the last migration for payment-service
+    cmds:
+      - migrate -database "postgres://{{.DB_USER}}:{{.DB_PASS}}@{{.DB_HOST}}:{{.DB_PORT}}/{{.PAYMENT_DB_NAME}}?sslmode={{.DB_SSLMODE}}" -path ./services/payment-service/db/migrations drop
 
   # ──────────────────────────────────────────────
   #  Run Services
@@ -124,6 +139,12 @@ tasks:
     cmds:
       - go run ./src/...
 
+  run:payment:
+    desc: Run payment-service locally (Rust)
+    dir: services/payement-service
+    cmds:
+      - cargo run
+
   # ──────────────────────────────────────────────
   #  Build
   # ──────────────────────────────────────────────
@@ -145,12 +166,19 @@ tasks:
     cmds:
       - go build -o bin/order-service ./src/...
 
+  build:payment:
+    desc: Build payment-service binary (Rust)
+    dir: services/payement-service
+    cmds:
+      - cargo build --release
+
   build:all:
     desc: Build all services
     cmds:
       - task: build:user
       - task: build:product
       - task: build:order
+      - task: build:payment
 
   # ──────────────────────────────────────────────
   #  Docker
