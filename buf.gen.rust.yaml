@@ -2,6 +2,8 @@ version: v2
 plugins:
   - local: protoc-gen-prost
     out: gen/rust
+    opt:
+      - file_descriptor_set=true
 
   - local: protoc-gen-tonic
     out: gen/rust

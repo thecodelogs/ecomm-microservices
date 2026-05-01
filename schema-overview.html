@@ -1,552 +1,1794 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Database Schemas — E-Commerce Microservices</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0d0d0d;
-    --panel: #111;
-    --border: #1e1e1e;
-    --text: #cdd3de;
-    --muted: #4a4a5a;
-    --pk:   #f7c948;
-    --fk:   #4fc3f7;
-    --type: #a3be8c;
-    --enum: #ebcb8b;
-    --idx:  #b48ead;
-    --col:  #88c0d0;
-    --null: #555;
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ecommerce — Database Schemas</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-    --c-user:   #00f5c4;
-    --c-prod:   #4fc3f7;
-    --c-cart:   #ff9f43;
-    --c-order:  #b39ddb;
-    --c-pay:    #ff6b6b;
-    --c-ship:   #54a0ff;
-    --c-notif:  #ffd32a;
-    --c-anal:   #5f27cd;
-  }
+      :root {
+        --bg: #0a0c10;
+        --bg2: #0f1117;
+        --bg3: #151820;
+        --bg4: #1c2030;
+        --border: rgba(255, 255, 255, 0.07);
+        --border2: rgba(255, 255, 255, 0.12);
+        --text: #c8cdd8;
+        --text2: #7a8094;
+        --text3: #4a5068;
 
-  * { margin:0; padding:0; box-sizing:border-box; }
+        --cyan: #00e5cc;
+        --cyan-dim: rgba(0, 229, 204, 0.12);
+        --cyan-glow: rgba(0, 229, 204, 0.06);
+        --blue: #4d9fff;
+        --blue-dim: rgba(77, 159, 255, 0.12);
+        --amber: #ffb347;
+        --amber-dim: rgba(255, 179, 71, 0.12);
+        --green: #4dffb3;
+        --green-dim: rgba(77, 255, 179, 0.12);
+        --pink: #ff6eb4;
+        --pink-dim: rgba(255, 110, 180, 0.12);
+        --purple: #b388ff;
+        --purple-dim: rgba(179, 136, 255, 0.12);
+        --red: #ff6b6b;
+        --red-dim: rgba(255, 107, 107, 0.12);
+        --orange: #ff9c6e;
+        --orange-dim: rgba(255, 156, 110, 0.12);
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    padding: 36px 20px 60px;
-    background-image:
-      radial-gradient(ellipse 50% 30% at 5% 10%,  rgba(0,245,196,0.04) 0%, transparent 60%),
-      radial-gradient(ellipse 40% 40% at 95% 90%, rgba(95,39,205,0.05) 0%, transparent 60%);
-  }
+        --mono: "JetBrains Mono", monospace;
+        --sans: "Syne", sans-serif;
+        --radius: 10px;
+      }
 
-  header { text-align:center; margin-bottom:40px; }
-  header h1 {
-    font-family:'Syne',sans-serif; font-size:clamp(1.8rem,4vw,3rem); font-weight:800;
-    background:linear-gradient(135deg,#00f5c4,#4fc3f7);
-    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-  }
-  header p { color:var(--muted); font-size:0.72rem; margin-top:6px; letter-spacing:0.1em; }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--mono);
+        min-height: 100vh;
+        padding: 0 0 80px;
+      }
 
-  .grid {
-    max-width:1300px; margin:0 auto;
-    display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr));
-    gap:18px;
-  }
+      /* ── HEADER ── */
+      header {
+        text-align: center;
+        padding: 64px 32px 48px;
+        position: relative;
+        overflow: hidden;
+      }
+      header::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 60% 60% at 50% -10%,
+            rgba(0, 229, 204, 0.08) 0%,
+            transparent 70%
+          ),
+          radial-gradient(
+            ellipse 40% 40% at 20% 100%,
+            rgba(77, 159, 255, 0.05) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 40% 40% at 80% 100%,
+            rgba(179, 136, 255, 0.05) 0%,
+            transparent 60%
+          );
+        pointer-events: none;
+      }
+      header h1 {
+        font-family: var(--sans);
+        font-size: clamp(2.4rem, 5vw, 4rem);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        background: linear-gradient(
+          135deg,
+          var(--cyan) 0%,
+          var(--blue) 50%,
+          var(--purple) 100%
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
+      }
+      header p {
+        margin-top: 10px;
+        font-size: 0.78rem;
+        color: var(--text3);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        position: relative;
+      }
+      header p span {
+        color: var(--text2);
+      }
 
-  .service-block {
-    background:var(--panel);
-    border:1px solid var(--border);
-    border-radius:12px;
-    overflow:hidden;
-  }
+      /* ── LEGEND ── */
+      .legend {
+        display: flex;
+        justify-content: center;
+        gap: 24px;
+        flex-wrap: wrap;
+        margin: 0 32px 40px;
+        font-size: 0.7rem;
+        color: var(--text2);
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
 
-  .svc-header {
-    padding:10px 16px;
-    font-family:'Syne',sans-serif;
-    font-size:0.8rem; font-weight:700;
-    display:flex; align-items:center; gap:10px;
-    border-bottom:1px solid var(--border);
-  }
+      /* ── GRID ── */
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 20px;
+        padding: 0 32px;
+        max-width: 1600px;
+        margin: 0 auto;
+      }
 
-  .svc-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+      /* ── SERVICE CARD ── */
+      .service {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition:
+          border-color 0.2s,
+          transform 0.2s;
+        animation: fadeUp 0.5s ease both;
+      }
+      .service:hover {
+        border-color: var(--border2);
+        transform: translateY(-2px);
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .service:nth-child(1) {
+        animation-delay: 0.05s;
+      }
+      .service:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+      .service:nth-child(3) {
+        animation-delay: 0.15s;
+      }
+      .service:nth-child(4) {
+        animation-delay: 0.2s;
+      }
+      .service:nth-child(5) {
+        animation-delay: 0.25s;
+      }
+      .service:nth-child(6) {
+        animation-delay: 0.3s;
+      }
 
-  .svc-db-badge {
-    margin-left:auto; font-family:'JetBrains Mono',monospace;
-    font-size:0.6rem; padding:2px 8px; border-radius:20px;
-    background:rgba(255,255,255,0.05); color:var(--muted);
-  }
+      .service-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+      .service-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--sans);
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        box-shadow: 0 0 8px currentColor;
+        flex-shrink: 0;
+      }
+      .service-badge {
+        font-size: 0.65rem;
+        color: var(--text3);
+        letter-spacing: 0.1em;
+        border: 1px solid var(--border2);
+        padding: 2px 8px;
+        border-radius: 4px;
+      }
 
-  .tables { padding:14px; display:flex; flex-direction:column; gap:12px; }
+      .service-body {
+        padding: 16px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
 
-  .tbl { background:#0d0d0d; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+      /* ── TABLE BLOCK ── */
+      .table-block {
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .table-name {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg4);
+        letter-spacing: 0.04em;
+      }
+      .table-icon {
+        font-size: 0.85rem;
+        opacity: 0.8;
+      }
 
-  .tbl-name {
-    padding:7px 12px;
-    font-size:0.72rem; font-weight:600; letter-spacing:0.05em;
-    border-bottom:1px solid var(--border);
-    display:flex; align-items:center; gap:8px;
-  }
+      .fields {
+        display: flex;
+        flex-direction: column;
+      }
+      .field {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        padding: 6px 14px;
+        font-size: 0.7rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        line-height: 1.4;
+        transition: background 0.15s;
+      }
+      .field:last-child {
+        border-bottom: none;
+      }
+      .field:hover {
+        background: rgba(255, 255, 255, 0.02);
+      }
 
-  .tbl-name .icon { font-size:0.85rem; }
+      .field-icon {
+        width: 18px;
+        flex-shrink: 0;
+        font-size: 0.7rem;
+      }
+      .field-name {
+        flex: 1;
+        color: var(--text);
+        font-weight: 500;
+      }
+      .field-name.pk {
+        color: var(--amber);
+      }
+      .field-name.fk {
+        color: var(--blue);
+      }
+      .field-type {
+        color: var(--text3);
+        font-size: 0.65rem;
+        text-align: right;
+        margin-left: 8px;
+      }
+      .field-tag {
+        font-size: 0.58rem;
+        padding: 1px 5px;
+        border-radius: 3px;
+        margin-left: 6px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+      }
+      .tag-pk {
+        background: var(--amber-dim);
+        color: var(--amber);
+      }
+      .tag-fk {
+        background: var(--blue-dim);
+        color: var(--blue);
+      }
+      .tag-uq {
+        background: var(--purple-dim);
+        color: var(--purple);
+      }
+      .tag-idx {
+        background: var(--cyan-dim);
+        color: var(--cyan);
+      }
+      .tag-gen {
+        background: var(--green-dim);
+        color: var(--green);
+      }
+      .tag-chk {
+        background: var(--pink-dim);
+        color: var(--pink);
+      }
+      .tag-snap {
+        background: var(--orange-dim);
+        color: var(--orange);
+      }
+      .tag-ao {
+        background: var(--red-dim);
+        color: var(--red);
+      }
+      .tag-ref {
+        background: rgba(120, 120, 180, 0.15);
+        color: #aab;
+      }
 
-  .col-list { padding:6px 0; }
+      /* index tags row */
+      .index-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px 14px;
+        border-top: 1px solid var(--border);
+        background: var(--bg);
+      }
+      .idx-pill {
+        font-size: 0.6rem;
+        padding: 2px 8px;
+        border-radius: 20px;
+        background: var(--bg4);
+        border: 1px solid var(--border2);
+        color: var(--text2);
+        letter-spacing: 0.04em;
+      }
 
-  .col-row {
-    display:grid;
-    grid-template-columns:18px 1fr auto auto;
-    gap:4px 8px;
-    padding:3px 12px;
-    font-size:0.68rem;
-    align-items:center;
-    line-height:1.4;
-  }
+      /* note row */
+      .note-row {
+        padding: 8px 14px;
+        font-size: 0.65rem;
+        color: var(--text3);
+        border-top: 1px solid var(--border);
+        font-style: italic;
+        background: rgba(0, 229, 204, 0.02);
+        border-left: 2px solid rgba(0, 229, 204, 0.2);
+      }
 
-  .col-row:hover { background:rgba(255,255,255,0.02); }
+      /* ── CROSS-SERVICE NOTE ── */
+      .x-note {
+        margin: 0 32px 20px;
+        max-width: 1600px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 0 32px;
+      }
+      .x-banner {
+        background: linear-gradient(
+          135deg,
+          rgba(0, 229, 204, 0.05),
+          rgba(77, 159, 255, 0.05)
+        );
+        border: 1px solid rgba(0, 229, 204, 0.15);
+        border-radius: 10px;
+        padding: 14px 20px;
+        font-size: 0.72rem;
+        color: var(--text2);
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        margin-bottom: 28px;
+      }
+      .x-banner strong {
+        color: var(--cyan);
+        font-weight: 600;
+      }
 
-  .col-marker { font-size:0.6rem; text-align:center; }
-  .pk-marker  { color:var(--pk); }
-  .fk-marker  { color:var(--fk); }
+      /* ── SECTION LABEL ── */
+      .section-label {
+        padding: 0 32px;
+        max-width: 1600px;
+        margin: 32px auto 14px;
+        font-size: 0.65rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--text3);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .section-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
 
-  .col-name   { color:var(--col); }
-  .col-type   { color:var(--type); font-size:0.62rem; text-align:right; }
-  .col-flag   { color:var(--null); font-size:0.6rem; }
+      /* scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--bg4);
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Database Schemas</h1>
+      <p>
+        // <span>6 services</span> · PostgreSQL · Raw SQL Migrations · uuid
+        primary keys
+      </p>
+    </header>
 
-  .col-name.is-pk { color:var(--pk); font-weight:600; }
-  .col-name.is-fk { color:var(--fk); }
-
-  .indexes {
-    padding:6px 12px 8px;
-    border-top:1px solid var(--border);
-    display:flex; flex-wrap:wrap; gap:4px;
-  }
-
-  .idx-tag {
-    font-size:0.58rem; padding:1px 7px;
-    border-radius:10px;
-    background:rgba(180,142,173,0.1); color:var(--idx);
-  }
-
-  .enum-tag {
-    font-size:0.6rem; padding:2px 7px;
-    border-radius:4px; margin-bottom:2px;
-    background:rgba(235,203,139,0.08); color:var(--enum);
-    display:inline-block;
-  }
-
-  .enums-row { padding:6px 12px; display:flex; flex-wrap:wrap; gap:4px; border-bottom:1px solid var(--border); }
-
-  .divider { height:1px; background:var(--border); margin:2px 0; }
-</style>
-</head>
-<body>
-
-<header>
-  <h1>Database Schemas</h1>
-  <p>// 8 services · PostgreSQL · Raw SQL Migrations · uuid primary keys</p>
-</header>
-
-<div class="grid">
-
-  <!-- USER SERVICE -->
-  <div class="service-block">
-    <div class="svc-header">
-      <div class="svc-dot" style="background:var(--c-user)"></div>
-      User Service
-      <span class="svc-db-badge">PostgreSQL</span>
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot" style="background: var(--amber)"></div>
+        Primary Key
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background: var(--blue)"></div>
+        Foreign Key
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background: var(--green)"></div>
+        Generated Column
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background: var(--orange)"></div>
+        Snapshotted
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background: var(--red)"></div>
+        Append-only
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" style="background: var(--purple)"></div>
+        Unique
+      </div>
     </div>
-    <div class="tables">
 
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-user)"><span class="icon">🗂</span> users</div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">email</span><span class="col-type">VARCHAR(255)</span><span class="col-flag">UNIQUE</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">password_hash</span><span class="col-type">VARCHAR(255)</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">first_name</span><span class="col-type">VARCHAR(100)</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">last_name</span><span class="col-type">VARCHAR(100)</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">phone</span><span class="col-type">VARCHAR(20)</span><span class="col-flag">NULL</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">is_verified</span><span class="col-type">BOOLEAN</span><span class="col-flag">false</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">is_active</span><span class="col-type">BOOLEAN</span><span class="col-flag">true</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">created_at</span><span class="col-type">TIMESTAMPTZ</span><span class="col-flag"></span></div>
+    <div style="padding: 0 32px; max-width: 1600px; margin: 0 auto 8px">
+      <div class="x-banner">
+        <span>⚡</span>
+        <div>
+          <strong>Microservices boundary rule:</strong> Each service owns its
+          data exclusively. Cross-service references are lightweight identifiers
+          only (e.g. <code>payment_service_ref</code>,
+          <code>shipment_service_ref</code>). Services communicate via an
+          <strong>event bus</strong> (Kafka / RabbitMQ) — never via direct DB
+          joins.
         </div>
-        <div class="indexes"><span class="idx-tag">idx_users_email</span></div>
       </div>
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-user)"><span class="icon">🗂</span> addresses</div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker fk-marker">🔗</span><span class="col-name is-fk">user_id</span><span class="col-type">UUID</span><span class="col-flag">FK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">label</span><span class="col-type">VARCHAR(50)</span><span class="col-flag">NULL</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">line1, line2</span><span class="col-type">VARCHAR</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">city / state / country</span><span class="col-type">VARCHAR</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">postal_code</span><span class="col-type">VARCHAR(20)</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">is_default</span><span class="col-type">BOOLEAN</span><span class="col-flag"></span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_addresses_user_id</span></div>
-      </div>
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-user)"><span class="icon">🗂</span> refresh_tokens</div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker fk-marker">🔗</span><span class="col-name is-fk">user_id</span><span class="col-type">UUID</span><span class="col-flag">FK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">token_hash</span><span class="col-type">VARCHAR(255)</span><span class="col-flag">UNIQUE</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">expires_at</span><span class="col-type">TIMESTAMPTZ</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">revoked</span><span class="col-type">BOOLEAN</span><span class="col-flag"></span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_refresh_tokens_user_id</span><span class="idx-tag">idx_refresh_tokens_token_hash</span></div>
-      </div>
-
     </div>
-  </div>
 
-  <!-- PRODUCT SERVICE -->
-  <div class="service-block">
-    <div class="svc-header">
-      <div class="svc-dot" style="background:var(--c-prod)"></div>
-      Product Service
-      <span class="svc-db-badge">PostgreSQL</span>
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section-label">Core Services</div>
+    <div class="grid">
+      <!-- ── USER SERVICE ── -->
+      <div class="service" style="--accent: var(--cyan)">
+        <div class="service-header">
+          <div class="service-title">
+            <div
+              class="dot"
+              style="color: var(--cyan); background: var(--cyan)"
+            ></div>
+            User Service
+          </div>
+          <div class="service-badge">PostgreSQL</div>
+        </div>
+        <div class="service-body">
+          <div class="table-block">
+            <div class="table-name" style="color: var(--cyan)">
+              <span class="table-icon">🗂</span> users
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">email</span
+                ><span class="field-type">VARCHAR(255)</span
+                ><span class="field-tag tag-uq">UNIQUE</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">password_hash</span
+                ><span class="field-type">VARCHAR(255)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">first_name</span
+                ><span class="field-type">VARCHAR(100)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">last_name</span
+                ><span class="field-type">VARCHAR(100)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">phone</span
+                ><span class="field-type">VARCHAR(20) NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">is_verified</span
+                ><span class="field-type">BOOLEAN false</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">is_active</span
+                ><span class="field-type">BOOLEAN true</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">created_at</span
+                ><span class="field-type">TIMESTAMPTZ</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_users_email</span>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--cyan)">
+              <span class="table-icon">🗂</span> addresses
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">user_id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-fk">FK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">label</span
+                ><span class="field-type">VARCHAR(50) NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">line1 / line2</span
+                ><span class="field-type">VARCHAR</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">city / state / country</span
+                ><span class="field-type">VARCHAR</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">postal_code</span
+                ><span class="field-type">VARCHAR(20)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">is_default</span
+                ><span class="field-type">BOOLEAN</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_addresses_user_id</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PRODUCT SERVICE ── -->
+      <div class="service">
+        <div class="service-header">
+          <div class="service-title">
+            <div
+              class="dot"
+              style="color: var(--blue); background: var(--blue)"
+            ></div>
+            Product Service
+          </div>
+          <div class="service-badge">PostgreSQL</div>
+        </div>
+        <div class="service-body">
+          <div class="table-block">
+            <div class="table-name" style="color: var(--blue)">
+              <span class="table-icon">🗂</span> categories
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">name / slug</span
+                ><span class="field-type">VARCHAR(150)</span
+                ><span class="field-tag tag-uq">UNIQUE</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">parent_id</span
+                ><span class="field-type">UUID self-FK</span
+                ><span class="field-tag tag-fk">FK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">description</span
+                ><span class="field-type">TEXT NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">is_active</span
+                ><span class="field-type">BOOLEAN</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_categories_parent</span>
+              <span class="idx-pill">idx_categories_slug</span>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--blue)">
+              <span class="table-icon">🗂</span> products
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">category_id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-fk">FK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">name / slug</span
+                ><span class="field-type">VARCHAR(255)</span
+                ><span class="field-tag tag-uq">UNIQUE</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">base_price</span
+                ><span class="field-type">NUMERIC(12,2)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">currency</span
+                ><span class="field-type">VARCHAR(10) USD</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">is_active</span
+                ><span class="field-type">BOOLEAN</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_products_category</span>
+              <span class="idx-pill">idx_products_slug</span>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--blue)">
+              <span class="table-icon">🗂</span> product_variants
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">product_id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-fk">FK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">sku</span
+                ><span class="field-type">VARCHAR(100)</span
+                ><span class="field-tag tag-uq">UNIQUE</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">attributes</span
+                ><span class="field-type">JSONB</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">price_override</span
+                ><span class="field-type">NUMERIC(12,2) NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">stock_qty</span
+                ><span class="field-type">INT ≥0</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">is_active</span
+                ><span class="field-type">BOOLEAN</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_variants_product</span>
+              <span class="idx-pill">idx_variants_sku</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CART SERVICE ── -->
+      <div class="service">
+        <div class="service-header">
+          <div class="service-title">
+            <div
+              class="dot"
+              style="color: var(--amber); background: var(--amber)"
+            ></div>
+            Cart Service
+          </div>
+          <div class="service-badge">PostgreSQL</div>
+        </div>
+        <div class="service-body">
+          <div class="table-block">
+            <div class="table-name" style="color: var(--amber)">
+              <span class="table-icon">🗂</span> carts
+            </div>
+            <div class="note-row">
+              status: active | merged | abandoned | converted
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">user_id</span
+                ><span class="field-type">UUID NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">session_id</span
+                ><span class="field-type">VARCHAR(255) NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">status</span
+                ><span class="field-type">ENUM active</span
+                ><span class="field-tag tag-chk">CHECK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">expires_at</span
+                ><span class="field-type">TIMESTAMPTZ NULL</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_carts_user_id</span>
+              <span class="idx-pill">idx_carts_session_id</span>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--amber)">
+              <span class="table-icon">🗂</span> cart_items
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">cart_id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-fk">FK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">product_id / variant_id</span
+                ><span class="field-type">UUID</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">product_name</span
+                ><span class="field-type">VARCHAR</span
+                ><span class="field-tag tag-snap">snapshot</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">unit_price</span
+                ><span class="field-type">NUMERIC(12,2)</span
+                ><span class="field-tag tag-snap">snapshot</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">quantity</span
+                ><span class="field-type">INT >0</span
+                ><span class="field-tag tag-chk">CHECK</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_cart_items_cart</span>
+              <span class="idx-pill">UNIQUE(cart_id, variant_id)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ORDER SERVICE ── -->
+      <div class="service">
+        <div class="service-header">
+          <div class="service-title">
+            <div
+              class="dot"
+              style="color: var(--green); background: var(--green)"
+            ></div>
+            Order Service
+          </div>
+          <div class="service-badge">PostgreSQL</div>
+        </div>
+        <div class="service-body">
+          <div class="table-block">
+            <div class="table-name" style="color: var(--green)">
+              <span class="table-icon">🗂</span> checkout_session
+            </div>
+            <div class="note-row">
+              Parent record — one checkout → many orders (split by
+              seller/warehouse)
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">user_id</span
+                ><span class="field-type">UUID</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">status</span
+                ><span class="field-type">VARCHAR(50)</span
+                ><span class="field-tag tag-chk">CHECK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">total_amount</span
+                ><span class="field-type">NUMERIC(12,2)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">currency</span
+                ><span class="field-type">CHAR(3) INR</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">payment_status</span
+                ><span class="field-type">VARCHAR(50)</span
+                ><span class="field-tag tag-ref">ref</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">payment_service_ref</span
+                ><span class="field-type">UUID NULL</span
+                ><span class="field-tag tag-ref">ref</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">metadata</span
+                ><span class="field-type">JSONB</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">created_at / updated_at</span
+                ><span class="field-type">TIMESTAMPTZ</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_checkout_user_id</span>
+              <span class="idx-pill">idx_checkout_status</span>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--green)">
+              <span class="table-icon">🗂</span> order
+            </div>
+            <div class="note-row">
+              display_order_id auto-generated: ORD-YYYYMMDD-NNNNN via trigger
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">display_order_id</span
+                ><span class="field-type">VARCHAR(50)</span
+                ><span class="field-tag tag-uq">UNIQUE</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">checkout_session_id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-fk">FK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">user_id</span
+                ><span class="field-type">UUID</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">seller_id</span
+                ><span class="field-type">UUID NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">fulfillment_center_id</span
+                ><span class="field-type">UUID NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">status</span
+                ><span class="field-type">VARCHAR(50)</span
+                ><span class="field-tag tag-chk">CHECK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">subtotal</span
+                ><span class="field-type">NUMERIC(12,2)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">shipping_amount</span
+                ><span class="field-type">NUMERIC(12,2)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">tax_amount</span
+                ><span class="field-type">NUMERIC(12,2)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">discount_amount</span
+                ><span class="field-type">NUMERIC(12,2)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">total_amount</span
+                ><span class="field-type">NUMERIC(12,2)</span
+                ><span class="field-tag tag-gen">generated</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">shipment_status</span
+                ><span class="field-type">VARCHAR(50)</span
+                ><span class="field-tag tag-ref">ref</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">shipment_service_ref</span
+                ><span class="field-type">UUID NULL</span
+                ><span class="field-tag tag-ref">ref</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">created_at / updated_at</span
+                ><span class="field-type">TIMESTAMPTZ</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_order_session</span>
+              <span class="idx-pill">idx_order_user_id</span>
+              <span class="idx-pill">idx_order_status</span>
+              <span class="idx-pill">idx_order_created_at</span>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--green)">
+              <span class="table-icon">🗂</span> order_item
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">order_id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-fk">FK CASCADE</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">product_id</span
+                ><span class="field-type">UUID</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">variant_id</span
+                ><span class="field-type">UUID NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">product_name</span
+                ><span class="field-type">VARCHAR(500)</span
+                ><span class="field-tag tag-snap">snapshot</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">sku</span
+                ><span class="field-type">VARCHAR(100)</span
+                ><span class="field-tag tag-snap">snapshot</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">quantity</span
+                ><span class="field-type">INT >0</span
+                ><span class="field-tag tag-chk">CHECK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">unit_price</span
+                ><span class="field-type">NUMERIC(12,2)</span
+                ><span class="field-tag tag-snap">snapshot</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">total_price</span
+                ><span class="field-type">NUMERIC(12,2)</span
+                ><span class="field-tag tag-gen">generated</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">status</span
+                ><span class="field-type">VARCHAR(50)</span
+                ><span class="field-tag tag-chk">CHECK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">metadata</span
+                ><span class="field-type">JSONB</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_order_item_order</span>
+              <span class="idx-pill">idx_order_item_product</span>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--green)">
+              <span class="table-icon">🗂</span> shipping_address
+            </div>
+            <div class="note-row">
+              Snapshotted at checkout — decoupled from user's address book
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">order_id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-fk">FK UNIQUE</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">full_name / phone</span
+                ><span class="field-type">VARCHAR</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">address_line1 / line2</span
+                ><span class="field-type">VARCHAR(500)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">city / state</span
+                ><span class="field-type">VARCHAR(100)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">postal_code</span
+                ><span class="field-type">VARCHAR(20)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">country</span
+                ><span class="field-type">CHAR(2) IN</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_shipping_order_id</span>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--green)">
+              <span class="table-icon">🗂</span> order_status_history
+            </div>
+            <div class="note-row">
+              Append-only — protected by DB rules (no UPDATE / DELETE allowed)
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">order_id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-fk">FK CASCADE</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">from_status</span
+                ><span class="field-type">VARCHAR(50) NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">to_status</span
+                ><span class="field-type">VARCHAR(50)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">reason</span
+                ><span class="field-type">TEXT NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">changed_by</span
+                ><span class="field-type">VARCHAR(100)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">metadata</span
+                ><span class="field-type">JSONB</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">changed_at</span
+                ><span class="field-type">TIMESTAMPTZ</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_osh_order_id</span>
+              <span class="idx-pill">idx_osh_changed_at DESC</span>
+              <span
+                class="idx-pill tag-ao"
+                style="
+                  background: var(--red-dim);
+                  color: var(--red);
+                  border-color: transparent;
+                "
+                >append-only</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PAYMENT SERVICE ── -->
+      <div class="service">
+        <div class="service-header">
+          <div class="service-title">
+            <div
+              class="dot"
+              style="color: var(--pink); background: var(--pink)"
+            ></div>
+            Payment Service
+          </div>
+          <div class="service-badge">PostgreSQL</div>
+        </div>
+        <div class="service-body">
+          <div class="table-block">
+            <div class="table-name" style="color: var(--pink)">
+              <span class="table-icon">🗂</span> payment
+            </div>
+            <div class="note-row">
+              Linked to checkout_session_id (order service ref) — one payment
+              per checkout
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">checkout_session_ref</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-ref">ref</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">payment_method_id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-fk">FK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">gateway</span
+                ><span class="field-type">VARCHAR(100)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">transaction_id</span
+                ><span class="field-type">VARCHAR(255)</span
+                ><span class="field-tag tag-uq">UNIQUE</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">status</span
+                ><span class="field-type">VARCHAR(50)</span
+                ><span class="field-tag tag-chk">CHECK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">amount / currency</span
+                ><span class="field-type">NUMERIC(12,2)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">gateway_response</span
+                ><span class="field-type">JSONB</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">paid_at</span
+                ><span class="field-type">TIMESTAMPTZ NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">created_at / updated_at</span
+                ><span class="field-type">TIMESTAMPTZ</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_payment_session_ref</span>
+              <span class="idx-pill">idx_payment_transaction</span>
+              <span class="idx-pill">idx_payment_status</span>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--pink)">
+              <span class="table-icon">🗂</span> payment_method
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">user_ref</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-ref">ref</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">type</span
+                ><span class="field-type">VARCHAR(50)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">provider_token</span
+                ><span class="field-type">VARCHAR(255)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">last4 / brand</span
+                ><span class="field-type">VARCHAR NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">is_default</span
+                ><span class="field-type">BOOLEAN</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">expires_at</span
+                ><span class="field-type">TIMESTAMPTZ NULL</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_pm_user_ref</span>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--pink)">
+              <span class="table-icon">🗂</span> payment_attempt
+            </div>
+            <div class="note-row">
+              Tracks every retry — important for debugging failed payments
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">payment_id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-fk">FK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">attempt_number</span
+                ><span class="field-type">INT</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">status</span
+                ><span class="field-type">VARCHAR(50)</span
+                ><span class="field-tag tag-chk">CHECK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">gateway_response</span
+                ><span class="field-type">JSONB</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">attempted_at</span
+                ><span class="field-type">TIMESTAMPTZ</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_attempt_payment</span>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--pink)">
+              <span class="table-icon">🗂</span> refund
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">payment_id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-fk">FK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">amount</span
+                ><span class="field-type">NUMERIC(12,2)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">reason</span
+                ><span class="field-type">TEXT NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">status</span
+                ><span class="field-type">VARCHAR(50)</span
+                ><span class="field-tag tag-chk">CHECK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">gateway_refund_id</span
+                ><span class="field-type">VARCHAR(255)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">refunded_at</span
+                ><span class="field-type">TIMESTAMPTZ NULL</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_refund_payment</span>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--pink)">
+              <span class="table-icon">🗂</span> payment_webhook_log
+            </div>
+            <div class="note-row">
+              Append-only — raw inbound events from payment gateways
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">gateway</span
+                ><span class="field-type">VARCHAR(100)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">event_type</span
+                ><span class="field-type">VARCHAR(100)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">payload</span
+                ><span class="field-type">JSONB</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">processed</span
+                ><span class="field-type">BOOLEAN false</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">received_at</span
+                ><span class="field-type">TIMESTAMPTZ</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_webhook_gateway</span>
+              <span class="idx-pill">idx_webhook_processed</span>
+              <span
+                class="idx-pill"
+                style="background: var(--red-dim); color: var(--red)"
+                >append-only</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SHIPMENT SERVICE ── -->
+      <div class="service">
+        <div class="service-header">
+          <div class="service-title">
+            <div
+              class="dot"
+              style="color: var(--purple); background: var(--purple)"
+            ></div>
+            Shipment Service
+          </div>
+          <div class="service-badge">PostgreSQL</div>
+        </div>
+        <div class="service-body">
+          <div class="table-block">
+            <div class="table-name" style="color: var(--purple)">
+              <span class="table-icon">🗂</span> shipment
+            </div>
+            <div class="note-row">
+              order_ref from order service — fetches shipping_address via API
+              once at dispatch
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">order_ref</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-ref">ref</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">seller_ref</span
+                ><span class="field-type">UUID NULL</span
+                ><span class="field-tag tag-ref">ref</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">carrier_id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-fk">FK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">tracking_number</span
+                ><span class="field-type">VARCHAR(255)</span
+                ><span class="field-tag tag-uq">UNIQUE</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">status</span
+                ><span class="field-type">VARCHAR(50)</span
+                ><span class="field-tag tag-chk">CHECK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">estimated_delivery</span
+                ><span class="field-type">DATE NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">shipped_at</span
+                ><span class="field-type">TIMESTAMPTZ NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">delivered_at</span
+                ><span class="field-type">TIMESTAMPTZ NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">metadata</span
+                ><span class="field-type">JSONB</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">created_at / updated_at</span
+                ><span class="field-type">TIMESTAMPTZ</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_shipment_order_ref</span>
+              <span class="idx-pill">idx_shipment_tracking</span>
+              <span class="idx-pill">idx_shipment_status</span>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--purple)">
+              <span class="table-icon">🗂</span> shipment_item
+            </div>
+            <div class="note-row">
+              Maps which order_items are in this physical box
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">shipment_id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-fk">FK CASCADE</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">order_item_ref</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-ref">ref</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">quantity</span
+                ><span class="field-type">INT >0</span
+                ><span class="field-tag tag-chk">CHECK</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_shipment_item_shipment</span>
+              <span class="idx-pill">UNIQUE(shipment_id, order_item_ref)</span>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--purple)">
+              <span class="table-icon">🗂</span> shipment_tracking
+            </div>
+            <div class="note-row">
+              Granular carrier scan events — append-only
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">shipment_id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-fk">FK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">event_code</span
+                ><span class="field-type">VARCHAR(100)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">description</span
+                ><span class="field-type">TEXT</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">location</span
+                ><span class="field-type">VARCHAR(255) NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">occurred_at</span
+                ><span class="field-type">TIMESTAMPTZ</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_tracking_shipment</span>
+              <span class="idx-pill">idx_tracking_occurred_at</span>
+              <span
+                class="idx-pill"
+                style="background: var(--red-dim); color: var(--red)"
+                >append-only</span
+              >
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--purple)">
+              <span class="table-icon">🗂</span> carrier
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">name</span
+                ><span class="field-type">VARCHAR(100)</span
+                ><span class="field-tag tag-uq">UNIQUE</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">code</span
+                ><span class="field-type">VARCHAR(20)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">tracking_url_template</span
+                ><span class="field-type">VARCHAR(500)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">is_active</span
+                ><span class="field-type">BOOLEAN</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_carrier_code</span>
+            </div>
+          </div>
+
+          <div class="table-block">
+            <div class="table-name" style="color: var(--purple)">
+              <span class="table-icon">🗂</span> shipment_status_history
+            </div>
+            <div class="note-row">
+              Append-only audit trail — mirrors order service pattern
+            </div>
+            <div class="fields">
+              <div class="field">
+                <span class="field-icon">🔑</span
+                ><span class="field-name pk">id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-pk">PK</span>
+              </div>
+              <div class="field">
+                <span class="field-icon">🔗</span
+                ><span class="field-name fk">shipment_id</span
+                ><span class="field-type">UUID</span
+                ><span class="field-tag tag-fk">FK CASCADE</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">from_status</span
+                ><span class="field-type">VARCHAR(50) NULL</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">to_status</span
+                ><span class="field-type">VARCHAR(50)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">changed_by</span
+                ><span class="field-type">VARCHAR(100)</span>
+              </div>
+              <div class="field">
+                <span class="field-icon"></span
+                ><span class="field-name">changed_at</span
+                ><span class="field-type">TIMESTAMPTZ</span>
+              </div>
+            </div>
+            <div class="index-row">
+              <span class="idx-pill">idx_ssh_shipment_id</span>
+              <span
+                class="idx-pill"
+                style="background: var(--red-dim); color: var(--red)"
+                >append-only</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="tables">
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-prod)"><span class="icon">🗂</span> categories</div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">name / slug</span><span class="col-type">VARCHAR(150)</span><span class="col-flag">UNIQUE</span></div>
-          <div class="col-row"><span class="col-marker fk-marker">🔗</span><span class="col-name is-fk">parent_id</span><span class="col-type">UUID</span><span class="col-flag">self-FK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">description</span><span class="col-type">TEXT</span><span class="col-flag">NULL</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">is_active</span><span class="col-type">BOOLEAN</span><span class="col-flag"></span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_categories_parent</span><span class="idx-tag">idx_categories_slug</span></div>
-      </div>
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-prod)"><span class="icon">🗂</span> products</div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker fk-marker">🔗</span><span class="col-name is-fk">category_id</span><span class="col-type">UUID</span><span class="col-flag">FK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">name / slug</span><span class="col-type">VARCHAR(255)</span><span class="col-flag">UNIQUE</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">base_price</span><span class="col-type">NUMERIC(12,2)</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">currency</span><span class="col-type">VARCHAR(10)</span><span class="col-flag">USD</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">is_active</span><span class="col-type">BOOLEAN</span><span class="col-flag"></span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_products_category</span><span class="idx-tag">idx_products_slug</span></div>
-      </div>
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-prod)"><span class="icon">🗂</span> product_variants</div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker fk-marker">🔗</span><span class="col-name is-fk">product_id</span><span class="col-type">UUID</span><span class="col-flag">FK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">sku</span><span class="col-type">VARCHAR(100)</span><span class="col-flag">UNIQUE</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">name</span><span class="col-type">VARCHAR(150)</span><span class="col-flag">NULL</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">price</span><span class="col-type">NUMERIC(12,2)</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">stock_qty</span><span class="col-type">INT</span><span class="col-flag"></span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_variants_product</span><span class="idx-tag">idx_variants_sku</span></div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- CART SERVICE -->
-  <div class="service-block">
-    <div class="svc-header">
-      <div class="svc-dot" style="background:var(--c-cart)"></div>
-      Cart Service
-      <span class="svc-db-badge">PostgreSQL</span>
-    </div>
-    <div class="tables">
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-cart)"><span class="icon">🗂</span> carts</div>
-        <div class="enums-row">
-          <span class="enum-tag">status: active | merged | abandoned | converted</span>
-        </div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">user_id</span><span class="col-type">UUID</span><span class="col-flag">NULL</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">session_id</span><span class="col-type">VARCHAR(255)</span><span class="col-flag">NULL</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">status</span><span class="col-type">ENUM</span><span class="col-flag">active</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">expires_at</span><span class="col-type">TIMESTAMPTZ</span><span class="col-flag">NULL</span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_carts_user_id</span><span class="idx-tag">idx_carts_session_id</span></div>
-      </div>
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-cart)"><span class="icon">🗂</span> cart_items</div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker fk-marker">🔗</span><span class="col-name is-fk">cart_id</span><span class="col-type">UUID</span><span class="col-flag">FK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">product_id / variant_id</span><span class="col-type">UUID</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">product_name</span><span class="col-type">VARCHAR</span><span class="col-flag">snapshot</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">unit_price</span><span class="col-type">NUMERIC(12,2)</span><span class="col-flag">snapshot</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">quantity</span><span class="col-type">INT</span><span class="col-flag">&gt;0</span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_cart_items_cart</span><span class="idx-tag">UNIQUE(cart_id, variant_id)</span></div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ORDER SERVICE -->
-  <div class="service-block">
-    <div class="svc-header">
-      <div class="svc-dot" style="background:var(--c-order)"></div>
-      Order Service
-      <span class="svc-db-badge">PostgreSQL</span>
-    </div>
-    <div class="tables">
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-order)"><span class="icon">🗂</span> orders</div>
-        <div class="enums-row">
-          <span class="enum-tag">status: pending | confirmed | processing | shipped | delivered | cancelled | refunded</span>
-        </div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">user_id</span><span class="col-type">UUID</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">order_number</span><span class="col-type">VARCHAR(30)</span><span class="col-flag">UNIQUE</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">status</span><span class="col-type">order_status</span><span class="col-flag">ENUM</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">subtotal / tax / shipping</span><span class="col-type">NUMERIC(12,2)</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">total_amount</span><span class="col-type">NUMERIC(12,2)</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">currency</span><span class="col-type">VARCHAR(10)</span><span class="col-flag">USD</span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_orders_user_id</span><span class="idx-tag">idx_orders_status</span><span class="idx-tag">idx_orders_order_number</span></div>
-      </div>
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-order)"><span class="icon">🗂</span> order_items</div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker fk-marker">🔗</span><span class="col-name is-fk">order_id</span><span class="col-type">UUID</span><span class="col-flag">FK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">product_id / variant_id</span><span class="col-type">UUID</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">sku / product_name</span><span class="col-type">VARCHAR</span><span class="col-flag">snapshot</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">unit_price / quantity</span><span class="col-type">NUMERIC / INT</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">line_total</span><span class="col-type">NUMERIC(12,2)</span><span class="col-flag"></span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_order_items_order</span></div>
-      </div>
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-order)"><span class="icon">🗂</span> order_status_history</div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker fk-marker">🔗</span><span class="col-name is-fk">order_id</span><span class="col-type">UUID</span><span class="col-flag">FK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">from_status → to_status</span><span class="col-type">ENUM</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">changed_by / note</span><span class="col-type">VARCHAR / TEXT</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">changed_at</span><span class="col-type">TIMESTAMPTZ</span><span class="col-flag"></span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_status_history_order</span></div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- PAYMENT SERVICE -->
-  <div class="service-block">
-    <div class="svc-header">
-      <div class="svc-dot" style="background:var(--c-pay)"></div>
-      Payment Service
-      <span class="svc-db-badge">PostgreSQL</span>
-    </div>
-    <div class="tables">
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-pay)"><span class="icon">🗂</span> payments</div>
-        <div class="enums-row">
-          <span class="enum-tag">status: pending | processing | completed | failed | refunded</span>
-          <span class="enum-tag">method: credit_card | upi | wallet | cod | bank_transfer</span>
-        </div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">order_id / user_id</span><span class="col-type">UUID</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">amount / currency</span><span class="col-type">NUMERIC / VARCHAR</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">status / method</span><span class="col-type">ENUM</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">gateway</span><span class="col-type">VARCHAR(50)</span><span class="col-flag">stripe/razorpay</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">gateway_txn_id</span><span class="col-type">VARCHAR(255)</span><span class="col-flag">NULL</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">gateway_response</span><span class="col-type">JSONB</span><span class="col-flag">raw payload</span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_payments_order_id</span><span class="idx-tag">idx_payments_status</span><span class="idx-tag">idx_payments_gateway_txn</span></div>
-      </div>
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-pay)"><span class="icon">🗂</span> refunds</div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker fk-marker">🔗</span><span class="col-name is-fk">payment_id</span><span class="col-type">UUID</span><span class="col-flag">FK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">order_id / amount</span><span class="col-type">UUID / NUMERIC</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">status</span><span class="col-type">refund_status</span><span class="col-flag">ENUM</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">gateway_refund_id</span><span class="col-type">VARCHAR(255)</span><span class="col-flag">NULL</span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_refunds_payment</span><span class="idx-tag">idx_refunds_order</span></div>
-      </div>
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-pay)"><span class="icon">🗂</span> saved_payment_methods</div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">user_id</span><span class="col-type">UUID</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">gateway_token</span><span class="col-type">VARCHAR(255)</span><span class="col-flag">tokenized</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">last4 / brand</span><span class="col-type">VARCHAR</span><span class="col-flag">display</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">is_default</span><span class="col-type">BOOLEAN</span><span class="col-flag"></span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_saved_pm_user</span></div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- SHIPPING SERVICE -->
-  <div class="service-block">
-    <div class="svc-header">
-      <div class="svc-dot" style="background:var(--c-ship)"></div>
-      Shipping Service
-      <span class="svc-db-badge">PostgreSQL</span>
-    </div>
-    <div class="tables">
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-ship)"><span class="icon">🗂</span> shipments</div>
-        <div class="enums-row">
-          <span class="enum-tag">status: pending | label_created | picked_up | in_transit | out_for_delivery | delivered | returned</span>
-        </div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">order_id</span><span class="col-type">UUID</span><span class="col-flag">UNIQUE</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">user_id</span><span class="col-type">UUID</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">status</span><span class="col-type">shipment_status</span><span class="col-flag">ENUM</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">carrier</span><span class="col-type">VARCHAR(100)</span><span class="col-flag">FedEx/DHL</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">tracking_number</span><span class="col-type">VARCHAR(100)</span><span class="col-flag">NULL</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">estimated_delivery</span><span class="col-type">DATE</span><span class="col-flag">NULL</span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_shipments_order_id</span><span class="idx-tag">idx_shipments_tracking_number</span></div>
-      </div>
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-ship)"><span class="icon">🗂</span> tracking_events</div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker fk-marker">🔗</span><span class="col-name is-fk">shipment_id</span><span class="col-type">UUID</span><span class="col-flag">FK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">status</span><span class="col-type">shipment_status</span><span class="col-flag">ENUM</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">location</span><span class="col-type">VARCHAR(255)</span><span class="col-flag">NULL</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">description</span><span class="col-type">TEXT</span><span class="col-flag">NULL</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">occurred_at</span><span class="col-type">TIMESTAMPTZ</span><span class="col-flag"></span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_tracking_events_shipment</span><span class="idx-tag">idx_tracking_events_time</span></div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- NOTIFICATION SERVICE -->
-  <div class="service-block">
-    <div class="svc-header">
-      <div class="svc-dot" style="background:var(--c-notif)"></div>
-      Notification Service
-      <span class="svc-db-badge">PostgreSQL</span>
-    </div>
-    <div class="tables">
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-notif)"><span class="icon">🗂</span> notifications</div>
-        <div class="enums-row">
-          <span class="enum-tag">channel: email | sms | push | in_app</span>
-          <span class="enum-tag">status: queued | sent | delivered | failed | read</span>
-        </div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">user_id</span><span class="col-type">UUID</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">channel / status</span><span class="col-type">ENUM</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">event_type</span><span class="col-type">VARCHAR(100)</span><span class="col-flag">order.placed</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">subject / body</span><span class="col-type">VARCHAR / TEXT</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">metadata</span><span class="col-type">JSONB</span><span class="col-flag">NULL</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">sent_at / read_at</span><span class="col-type">TIMESTAMPTZ</span><span class="col-flag">NULL</span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_notifications_user_id</span><span class="idx-tag">idx_notifications_status</span><span class="idx-tag">idx_notifications_event_type</span></div>
-      </div>
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-notif)"><span class="icon">🗂</span> notification_templates</div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">event_type</span><span class="col-type">VARCHAR(100)</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">channel</span><span class="col-type">ENUM</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">body_template</span><span class="col-type">TEXT</span><span class="col-flag">Handlebars</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">is_active</span><span class="col-type">BOOLEAN</span><span class="col-flag"></span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">UNIQUE(event_type, channel)</span></div>
-      </div>
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:var(--c-notif)"><span class="icon">🗂</span> push_tokens</div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">user_id</span><span class="col-type">UUID</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">token</span><span class="col-type">VARCHAR(500)</span><span class="col-flag">UNIQUE</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">platform</span><span class="col-type">VARCHAR(20)</span><span class="col-flag">ios/android/web</span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_push_tokens_user</span></div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ANALYTICS SERVICE -->
-  <div class="service-block">
-    <div class="svc-header">
-      <div class="svc-dot" style="background:#a78bfa"></div>
-      Analytics Service
-      <span class="svc-db-badge">PostgreSQL (partitioned)</span>
-    </div>
-    <div class="tables">
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:#a78bfa"><span class="icon">🗂</span> events <span style="font-size:0.6rem;color:var(--muted);font-weight:400">PARTITION BY RANGE(occurred_at)</span></div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">event_type</span><span class="col-type">VARCHAR(100)</span><span class="col-flag">page_view…</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">user_id</span><span class="col-type">UUID</span><span class="col-flag">NULL anon</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">session_id</span><span class="col-type">VARCHAR(255)</span><span class="col-flag">NULL</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">properties</span><span class="col-type">JSONB</span><span class="col-flag">flexible</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">ip_address / user_agent</span><span class="col-type">VARCHAR / TEXT</span><span class="col-flag">NULL</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">occurred_at</span><span class="col-type">TIMESTAMPTZ</span><span class="col-flag">partition key</span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_events_type</span><span class="idx-tag">idx_events_user_id</span><span class="idx-tag">idx_events_occurred</span></div>
-      </div>
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:#a78bfa"><span class="icon">🗂</span> product_metrics <span style="font-size:0.6rem;color:var(--muted);font-weight:400">daily rollup</span></div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">product_id</span><span class="col-type">UUID</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">metric_date</span><span class="col-type">DATE</span><span class="col-flag">UNIQUE w/ product</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">views / add_to_carts</span><span class="col-type">INT</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">purchases / revenue</span><span class="col-type">INT / NUMERIC</span><span class="col-flag"></span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">UNIQUE(product_id, metric_date)</span></div>
-      </div>
-
-      <div class="tbl">
-        <div class="tbl-name" style="color:#a78bfa"><span class="icon">🗂</span> user_metrics <span style="font-size:0.6rem;color:var(--muted);font-weight:400">daily rollup</span></div>
-        <div class="col-list">
-          <div class="col-row"><span class="col-marker pk-marker">🔑</span><span class="col-name is-pk">id</span><span class="col-type">UUID</span><span class="col-flag">PK</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">metric_date</span><span class="col-type">DATE</span><span class="col-flag">UNIQUE</span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">new_signups / active_users</span><span class="col-type">INT</span><span class="col-flag"></span></div>
-          <div class="col-row"><span class="col-marker"></span><span class="col-name">total_orders / total_revenue</span><span class="col-type">INT / NUMERIC</span><span class="col-flag"></span></div>
-        </div>
-        <div class="indexes"><span class="idx-tag">idx_user_metrics_date</span></div>
-      </div>
-
-    </div>
-  </div>
-
-</div>
-
-</body>
+  </body>
 </html>
