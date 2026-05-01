@@ -1,0 +1,87 @@
+version: "3.8"
+  # product_db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: product_db
+  #   ports:
+  #     - "5433:5432"
+  #   volumes:
+  #     - product_db_data:/var/lib/postgresql/data
+
+  # order_db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: order_db
+  #   ports:
+  #     - "5434:5432"
+  #   volumes:
+  #     - order_db_data:/var/lib/postgresql/data
+
+  # payment_db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     POSTGRES_DB: payment_db
+  #   ports:
+  #     - "5435:5432"
+  #   volumes:
+  #     - payment_db_data:/var/lib/postgresql/data
+
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+
+  # Services (build from Dockerfiles)
+services:
+  user_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: user_db
+    ports:
+      - "5440:5432"
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d user_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build:
+      context: .
+      dockerfile: services/user-service/Dockerfile
+    ports:
+      - "50051:50051"
+    environment:
+      DB_URL: postgres://postgres:postgres@user_db:5432/user_db?sslmode=disable
+      PASETO_SECRET: ${PASETO_SECRET}   # ✅ fixed
+      PORT: 50051
+    depends_on:
+      user_db:
+        condition: service_healthy
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      user_db:
+        condition: service_healthy
+
+volumes:
+  user_db_data:
+  # product_db_data:
+  # order_db_data:
+  # payment_db_data:
