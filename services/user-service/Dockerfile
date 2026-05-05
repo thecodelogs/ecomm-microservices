@@ -19,6 +19,7 @@ COPY services/user-service .
 
 # Build
 RUN CGO_ENABLED=0 GOOS=linux go build -o user-service main.go
+RUN go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
 
 # Final stage
 FROM alpine:latest
@@ -27,5 +28,6 @@ WORKDIR /root/
 RUN apk --no-cache add ca-certificates
 
 COPY --from=builder /app/services/user-service/user-service .
+COPY --from=builder /go/bin/grpcurl /usr/local/bin/
 
 CMD ["./user-service"]

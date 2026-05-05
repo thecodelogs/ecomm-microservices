@@ -1,0 +1,112 @@
+package middleware
+
+import (
+	"context"
+	"errors"
+	"net/http"
+	"strings"
+	"time"
+
+	userpb "github.com/manojnegi/ecomm-microservices/gen/go/user/v1"
+
+	"github.com/gin-gonic/gin"
+	"github.com/o1egl/paseto"
+)
+
+// PASETO claims (must match user-service)
+type AccessTokenClaims struct {
+	Subject   string    `json:"sub"`
+	Role      string    `json:"role"`
+	IssuedAt  time.Time `json:"iat"`
+	ExpiresAt time.Time `json:"exp"`
+}
+
+type AuthMiddleware struct {
+	pasetoV2     *paseto.V2
+	symmetricKey []byte
+	userClient   userpb.UserServiceClient
+}
+
+func NewAuthMiddleware(secret string, userClient userpb.UserServiceClient) *AuthMiddleware {
+	key := make([]byte, 32)
+	copy(key, []byte(secret))
+
+	return &AuthMiddleware{
+		pasetoV2:     paseto.NewV2(),
+		symmetricKey: key,
+		userClient:   userClient,
+	}
+}
+
+// Gin middleware that validates PASETO token
+func (a *AuthMiddleware) RequireAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
+			return
+		}
+
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+		if token == authHeader {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization format"})
+			return
+		}
+
+		// Validate locally first (fast path)
+		claims, err := a.validateToken(token)
+		if err != nil {
+			// Fallback: validate via gRPC (if key rotation or other issues)
+			claims, err = a.validateViaGRPC(c.Request.Context(), token)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+				return
+			}
+		}
+
+		// Set user info in context
+		c.Set("userID", claims.Subject)
+		c.Set("role", claims.Role)
+		c.Set("token", token)
+
+		c.Next()
+	}
+}
+
+func (a *AuthMiddleware) validateToken(token string) (*AccessTokenClaims, error) {
+	var claims AccessTokenClaims
+	err := a.pasetoV2.Decrypt(token, a.symmetricKey, &claims, nil)
+	if err != nil {
+		return nil, errors.New("invalid token")
+	}
+
+	if time.Now().UTC().After(claims.ExpiresAt) {
+		return nil, errors.New("token expired")
+	}
+
+	return &claims, nil
+}
+
+func (a *AuthMiddleware) validateViaGRPC(ctx context.Context, token string) (*AccessTokenClaims, error) {
+	resp, err := a.userClient.ValidateToken(ctx, &userpb.ValidateTokenRequest{Token: token})
+	if err != nil || !resp.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return &AccessTokenClaims{
+		Subject: resp.UserId,
+		Role:    resp.Role,
+	}, nil
+}
+
+// Extract user ID from context (call after RequireAuth)
+func GetUserID(c *gin.Context) string {
+	userID, _ := c.Get("userID")
+	return userID.(string)
+}
+
+// Extract role from context
+func GetRole(c *gin.Context) string {
+	role, _ := c.Get("role")
+	return role.(string)
+}

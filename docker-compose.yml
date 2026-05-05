@@ -1,4 +1,23 @@
 version: "3.8"
+
+services:
+  # ── Databases ──
+  user_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: user_db
+    ports:
+      - "5440:5432"
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d user_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   # product_db:
   #   image: postgres:16-alpine
   #   environment:
@@ -37,24 +56,7 @@ version: "3.8"
   #   ports:
   #     - "6379:6379"
 
-  # Services (build from Dockerfiles)
-services:
-  user_db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: user_db
-    ports:
-      - "5440:5432"
-    volumes:
-      - user_db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d user_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
+  # ── Microservices ──
   user-service:
     build:
       context: .
@@ -63,12 +65,81 @@ services:
       - "50051:50051"
     environment:
       DB_URL: postgres://postgres:postgres@user_db:5432/user_db?sslmode=disable
-      PASETO_SECRET: ${PASETO_SECRET}   # ✅ fixed
+      PASETO_SECRET: ${PASETO_SECRET}
       PORT: 50051
     depends_on:
       user_db:
         condition: service_healthy
 
+  # product-service:
+  #   build:
+  #     context: .
+  #     dockerfile: services/product-service/Dockerfile
+  #   ports:
+  #     - "50052:50052"
+  #   environment:
+  #     DB_URL: postgres://postgres:postgres@product_db:5432/product_db?sslmode=disable
+  #     PORT: 50052
+  #   depends_on:
+  #     product_db:
+  #       condition: service_healthy
+
+  # order-service:
+  #   build:
+  #     context: .
+  #     dockerfile: services/order-service/Dockerfile
+  #   ports:
+  #     - "50053:50053"
+  #   environment:
+  #     DB_URL: postgres://postgres:postgres@order_db:5432/order_db?sslmode=disable
+  #     USER_SERVICE_URL: user-service:50051
+  #     PRODUCT_SERVICE_URL: product-service:50052
+  #     PAYMENT_SERVICE_URL: payment-service:50054
+  #     PORT: 50053
+  #   depends_on:
+  #     order_db:
+  #       condition: service_healthy
+  #     user-service:
+  #       condition: service_healthy
+  #     product-service:
+  #       condition: service_healthy
+
+  # payment-service:
+  #   build:
+  #     context: .
+  #     dockerfile: services/payment-service/Dockerfile
+  #   ports:
+  #     - "50054:50054"
+  #   environment:
+  #     DB_URL: postgres://postgres:postgres@payment_db:5432/payment_db?sslmode=disable
+  #     PORT: 50054
+  #   depends_on:
+  #     payment_db:
+  #       condition: service_healthy
+
+  # ── API Gateway (Public Entry Point) ──
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      USER_SERVICE_URL: user-service:50051
+      PASETO_SECRET: ${PASETO_SECRET}
+      ENV: ${ENV:-development}
+    depends_on:
+      user-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Tools ──
   pgadmin:
     image: dpage/pgadmin4
     environment:
