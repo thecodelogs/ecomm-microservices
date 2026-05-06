@@ -43,7 +43,8 @@ message User {
     string avatar_url = 6;
     string status = 7;
     bool is_email_verified = 8;
-    int64 created_at = 9;
+    string role = 9;
+    int64 created_at = 10;
 }
 
 message AdminLoginRequest{

@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Setup(userClient *client.UserClient, authMiddleware *middleware.AuthMiddleware) *gin.Engine {
+func Setup(userClient *client.UserClient, productClient *client.ProductClient, authMiddleware *middleware.AuthMiddleware) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(middleware.CORS())
@@ -78,7 +78,7 @@ func Setup(userClient *client.UserClient, authMiddleware *middleware.AuthMiddlew
 
 	// ── Admin Routes (admin only) ──
 	adminHandler := handler.NewAdminHandler(userClient.Admin)
-	// productHandler := handler.NewProductHandler(userClient.Admin)
+	productHandler := handler.NewProductHandler(productClient.Product)
 	admin := r.Group("/api/admin")
 	admin.Use(authMiddleware.RequireAuth(), middleware.AdminOnly())
 	{
@@ -86,7 +86,7 @@ func Setup(userClient *client.UserClient, authMiddleware *middleware.AuthMiddlew
 		admin.GET("/users/:id", adminHandler.GetUser)
 		admin.PUT("/users/:id/status", adminHandler.UpdateUserStatus)
 		admin.DELETE("/users/:id", adminHandler.DeleteUser)
-		// admin.GET("/products", productHandler.ListProducts)
+		admin.GET("/products", productHandler.ListProducts)
 	}
 
 	return r

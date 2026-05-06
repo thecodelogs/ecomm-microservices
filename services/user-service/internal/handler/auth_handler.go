@@ -149,6 +149,7 @@ func toProtoUser(u *models.User) *userpb.User {
 	return &userpb.User{
 		Id:              u.ID.String(),
 		Email:           u.Email,
+		Role:            u.Role,
 		FirstName:       u.FirstName,
 		LastName:        u.LastName,
 		Phone:           u.Phone.String,

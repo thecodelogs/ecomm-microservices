@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/o1egl/paseto"
+	"google.golang.org/grpc/metadata"
 )
 
 // PASETO claims (must match user-service)
@@ -68,6 +69,11 @@ func (a *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 		c.Set("userID", claims.Subject)
 		c.Set("role", claims.Role)
 		c.Set("token", token)
+
+		// Inject token into gRPC outgoing context
+		md := metadata.Pairs("authorization", "Bearer "+token)
+		newCtx := metadata.NewOutgoingContext(c.Request.Context(), md)
+		c.Request = c.Request.WithContext(newCtx)
 
 		c.Next()
 	}

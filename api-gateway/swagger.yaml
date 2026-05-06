@@ -32,6 +32,8 @@ components:
           type: string
         is_email_verified:
           type: boolean
+        role:
+          type: string  
         created_at:
           type: integer
           format: int64
@@ -75,6 +77,40 @@ components:
       properties:
         message:
           type: string
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        category_id:
+          type: string
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        brand:
+          type: string
+        status:
+          type: string
+        vendor_id:
+          type: string
+        avg_rating:
+          type: number
+          format: double
+        review_count:
+          type: integer
+        price:
+          type: number
+          format: double
+        stock:
+          type: integer
+        image_url:
+          type: string
+        created_at:
+          type: integer
+          format: int64
 
 paths:
   /health:
@@ -605,5 +641,46 @@ paths:
                 $ref: '#/components/schemas/User'
         '400':
           description: Bad request
+        '500':
+          description: Internal server error
+
+  /admin/products:
+    get:
+      tags:
+        - Admin
+      summary: List all products
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: category_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
         '500':
           description: Internal server error

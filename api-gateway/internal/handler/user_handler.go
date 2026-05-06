@@ -28,7 +28,7 @@ func NewUserHandler(userClient userpb.UserServiceClient, addrClient userpb.Addre
 func (h *UserHandler) GetProfile(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
 	resp, err := h.userClient.GetProfile(ctx, &userpb.GetProfileRequest{UserId: userID})
@@ -51,7 +51,7 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	}
 	req.UserId = userID
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
 	resp, err := h.userClient.UpdateProfile(ctx, &req)
@@ -69,7 +69,7 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 func (h *UserHandler) ListAddresses(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
 	resp, err := h.addrClient.ListAddresses(ctx, &userpb.ListAddressesRequest{UserId: userID})
@@ -92,7 +92,7 @@ func (h *UserHandler) CreateAddress(c *gin.Context) {
 	}
 	req.UserId = userID
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
 	resp, err := h.addrClient.CreateAddress(ctx, &req)
@@ -108,7 +108,7 @@ func (h *UserHandler) CreateAddress(c *gin.Context) {
 func (h *UserHandler) GetAddress(c *gin.Context) {
 	addressID := c.Param("id")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
 	resp, err := h.addrClient.GetAddress(ctx, &userpb.GetAddressRequest{AddressId: addressID})
@@ -125,7 +125,7 @@ func (h *UserHandler) SetDefaultAddress(c *gin.Context) {
 	userID := middleware.GetUserID(c)
 	addressID := c.Param("id")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
 	_, err := h.addrClient.SetDefaultAddress(ctx, &userpb.SetDefaultAddressRequest{
@@ -144,7 +144,7 @@ func (h *UserHandler) SetDefaultAddress(c *gin.Context) {
 func (h *UserHandler) DeleteAddress(c *gin.Context) {
 	addressID := c.Param("id")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
 	_, err := h.addrClient.DeleteAddress(ctx, &userpb.DeleteAddressRequest{AddressId: addressID})

@@ -8,20 +8,22 @@ import (
 )
 
 type Config struct {
-	Port           string
-	UserServiceURL string
-	JWTSecret      string
-	Environment    string
+	Port              string
+	UserServiceURL    string
+	ProductServiceURL string
+	JWTSecret         string
+	Environment       string
 }
 
 func Load() *Config {
 	_ = godotenv.Load(".env")
 
 	cfg := &Config{
-		Port:           getEnv("PORT", "8080"),
-		UserServiceURL: getEnv("USER_SERVICE_URL", "localhost:50051"),
-		JWTSecret:      getEnv("PASETO_SECRET", "change-this-to-32-characters!!"),
-		Environment:    getEnv("ENV", "development"),
+		Port:              getEnv("PORT", "8080"),
+		UserServiceURL:    getEnv("USER_SERVICE_URL", "localhost:50051"),
+		ProductServiceURL: getEnv("PRODUCT_SERVICE_URL", "localhost:50052"),
+		JWTSecret:         getEnv("PASETO_SECRET", "change-this-to-32-characters!!"),
+		Environment:       getEnv("ENV", "development"),
 	}
 
 	if len(cfg.JWTSecret) < 32 {

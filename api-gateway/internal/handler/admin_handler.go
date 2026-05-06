@@ -7,7 +7,6 @@ import (
 	"time"
 
 	userpb "github.com/manojnegi/ecomm-microservices/gen/go/user/v1"
-	"google.golang.org/grpc/metadata"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,7 +26,7 @@ func NewAdminHandler(adminClient userpb.UserServiceClient) *AdminHandler {
 // 	status := c.Query("status")
 // 	search := c.Query("search")
 
-// 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+// 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 // 	defer cancel()
 
 // 	resp, err := h.adminClient.ListUsers(ctx, &userpb.ListUsersRequest{
@@ -50,19 +49,9 @@ func (h *AdminHandler) ListUsers(c *gin.Context) {
 	status := c.Query("status")
 	search := c.Query("search")
 
-	// 1. Extract the Authorization header from the incoming HTTP request
-	authHeader := c.GetHeader("Authorization")
-
-	// 2. Create a context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	// 3. Inject the token into gRPC Metadata
-	// The key must be lowercase "authorization" for most gRPC interceptors
-	md := metadata.Pairs("authorization", authHeader)
-	ctx = metadata.NewOutgoingContext(ctx, md)
-
-	// 4. Call the client with the ENRICHED context
 	resp, err := h.adminClient.ListUsers(ctx, &userpb.ListUsersRequest{
 		Page:     int32(page),
 		PageSize: int32(pageSize),
@@ -82,7 +71,7 @@ func (h *AdminHandler) ListUsers(c *gin.Context) {
 func (h *AdminHandler) GetUser(c *gin.Context) {
 	userID := c.Param("id")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
 	resp, err := h.adminClient.GetUser(ctx, &userpb.GetUserRequest{UserId: userID})
@@ -106,7 +95,7 @@ func (h *AdminHandler) UpdateUserStatus(c *gin.Context) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
 	resp, err := h.adminClient.UpdateUserStatus(ctx, &userpb.UpdateUserStatusRequest{
@@ -125,7 +114,7 @@ func (h *AdminHandler) UpdateUserStatus(c *gin.Context) {
 func (h *AdminHandler) DeleteUser(c *gin.Context) {
 	userID := c.Param("id")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
 	_, err := h.adminClient.DeleteUser(ctx, &userpb.DeleteUserRequest{UserId: userID})

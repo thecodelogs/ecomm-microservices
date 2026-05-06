@@ -117,7 +117,7 @@ func (s *AuthService) Login(ctx context.Context, email, password, clientIP strin
 	_ = s.userRepo.UpdateLastLogin(ctx, user.ID)
 
 	// Generate tokens
-	tokens, err := s.generateTokenPair(ctx, user.ID, clientIP)
+	tokens, err := s.generateTokenPair(ctx, user.ID, user.Role, clientIP)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -181,8 +181,14 @@ func (s *AuthService) RefreshToken(ctx context.Context, rawRefreshToken, clientI
 		return nil, errors.New("token expired")
 	}
 
+	// Fetch user to get current role
+	user, err := s.userRepo.GetByID(ctx, dbToken.UserID)
+	if err != nil {
+		return nil, errors.New("user not found")
+	}
+
 	// Generate new pair
-	return s.generateTokenPair(ctx, dbToken.UserID, clientIP)
+	return s.generateTokenPair(ctx, dbToken.UserID, user.Role, clientIP)
 }
 
 func (s *AuthService) Logout(ctx context.Context, rawRefreshToken string) error {
@@ -191,14 +197,14 @@ func (s *AuthService) Logout(ctx context.Context, rawRefreshToken string) error 
 
 // ── Private: Generate Token Pair ──
 
-func (s *AuthService) generateTokenPair(ctx context.Context, userID uuid.UUID, clientIP string) (*TokenPair, error) {
+func (s *AuthService) generateTokenPair(ctx context.Context, userID uuid.UUID, role, clientIP string) (*TokenPair, error) {
 	now := time.Now().UTC()
 
 	// ── Access Token: 15 minutes ──
 	accessExpiry := now.Add(15 * time.Minute)
 	accessClaims := AccessTokenClaims{
 		Subject:   userID.String(),
-		Role:      "customer",
+		Role:      role,
 		IssuedAt:  now,
 		ExpiresAt: accessExpiry,
 	}

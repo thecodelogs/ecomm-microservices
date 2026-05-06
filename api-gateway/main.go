@@ -22,11 +22,18 @@ func main() {
 	}
 	defer userClient.Close()
 
+	// Connect to product-service
+	productClient, err := client.NewProductClient(cfg.ProductServiceURL)
+	if err != nil {
+		log.Fatalf("failed to connect to product-service: %v", err)
+	}
+	defer productClient.Close()
+
 	// Setup middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret, userClient.User)
 
 	// Setup router
-	r := router.Setup(userClient, authMiddleware)
+	r := router.Setup(userClient, productClient, authMiddleware)
 
 	// Start server
 	log.Printf("API Gateway running on :%s", cfg.Port)
