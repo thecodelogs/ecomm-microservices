@@ -59,18 +59,24 @@ func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, 
 
 func (r *UserRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	query := `
-        SELECT id, email, password_hash, first_name, last_name, phone, avatar_url,
-               status, is_email_verified, email_verified_at, last_login_at,
-               failed_login_count, locked_until, created_at, updated_at, deleted_at
-        FROM users WHERE id = $1 AND deleted_at IS NULL
-    `
+			SELECT u.id, u.email, u.password_hash, u.first_name, u.last_name, u.phone, u.avatar_url,
+				   u.status, u.is_email_verified, u.email_verified_at, u.last_login_at,
+				   u.failed_login_count, u.locked_until, u.created_at, u.updated_at, u.deleted_at,
+				   COALESCE(r.name, 'customer') as role_name
+			FROM users u
+			LEFT JOIN user_roles ur ON u.id = ur.user_id
+			LEFT JOIN roles r ON ur.role_id = r.id
+			WHERE u.id = $1 AND u.deleted_at IS NULL
+		`
 	row := r.db.QueryRow(ctx, query, id)
 
 	var u models.User
+	// Note: You will need to add a 'Role' field to your models.User struct
 	err := row.Scan(
 		&u.ID, &u.Email, &u.PasswordHash, &u.FirstName, &u.LastName, &u.Phone, &u.AvatarURL,
 		&u.Status, &u.IsEmailVerified, &u.EmailVerifiedAt, &u.LastLoginAt,
 		&u.FailedLoginCount, &u.LockedUntil, &u.CreatedAt, &u.UpdatedAt, &u.DeletedAt,
+		&u.Role,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

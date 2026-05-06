@@ -2,3 +2,4 @@ gen/
 buf-remote/
 docs.md
 /services/payment-service/target
+/services/user-service/.env

@@ -21,6 +21,34 @@ func Setup(userClient *client.UserClient, authMiddleware *middleware.AuthMiddlew
 	r.GET("/health", health.Check)
 	r.GET("/ready", health.Ready)
 
+	// Swagger Documentation
+	r.StaticFile("/swagger.yaml", "./swagger.yaml")
+	r.GET("/swagger", func(c *gin.Context) {
+		c.Data(200, "text/html; charset=utf-8", []byte(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>API Documentation</title>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css" >
+</head>
+<body>
+    <div id="swagger-ui"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-standalone-preset.min.js"></script>
+    <script>
+        window.onload = function() {
+            window.ui = SwaggerUIBundle({
+                url: "/swagger.yaml",
+                dom_id: '#swagger-ui',
+                presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+                layout: "BaseLayout"
+            });
+        }
+    </script>
+</body>
+</html>`))
+	})
+
 	// ── Public Auth Routes ──
 	authHandler := handler.NewAuthHandler(userClient.Auth)
 	auth := r.Group("/api/auth")
@@ -50,6 +78,7 @@ func Setup(userClient *client.UserClient, authMiddleware *middleware.AuthMiddlew
 
 	// ── Admin Routes (admin only) ──
 	adminHandler := handler.NewAdminHandler(userClient.Admin)
+	// productHandler := handler.NewProductHandler(userClient.Admin)
 	admin := r.Group("/api/admin")
 	admin.Use(authMiddleware.RequireAuth(), middleware.AdminOnly())
 	{
@@ -57,6 +86,7 @@ func Setup(userClient *client.UserClient, authMiddleware *middleware.AuthMiddlew
 		admin.GET("/users/:id", adminHandler.GetUser)
 		admin.PUT("/users/:id/status", adminHandler.UpdateUserStatus)
 		admin.DELETE("/users/:id", adminHandler.DeleteUser)
+		// admin.GET("/products", productHandler.ListProducts)
 	}
 
 	return r

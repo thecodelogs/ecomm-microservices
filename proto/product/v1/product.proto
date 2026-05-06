@@ -5,10 +5,11 @@ package product;
 option go_package = "github.com/manojnegi/ecomm-microservices/gen/go/product/v1;productpb";
 
 service ProductService {
-    rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
-    rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse);
-    rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
-    rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+    // rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
+    // rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse);
+    // rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
+    // rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+    rpc ListProducts(ListProductsRequest) returns (ProductListResponse);
 }
 
 service CategoryService {
@@ -16,6 +17,10 @@ service CategoryService {
     rpc UpdateCategory(UpdateCategoryRequest) returns (UpdateCategoryResponse);
     rpc DeleteCategory(DeleteCategoryRequest) returns (DeleteCategoryResponse);
     rpc GetCategory(GetCategoryRequest) returns (GetCategoryResponse);
+}
+
+service InventoryService {
+    rpc GetInventory(GetInventoryRequest) returns (GetInventoryResponse);
 }
 
 message Category {
@@ -64,14 +69,35 @@ message DeleteCategoryResponse {
 }
 
 
+message ListProductsRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    string category_id = 3; // Add this field
+}
+
+// Ensure your response message name matches what the handler returns
+message ProductListResponse {
+    repeated Product products = 1;
+    int32 total = 2;
+    int32 page = 3;
+}
+
 message Product {
     string id = 1;
-    string name = 2;
-    string description = 3;
-    double price = 4;
-    int32 stock = 5;
-    string category = 6;
-    string image_url = 7;
+    string category_id = 2;
+    string slug = 3;
+    string name = 4;
+    string description = 5;
+    string brand = 6;
+    string status = 7;
+    string vendor_id = 8;
+    double avg_rating = 9;
+    int32 review_count = 10;
+    int64 created_at = 11;
+
+    double price = 12;
+    int32 stock = 13;
+    string image_url = 14;
 }
 
 message CreateProductRequest {
@@ -126,4 +152,19 @@ message GetProductRequest {
 
 message GetProductResponse {
     Product product = 1;
+}
+
+message GetInventoryRequest {
+    string variant_id = 1;
+}
+
+message Inventory {
+    string variant_id = 1;
+    int32 quantity_on_hand = 2;
+    int32 quantity_reserved = 3;
+    int32 quantity_available = 4;
+}
+
+message GetInventoryResponse {
+    Inventory inventory = 1;
 }
