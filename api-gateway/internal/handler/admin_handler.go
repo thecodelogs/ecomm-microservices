@@ -19,30 +19,6 @@ func NewAdminHandler(adminClient userpb.UserServiceClient) *AdminHandler {
 	return &AdminHandler{adminClient: adminClient}
 }
 
-// GET /api/admin/users — List all users (paginated, searchable)
-// func (h *AdminHandler) ListUsers(c *gin.Context) {
-// 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-// 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
-// 	status := c.Query("status")
-// 	search := c.Query("search")
-
-// 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
-// 	defer cancel()
-
-// 	resp, err := h.adminClient.ListUsers(ctx, &userpb.ListUsersRequest{
-// 		Page:     int32(page),
-// 		PageSize: int32(pageSize),
-// 		Status:   status,
-// 		Search:   search,
-// 	})
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		return
-// 	}
-
-// 	c.JSON(http.StatusOK, resp)
-// }
-
 func (h *AdminHandler) ListUsers(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))

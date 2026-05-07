@@ -21,16 +21,42 @@ func NewUserRepo(db *pgxpool.Pool) *UserRepo {
 	return &UserRepo{db: db}
 }
 
-func (r *UserRepo) Create(ctx context.Context, user *models.User) error {
+func (r *UserRepo) Create(ctx context.Context, user *models.User) (uuid.UUID, error) {
 	query := `
-        INSERT INTO users (id, email, password_hash, first_name, last_name, phone, status, is_email_verified, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        INSERT INTO users (
+            email,
+            password_hash,
+            first_name,
+            last_name,
+            phone,
+            status,
+            is_email_verified,
+            created_at,
+            updated_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING id
     `
-	_, err := r.db.Exec(ctx, query,
-		user.ID, user.Email, user.PasswordHash, user.FirstName, user.LastName,
-		user.Phone, user.Status, user.IsEmailVerified, user.CreatedAt, user.UpdatedAt,
-	)
-	return err
+
+	var id uuid.UUID
+
+	err := r.db.QueryRow(ctx, query,
+		user.Email,
+		user.PasswordHash,
+		user.FirstName,
+		user.LastName,
+		user.Phone,
+		user.Status,
+		user.IsEmailVerified,
+		user.CreatedAt,
+		user.UpdatedAt,
+	).Scan(&id)
+
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	return id, nil
 }
 
 func (r *UserRepo) GetByEmail(ctx context.Context, email string) (*models.User, error) {
@@ -124,8 +150,24 @@ func (r *UserRepo) IncrementFailedLogin(ctx context.Context, id uuid.UUID) error
 
 func (r *UserRepo) List(ctx context.Context, page, pageSize int32, status, search string) ([]models.User, int32, error) {
 	// Build query with filters
-	query := `SELECT id, email, first_name, last_name, phone, avatar_url, status, is_email_verified, created_at 
-	          FROM users WHERE deleted_at IS NULL`
+	query := `
+		SELECT 
+			u.id,
+			u.email,
+			u.first_name,
+			u.last_name,
+			u.phone,
+			u.avatar_url,
+			u.status,
+			u.is_email_verified,
+			u.created_at
+		FROM users u
+		INNER JOIN user_roles ur ON ur.user_id = u.id
+		INNER JOIN roles r ON r.id = ur.role_id
+		WHERE u.deleted_at IS NULL
+		AND r.name = 'customer'
+		`
+
 	args := []interface{}{}
 	argCount := 1
 

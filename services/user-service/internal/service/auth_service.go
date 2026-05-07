@@ -21,11 +21,12 @@ import (
 type AuthService struct {
 	userRepo     *repository.UserRepo
 	tokenRepo    *repository.TokenRepo
+	userRoleRepo *repository.UserRolesRepo
 	pasetoV2     *paseto.V2
 	symmetricKey []byte
 }
 
-func NewAuthService(userRepo *repository.UserRepo, tokenRepo *repository.TokenRepo, secret string) *AuthService {
+func NewAuthService(userRepo *repository.UserRepo, tokenRepo *repository.TokenRepo, userRoleRepo *repository.UserRolesRepo, secret string) *AuthService {
 	// PASETO requires 32-byte key for local (symmetric) mode
 	key := make([]byte, 32)
 	copy(key, []byte(secret))
@@ -33,6 +34,7 @@ func NewAuthService(userRepo *repository.UserRepo, tokenRepo *repository.TokenRe
 	return &AuthService{
 		userRepo:     userRepo,
 		tokenRepo:    tokenRepo,
+		userRoleRepo: userRoleRepo,
 		pasetoV2:     paseto.NewV2(),
 		symmetricKey: key,
 	}
@@ -84,7 +86,22 @@ func (s *AuthService) Register(ctx context.Context, email, password, firstName, 
 		UpdatedAt:       time.Now().UTC(),
 	}
 
-	if err := s.userRepo.Create(ctx, user); err != nil {
+	userID, err := s.userRepo.Create(ctx, user)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	roleID, err := s.userRepo.GetRoleIDByName(ctx, "customer")
+	if err != nil {
+		return nil, fmt.Errorf("failed to get role id: %w", err)
+	}
+
+	user_role := &models.UserRole{
+		UserID: userID,
+		RoleID: roleID,
+	}
+
+	if err := s.userRoleRepo.Create(ctx, user_role); err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 

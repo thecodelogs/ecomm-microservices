@@ -40,8 +40,9 @@ func main() {
 	userRepo := repository.NewUserRepo(pool)
 	addrRepo := repository.NewAddressRepo(pool)
 	tokenRepo := repository.NewTokenRepo(pool)
+	userRoleRepo := repository.NewUserRolesRepo(pool)
 
-	authSvc := service.NewAuthService(userRepo, tokenRepo, cfg.PASETO_SECRET)
+	authSvc := service.NewAuthService(userRepo, tokenRepo, userRoleRepo, cfg.PASETO_SECRET)
 	userSvc := service.NewUserService(userRepo)
 	addrSvc := service.NewAddressService(addrRepo)
 
