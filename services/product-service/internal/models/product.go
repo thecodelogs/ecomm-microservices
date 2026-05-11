@@ -28,14 +28,15 @@ type Product struct {
 	Description      string          `db:"description"       json:"description"`
 	ShortDescription sql.NullString  `db:"short_description" json:"short_description,omitempty"`
 	Brand            sql.NullString  `db:"brand"             json:"brand,omitempty"`
-	Tags             []string        `db:"tags"              json:"tags"`
-	Attributes       json.RawMessage `db:"attributes"        json:"attributes"`
+	Tags             []string        `db:"tags"              json:"tags,omitempty"`
+	Attributes       json.RawMessage `db:"attributes"        json:"attributes,omitempty"`
 	Status           string          `db:"status"            json:"status"`
-	VendorID         uuid.UUID       `db:"vendor_id"         json:"vendor_id"`
-	AvgRating        float32         `db:"avg_rating"        json:"avg_rating"`
-	ReviewCount      int             `db:"review_count"      json:"review_count"`
+	VendorID         uuid.UUID       `db:"vendor_id"         json:"vendor_id,omitempty"`
+	AvgRating        float32         `db:"avg_rating"        json:"avg_rating,omitempty"`
+	ReviewCount      int             `db:"review_count"      json:"review_count,omitempty"`
 	CreatedAt        time.Time       `db:"created_at"        json:"created_at"`
 	UpdatedAt        time.Time       `db:"updated_at"        json:"updated_at"`
+	ImageUrl         []string        `db:"image_url"          json:"image_url,omitempty"`
 }
 
 type ProductImage struct {

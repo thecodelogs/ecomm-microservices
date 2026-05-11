@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 
+	// categorypb "github.com/manojnegi/ecomm-microservices/gen/go/category/v1"
 	productpb "github.com/manojnegi/ecomm-microservices/gen/go/product/v1"
 
 	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/service"
@@ -48,9 +49,11 @@ func main() {
 	prodSvc := service.NewProductService(prodRepo, varRepo, catRepo)
 	invSvc := service.NewInventoryService(invRepo)
 	revSvc := service.NewReviewService(revRepo, prodRepo)
+	catSvc := service.NewCategoryService(prodRepo, varRepo, catRepo)
 
 	// Handler layer
 	prodHandler := handler.NewProductHandler(prodSvc, invSvc, revSvc)
+	catHandler := handler.NewCategoryHandler(catSvc)
 
 	// gRPC server
 	lis, err := net.Listen("tcp", ":"+cfg.Port)
@@ -60,7 +63,7 @@ func main() {
 
 	srv := grpc.NewServer()
 	productpb.RegisterProductServiceServer(srv, prodHandler)
-	// productpb.RegisterInventoryServiceServer(srv, prodHandler)
+	productpb.RegisterCategoryServiceServer(srv, catHandler)
 
 	reflection.Register(srv)
 

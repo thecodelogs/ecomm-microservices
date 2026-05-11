@@ -29,16 +29,35 @@ func NewProductHandler(prodSvc *service.ProductService, invSvc *service.Inventor
 }
 
 // ── ProductService RPCs ──
-
-// ── ProductService RPCs ──
-
 // func (h *ProductHandler) CreateProduct(ctx context.Context, req *productpb.CreateProductRequest) (*productpb.CreateProductResponse, error) {
-// 	// 1. Map the Request to your internal Business/Database model
+// 	categoryID, err := uuid.Parse(req.CategoryId)
+// 	if err != nil {
+// 		return nil, status.Error(codes.InvalidArgument, "invalid category id")
+// 	}
+
+// 	vendorID, err := uuid.Parse(req.VendorId)
+// 	if err != nil {
+// 		return nil, status.Error(codes.InvalidArgument, "invalid vendor id")
+// 	}
+
 // 	productModel := &models.Product{
 // 		Name:        req.Name,
 // 		Description: req.Description,
-// 		// If your DB uses a different type for price (like decimals),
-// 		// handle the conversion here.
+// 		CategoryID:  categoryID,
+// 		ImageUrl:    req.ImageUrl,
+// 		Slug:        req.Slug,
+// 		ShortDescription: sql.NullString{
+// 			String: req.ShortDescription,
+// 			Valid:  req.ShortDescription != "",
+// 		},
+// 		Brand: sql.NullString{
+// 			String: req.Brand,
+// 			Valid:  req.Brand != "",
+// 		},
+// 		Tags:       req.Tags,
+// 		Attributes: json.RawMessage(req.Attributes),
+// 		Status:     req.Status,
+// 		VendorID:   vendorID,
 // 	}
 
 // 	// 2. Call your service layer to persist the data

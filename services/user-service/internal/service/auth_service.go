@@ -218,7 +218,7 @@ func (s *AuthService) generateTokenPair(ctx context.Context, userID uuid.UUID, r
 	now := time.Now().UTC()
 
 	// ── Access Token: 15 minutes ──
-	accessExpiry := now.Add(15 * time.Minute)
+	accessExpiry := now.Add(1440 * time.Minute)
 	accessClaims := AccessTokenClaims{
 		Subject:   userID.String(),
 		Role:      role,
@@ -233,7 +233,7 @@ func (s *AuthService) generateTokenPair(ctx context.Context, userID uuid.UUID, r
 
 	// ── Refresh Token: 30 days ──
 	refreshTokenID := uuid.New().String()
-	refreshExpiry := now.Add(30 * 24 * time.Hour)
+	refreshExpiry := now.Add(1440 * 24 * time.Hour)
 	refreshClaims := RefreshTokenClaims{
 		Subject:   userID.String(),
 		TokenID:   refreshTokenID,
