@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/manojnegi/ecommerce/api-gateway/internal/client"
+	"github.com/manojnegi/ecommerce/api-gateway/internal/storage"
 
 	"github.com/manojnegi/ecommerce/api-gateway/internal/handler"
 
@@ -10,7 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Setup(userClient *client.UserClient, productClient *client.ProductClient, authMiddleware *middleware.AuthMiddleware) *gin.Engine {
+func Setup(userClient *client.UserClient, productClient *client.ProductClient, authMiddleware *middleware.AuthMiddleware, s3Storage *storage.S3Storage) *gin.Engine {
+
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(middleware.CORS())
@@ -78,7 +80,11 @@ func Setup(userClient *client.UserClient, productClient *client.ProductClient, a
 
 	// ── Admin Routes (admin only) ──
 	adminHandler := handler.NewAdminHandler(userClient.Admin)
-	productHandler := handler.NewProductHandler(productClient.Product)
+	productHandler := handler.NewProductHandler(
+		productClient.Product,
+		productClient.Category,
+		s3Storage,
+	)
 	admin := r.Group("/api/admin")
 	admin.Use(authMiddleware.RequireAuth(), middleware.AdminOnly())
 	{
@@ -87,6 +93,7 @@ func Setup(userClient *client.UserClient, productClient *client.ProductClient, a
 		admin.PUT("/users/:id/status", adminHandler.UpdateUserStatus)
 		admin.DELETE("/users/:id", adminHandler.DeleteUser)
 		admin.GET("/products", productHandler.ListProducts)
+		admin.POST("/categories", productHandler.CreateCategory)
 	}
 
 	return r

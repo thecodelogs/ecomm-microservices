@@ -13,6 +13,10 @@ type Config struct {
 	ProductServiceURL string
 	JWTSecret         string
 	Environment       string
+	AWSAccessKey      string
+	AWSSecretKey      string
+	AWSRegion         string
+	S3Bucket          string
 }
 
 func Load() *Config {

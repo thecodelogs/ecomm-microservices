@@ -3,16 +3,15 @@ package main
 import (
 	"log"
 
-	"github.com/manojnegi/ecommerce/api-gateway/internal/middleware"
-
-	"github.com/manojnegi/ecommerce/api-gateway/internal/router"
-
-	"github.com/manojnegi/ecommerce/api-gateway/internal/config"
-
 	"github.com/manojnegi/ecommerce/api-gateway/internal/client"
+	"github.com/manojnegi/ecommerce/api-gateway/internal/config"
+	"github.com/manojnegi/ecommerce/api-gateway/internal/middleware"
+	"github.com/manojnegi/ecommerce/api-gateway/internal/router"
+	"github.com/manojnegi/ecommerce/api-gateway/internal/storage"
 )
 
 func main() {
+
 	cfg := config.Load()
 
 	// Connect to user-service
@@ -29,14 +28,35 @@ func main() {
 	}
 	defer productClient.Close()
 
-	// Setup middleware
-	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret, userClient.User)
+	// Auth middleware
+	authMiddleware := middleware.NewAuthMiddleware(
+		cfg.JWTSecret,
+		userClient.User,
+	)
+
+	// S3 Storage
+	s3Storage, err := storage.NewS3Storage(
+		cfg.AWSAccessKey,
+		cfg.AWSSecretKey,
+		cfg.AWSRegion,
+		cfg.S3Bucket,
+	)
+
+	if err != nil {
+		log.Fatalf("failed to initialize s3 storage: %v", err)
+	}
 
 	// Setup router
-	r := router.Setup(userClient, productClient, authMiddleware)
+	r := router.Setup(
+		userClient,
+		productClient,
+		authMiddleware,
+		s3Storage,
+	)
 
 	// Start server
 	log.Printf("API Gateway running on :%s", cfg.Port)
+
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}

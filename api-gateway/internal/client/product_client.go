@@ -11,8 +11,9 @@ import (
 )
 
 type ProductClient struct {
-	conn    *grpc.ClientConn
-	Product productpb.ProductServiceClient
+	conn     *grpc.ClientConn
+	Category productpb.CategoryServiceClient
+	Product  productpb.ProductServiceClient
 }
 
 func NewProductClient(addr string) (*ProductClient, error) {
