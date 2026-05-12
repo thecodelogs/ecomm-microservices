@@ -1,0 +1,45 @@
+package model
+
+import "time"
+
+type User struct {
+	ID        string     `json:"id"`
+	Email     string     `json:"email"`
+	FirstName string     `json:"firstName"`
+	LastName  string     `json:"lastName"`
+	Username  string     `json:"username"`
+	Phone     *string    `json:"phone,omitempty"`
+	Role      Role       `json:"role"`
+	Status    UserStatus `json:"status"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+}
+
+type Product struct {
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Price       float64   `json:"price"`
+	Sku         string    `json:"sku"`
+	Stock       int       `json:"stock"`
+	CategoryID  string    `json:"categoryId"`
+	Images      []string  `json:"images"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+type Category struct {
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Slug        string  `json:"slug"`
+	Description *string `json:"description,omitempty"`
+	ParentID    *string `json:"parentId,omitempty"`
+}
+
+func (User) IsNode()     {}
+func (Product) IsNode()  {}
+func (Category) IsNode() {}
+
+func (u User) GetID() string { return u.ID }
+func (p Product) GetID() string { return p.ID }
+func (c Category) GetID() string { return c.ID }

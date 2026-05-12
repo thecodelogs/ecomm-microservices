@@ -39,7 +39,48 @@ func NewAuthMiddleware(secret string, userClient userpb.UserServiceClient) *Auth
 	}
 }
 
-// Gin middleware that validates PASETO token
+// Authenticate middleware attempts to authenticate the user but does not abort if no token is provided.
+func (a *AuthMiddleware) Authenticate() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.Next()
+			return
+		}
+
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+		if token == authHeader {
+			c.Next()
+			return
+		}
+
+		// Validate locally
+		claims, err := a.validateToken(token)
+		if err != nil {
+			// Fallback to gRPC
+			claims, err = a.validateViaGRPC(c.Request.Context(), token)
+			if err != nil {
+				// Invalid token, but we don't abort, just don't set userID
+				c.Next()
+				return
+			}
+		}
+
+		// Set user info in context
+		c.Set("userID", claims.Subject)
+		c.Set("role", claims.Role)
+		c.Set("token", token)
+
+		// Inject token into gRPC outgoing context
+		md := metadata.Pairs("authorization", "Bearer "+token)
+		newCtx := metadata.NewOutgoingContext(c.Request.Context(), md)
+		c.Request = c.Request.WithContext(newCtx)
+
+		c.Next()
+	}
+}
+
+// RequireAuth Gin middleware that validates PASETO token and aborts if missing
 func (a *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -54,10 +95,8 @@ func (a *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 			return
 		}
 
-		// Validate locally first (fast path)
 		claims, err := a.validateToken(token)
 		if err != nil {
-			// Fallback: validate via gRPC (if key rotation or other issues)
 			claims, err = a.validateViaGRPC(c.Request.Context(), token)
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
@@ -65,12 +104,10 @@ func (a *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 			}
 		}
 
-		// Set user info in context
 		c.Set("userID", claims.Subject)
 		c.Set("role", claims.Role)
 		c.Set("token", token)
 
-		// Inject token into gRPC outgoing context
 		md := metadata.Pairs("authorization", "Bearer "+token)
 		newCtx := metadata.NewOutgoingContext(c.Request.Context(), md)
 		c.Request = c.Request.WithContext(newCtx)

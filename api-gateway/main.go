@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-
 	cfg := config.Load()
 
 	// Connect to user-service
@@ -41,22 +40,21 @@ func main() {
 		cfg.AWSRegion,
 		cfg.S3Bucket,
 	)
-
 	if err != nil {
 		log.Fatalf("failed to initialize s3 storage: %v", err)
 	}
 
-	// Setup router
-	r := router.Setup(
+	// Setup GraphQL router
+	r := router.SetupGraphQL(
 		userClient,
 		productClient,
 		authMiddleware,
 		s3Storage,
+		cfg,
 	)
 
 	// Start server
-	log.Printf("API Gateway running on :%s", cfg.Port)
-
+	log.Printf("GraphQL API Gateway running on :%s", cfg.Port)
 	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}

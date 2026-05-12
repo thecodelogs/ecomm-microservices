@@ -1,0 +1,41 @@
+scalar Upload
+scalar Time
+
+directive @auth on FIELD_DEFINITION
+directive @admin on FIELD_DEFINITION
+
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+interface Node {
+  id: ID!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+  totalCount: Int!
+}
+
+type HealthCheck {
+  status: String!
+  timestamp: Time!
+  services: [ServiceHealth!]!
+}
+
+type ServiceHealth {
+  name: String!
+  status: String!
+  latency: Int
+}
+
+input PaginationInput {
+  first: Int
+  after: String
+  last: Int
+  before: String
+}

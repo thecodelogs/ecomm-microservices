@@ -1,0 +1,15 @@
+type Query {
+  # Health
+  health: HealthCheck!
+
+  # Auth/User
+  me: User! @auth
+  user(id: ID!): User @auth @admin
+  users(pagination: PaginationInput): UserConnection! @auth @admin
+
+  # Products
+  product(id: ID!): Product
+  products(categoryId: ID, pagination: PaginationInput): ProductConnection!
+  categories: [Category!]!
+  category(id: ID!): Category
+}

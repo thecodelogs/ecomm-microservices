@@ -1,0 +1,52 @@
+type Product implements Node {
+  id: ID!
+  name: String!
+  description: String!
+  price: Float!
+  sku: String!
+  stock: Int!
+  category: Category!
+  images: [String!]!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type Category implements Node {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  parentId: ID
+  children: [Category!]!
+  products: [Product!]!
+}
+
+type ProductConnection {
+  edges: [ProductEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ProductEdge {
+  node: Product!
+  cursor: String!
+}
+
+input CreateProductInput {
+  name: String!
+  description: String!
+  price: Float!
+  sku: String!
+  stock: Int!
+  categoryId: ID!
+  images: [Upload!]
+}
+
+input CreateCategoryInput {
+  name: String!
+  slug: String!
+  description: String
+  parentId: ID
+  SortOrder: Int!
+  IsActive: Boolean!
+  ImageUrl: String!
+}
