@@ -45,7 +45,6 @@ type AddressInput struct {
 type AuthPayload struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
-	Token        string `json:"token"`
 	User         *User  `json:"user,omitempty"`
 	ExpiresIn    *int   `json:"expiresIn,omitempty"`
 }
@@ -145,18 +144,18 @@ type UserEdge struct {
 type Role string
 
 const (
-	RoleUser  Role = "USER"
-	RoleAdmin Role = "ADMIN"
+	RoleCustomer Role = "customer"
+	RoleAdmin    Role = "admin"
 )
 
 var AllRole = []Role{
-	RoleUser,
+	RoleCustomer,
 	RoleAdmin,
 }
 
 func (e Role) IsValid() bool {
 	switch e {
-	case RoleUser, RoleAdmin:
+	case RoleCustomer, RoleAdmin:
 		return true
 	}
 	return false

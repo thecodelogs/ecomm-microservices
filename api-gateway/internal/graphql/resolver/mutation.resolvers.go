@@ -30,7 +30,6 @@ func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInp
 	return &model.AuthPayload{
 		AccessToken:  resp.AccessToken,
 		RefreshToken: resp.RefreshToken,
-		Token:        resp.AccessToken,
 		User:         mapUserFromProto(resp.User),
 		ExpiresIn:    intPtr(int(resp.ExpiresAt)),
 	}, nil
@@ -49,7 +48,6 @@ func (r *mutationResolver) Signin(ctx context.Context, input model.SigninInput) 
 	return &model.AuthPayload{
 		AccessToken:  resp.AccessToken,
 		RefreshToken: resp.RefreshToken,
-		Token:        resp.AccessToken,
 		User:         mapUserFromProto(resp.User),
 		ExpiresIn:    intPtr(int(resp.ExpiresAt)),
 	}, nil
@@ -68,7 +66,6 @@ func (r *mutationResolver) AdminLogin(ctx context.Context, input model.SigninInp
 	return &model.AuthPayload{
 		AccessToken:  resp.AccessToken,
 		RefreshToken: resp.RefreshToken,
-		Token:        resp.AccessToken,
 		User:         mapUserFromProto(resp.User),
 		ExpiresIn:    intPtr(int(resp.ExpiresAt)),
 	}, nil
@@ -86,7 +83,6 @@ func (r *mutationResolver) RefreshToken(ctx context.Context, token string) (*mod
 	return &model.AuthPayload{
 		AccessToken:  resp.AccessToken,
 		RefreshToken: resp.RefreshToken,
-		Token:        resp.AccessToken,
 	}, nil
 }
 

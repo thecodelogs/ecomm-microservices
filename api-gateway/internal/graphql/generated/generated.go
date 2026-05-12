@@ -58,7 +58,6 @@ type ComplexityRoot struct {
 		AccessToken  func(childComplexity int) int
 		ExpiresIn    func(childComplexity int) int
 		RefreshToken func(childComplexity int) int
-		Token        func(childComplexity int) int
 		User         func(childComplexity int) int
 	}
 
@@ -294,12 +293,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.AuthPayload.RefreshToken(childComplexity), true
-	case "AuthPayload.token":
-		if e.ComplexityRoot.AuthPayload.Token == nil {
-			break
-		}
-
-		return e.ComplexityRoot.AuthPayload.Token(childComplexity), true
 	case "AuthPayload.user":
 		if e.ComplexityRoot.AuthPayload.User == nil {
 			break
@@ -1063,8 +1056,8 @@ input PaginationInput {
 }
 
 enum Role {
-  USER
-  ADMIN
+  customer
+  admin
 }
 
 type User implements Node {
@@ -1097,7 +1090,6 @@ type Address implements Node {
 type AuthPayload {
   accessToken: String!
   refreshToken: String!
-  token: String!
   user: User
   expiresIn: Int
 }
@@ -1178,8 +1170,6 @@ func (ec *executionContext) childFields_AuthPayload(ctx context.Context, field g
 		return ec.fieldContext_AuthPayload_accessToken(ctx, field)
 	case "refreshToken":
 		return ec.fieldContext_AuthPayload_refreshToken(ctx, field)
-	case "token":
-		return ec.fieldContext_AuthPayload_token(ctx, field)
 	case "user":
 		return ec.fieldContext_AuthPayload_user(ctx, field)
 	case "expiresIn":
@@ -2064,29 +2054,6 @@ func (ec *executionContext) _AuthPayload_refreshToken(ctx context.Context, field
 	)
 }
 func (ec *executionContext) fieldContext_AuthPayload_refreshToken(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	return graphql.NewScalarFieldContext("AuthPayload", field, false, false, errors.New("field of type String does not have child fields"))
-}
-
-func (ec *executionContext) _AuthPayload_token(ctx context.Context, field graphql.CollectedField, obj *model.AuthPayload) (ret graphql.Marshaler) {
-	return graphql.ResolveField(
-		ctx,
-		ec.OperationContext,
-		field,
-		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return ec.fieldContext_AuthPayload_token(ctx, field)
-		},
-		func(ctx context.Context) (any, error) {
-			return obj.Token, nil
-		},
-		nil,
-		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
-			return ec.marshalNString2string(ctx, selections, v)
-		},
-		true,
-		true,
-	)
-}
-func (ec *executionContext) fieldContext_AuthPayload_token(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("AuthPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
@@ -6166,11 +6133,6 @@ func (ec *executionContext) _AuthPayload(ctx context.Context, sel ast.SelectionS
 			}
 		case "refreshToken":
 			out.Values[i] = ec._AuthPayload_refreshToken(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "token":
-			out.Values[i] = ec._AuthPayload_token(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

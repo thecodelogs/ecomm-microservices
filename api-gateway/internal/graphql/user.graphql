@@ -5,8 +5,8 @@ enum UserStatus {
 }
 
 enum Role {
-  USER
-  ADMIN
+  customer
+  admin
 }
 
 type User implements Node {
@@ -39,7 +39,6 @@ type Address implements Node {
 type AuthPayload {
   accessToken: String!
   refreshToken: String!
-  token: String!
   user: User
   expiresIn: Int
 }

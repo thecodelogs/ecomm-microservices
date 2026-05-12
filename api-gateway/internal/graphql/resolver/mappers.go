@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/manojnegi/ecommerce/api-gateway/internal/graphql/model"
 	productpb "github.com/manojnegi/ecomm-microservices/gen/go/product/v1"
 	userpb "github.com/manojnegi/ecomm-microservices/gen/go/user/v1"
+	"github.com/manojnegi/ecommerce/api-gateway/internal/graphql/model"
 )
 
 func mapUserFromProto(u *userpb.User) *model.User {
 	if u == nil {
 		return nil
 	}
-	
+
 	return &model.User{
 		ID:        u.Id,
 		Email:     u.Email,
@@ -80,10 +80,10 @@ func mapCategoryFromProto(c *productpb.Category) *model.Category {
 
 func mapRoleFromProto(r string) model.Role {
 	switch r {
-	case "ADMIN":
+	case "admin":
 		return model.RoleAdmin
 	default:
-		return model.RoleUser
+		return model.RoleCustomer
 	}
 }
 
