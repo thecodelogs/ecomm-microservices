@@ -3,6 +3,8 @@ package graphql
 import (
 	"context"
 	"fmt"
+	"log"
+	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -50,13 +52,13 @@ func (s *Server) Handler() gin.HandlerFunc {
 	config.Directives.Auth = func(ctx context.Context, obj any, next graphql.Resolver) (any, error) {
 		gc, err := resolver.GinContextFromContext(ctx)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("internal error: gin context missing")
 		}
 
 		// The AuthMiddleware already populates "userID" if the token is valid
 		userID, exists := gc.Get("userID")
 		if !exists || userID == "" {
-			return nil, fmt.Errorf("access denied: unauthenticated")
+			return nil, fmt.Errorf("access denied: unauthenticated (check Authorization header)")
 		}
 
 		return next(ctx)
@@ -66,12 +68,21 @@ func (s *Server) Handler() gin.HandlerFunc {
 	config.Directives.Admin = func(ctx context.Context, obj any, next graphql.Resolver) (any, error) {
 		gc, err := resolver.GinContextFromContext(ctx)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("internal error: gin context missing")
 		}
 
 		role, exists := gc.Get("role")
-		if !exists || role != "ADMIN" {
-			return nil, fmt.Errorf("access denied: admin only")
+		log.Printf("DEBUG: Admin Check - exists: %v, role: %v (%T)", exists, role, role)
+
+		roleStr, ok := role.(string)
+		if !exists {
+			return nil, fmt.Errorf("access denied: missing role in context (unauthenticated?)")
+		}
+		if !ok {
+			return nil, fmt.Errorf("access denied: role is not a string (%T)", role)
+		}
+		if !strings.EqualFold(roleStr, "admin") {
+			return nil, fmt.Errorf("access denied: admin only (your role: %s)", roleStr)
 		}
 
 		return next(ctx)
@@ -84,7 +95,7 @@ func (s *Server) Handler() gin.HandlerFunc {
 		// Pass gin context to graphql context
 		ctx := context.WithValue(c.Request.Context(), "GinContext", c)
 		c.Request = c.Request.WithContext(ctx)
-		
+
 		h.ServeHTTP(c.Writer, c.Request)
 	}
 }

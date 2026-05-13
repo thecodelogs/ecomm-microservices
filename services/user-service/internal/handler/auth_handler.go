@@ -47,6 +47,22 @@ func (h *AuthHandler) Login(ctx context.Context, req *userpb.LoginRequest) (*use
 	}, nil
 }
 
+// func (h *AuthHandler) AdminLogin(ctx context.Context, req *userpb.AdminLoginRequest) (*userpb.AuthResponse, error) {
+// 	clientIP := handler.ExtractClientIP(ctx)
+
+// 	tokens, user, err := h.authSvc.AdminLogin(ctx, req.Email, req.Password, clientIP)
+// 	if err != nil {
+// 		return nil, status.Error(codes.Unauthenticated, err.Error())
+// 	}
+
+// 	return &userpb.AuthResponse{
+// 		AccessToken:  tokens.AccessToken,
+// 		RefreshToken: tokens.RefreshToken,
+// 		ExpiresAt:    tokens.ExpiresAt.Unix(),
+// 		User:         toProtoUser(user),
+// 	}, nil
+// }
+
 // Register also passes IP
 func (h *AuthHandler) Register(ctx context.Context, req *userpb.RegisterRequest) (*userpb.AuthResponse, error) {
 	if req.Email == "" || req.Password == "" {

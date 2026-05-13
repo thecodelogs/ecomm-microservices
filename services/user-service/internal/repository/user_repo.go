@@ -165,7 +165,6 @@ func (r *UserRepo) List(ctx context.Context, page, pageSize int32, status, searc
 		INNER JOIN user_roles ur ON ur.user_id = u.id
 		INNER JOIN roles r ON r.id = ur.role_id
 		WHERE u.deleted_at IS NULL
-		AND r.name = 'customer'
 		`
 
 	args := []interface{}{}

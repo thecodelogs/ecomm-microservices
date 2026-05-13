@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/manojnegi/ecomm-microservices/services/user-service/internal/repository"
@@ -142,11 +143,41 @@ func (s *AuthService) Login(ctx context.Context, email, password, clientIP strin
 	return tokens, user, nil
 }
 
+func (s *AuthService) AdminLogin(ctx context.Context, email, password, clientIP string) (*TokenPair, *models.User, error) {
+	user, err := s.userRepo.GetByEmail(ctx, email)
+	if err != nil {
+		return nil, nil, errors.New("invalid credentials")
+	}
+
+	// Verify user is an admin
+	if !strings.EqualFold(user.Role, "admin") {
+		return nil, nil, errors.New("access denied: not an admin")
+	}
+
+	// Verify password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+		_ = s.userRepo.IncrementFailedLogin(ctx, user.ID)
+		return nil, nil, errors.New("invalid credentials")
+	}
+
+	// Reset failed attempts and update last login
+	_ = s.userRepo.UpdateLastLogin(ctx, user.ID)
+
+	// Generate tokens
+	tokens, err := s.generateTokenPair(ctx, user.ID, user.Role, clientIP)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return tokens, user, nil
+}
+
 func (s *AuthService) ValidateToken(ctx context.Context, tokenString string) (uuid.UUID, string, error) {
 	var claims AccessTokenClaims
 
 	// Decrypt and verify PASETO token
 	err := s.pasetoV2.Decrypt(tokenString, s.symmetricKey, &claims, nil)
+	log.Printf("DEBUG: Decrypted Token - role in claims: '%s'", claims.Role)
 	if err != nil {
 		return uuid.Nil, "", errors.New("invalid token")
 	}
@@ -225,11 +256,29 @@ func (s *AuthService) generateTokenPair(ctx context.Context, userID uuid.UUID, r
 		IssuedAt:  now,
 		ExpiresAt: accessExpiry,
 	}
+	log.Printf("DEBUG: Generating Token - role: '%s', Key Prefix: %x", role, s.symmetricKey[:4])
+	log.Printf("DEBUG: Claims before encryption: role='%s'", accessClaims.Role)
 
 	accessToken, err := s.pasetoV2.Encrypt(s.symmetricKey, accessClaims, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encrypt access token: %w", err)
 	}
+
+	tokenSuffix := ""
+	if len(accessToken) > 10 {
+		tokenSuffix = accessToken[len(accessToken)-10:]
+	}
+	log.Printf("DEBUG: Token Generated - Suffix: ...%s", tokenSuffix)
+
+	// SELF TEST
+	var testClaimsMap map[string]interface{}
+	_ = s.pasetoV2.Decrypt(accessToken, s.symmetricKey, &testClaimsMap, nil)
+	testJSON, _ := json.Marshal(testClaimsMap)
+	log.Printf("DEBUG: SELF TEST RAW JSON: %s", string(testJSON))
+	
+	var testClaims AccessTokenClaims
+	_ = s.pasetoV2.Decrypt(accessToken, s.symmetricKey, &testClaims, nil)
+	log.Printf("DEBUG: SELF TEST - decrypted role: '%s'", testClaims.Role)
 
 	// ── Refresh Token: 30 days ──
 	refreshTokenID := uuid.New().String()

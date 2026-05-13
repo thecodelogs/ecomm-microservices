@@ -3,6 +3,8 @@ package middleware
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -44,27 +46,35 @@ func (a *AuthMiddleware) Authenticate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
+			log.Printf("DEBUG: No Authorization header found")
 			c.Next()
 			return
 		}
 
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 		if token == authHeader {
+			log.Printf("DEBUG: Authorization header missing Bearer prefix: %s", authHeader)
 			c.Next()
 			return
 		}
 
+		log.Printf("DEBUG: Authenticating token (suffix: ...%s)", token[len(token)-5:])
+
 		// Validate locally
 		claims, err := a.validateToken(token)
 		if err != nil {
+			log.Printf("DEBUG: Local validation failed: %v. Falling back to gRPC", err)
 			// Fallback to gRPC
 			claims, err = a.validateViaGRPC(c.Request.Context(), token)
 			if err != nil {
+				log.Printf("DEBUG: gRPC validation also failed: %v", err)
 				// Invalid token, but we don't abort, just don't set userID
 				c.Next()
 				return
 			}
 		}
+
+		log.Printf("DEBUG: Authentication successful - user: %s, role: %s", claims.Subject, claims.Role)
 
 		// Set user info in context
 		c.Set("userID", claims.Subject)
@@ -120,11 +130,15 @@ func (a *AuthMiddleware) validateToken(token string) (*AccessTokenClaims, error)
 	var claims AccessTokenClaims
 	err := a.pasetoV2.Decrypt(token, a.symmetricKey, &claims, nil)
 	if err != nil {
-		return nil, errors.New("invalid token")
+		return nil, fmt.Errorf("decrypt failed: %w", err)
 	}
 
 	if time.Now().UTC().After(claims.ExpiresAt) {
 		return nil, errors.New("token expired")
+	}
+
+	if claims.Role == "" {
+		log.Printf("WARNING: Token decrypted but role is empty. Claims: %+v", claims)
 	}
 
 	return &claims, nil
@@ -132,8 +146,11 @@ func (a *AuthMiddleware) validateToken(token string) (*AccessTokenClaims, error)
 
 func (a *AuthMiddleware) validateViaGRPC(ctx context.Context, token string) (*AccessTokenClaims, error) {
 	resp, err := a.userClient.ValidateToken(ctx, &userpb.ValidateTokenRequest{Token: token})
-	if err != nil || !resp.Valid {
-		return nil, errors.New("invalid token")
+	if err != nil {
+		return nil, fmt.Errorf("grpc call failed: %w", err)
+	}
+	if !resp.Valid {
+		return nil, errors.New("token invalid according to user-service")
 	}
 
 	return &AccessTokenClaims{
