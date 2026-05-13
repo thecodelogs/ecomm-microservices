@@ -31,3 +31,7 @@ func (c *CategoryService) CreateCategory(ctx context.Context, p *models.Category
 
 	return nil
 }
+
+func (c *CategoryService) ListCategories(ctx context.Context, page, pageSize int32) ([]models.Category, int32, error) {
+	return c.catRepo.CategoriesList(ctx, page, pageSize)
+}

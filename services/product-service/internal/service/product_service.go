@@ -65,7 +65,6 @@ func (s *ProductService) GetProductBySlug(ctx context.Context, slug string) (*mo
 }
 
 func (s *ProductService) ListProducts(ctx context.Context, categoryID uuid.UUID, page, pageSize int32) ([]models.Product, int32, error) {
-	fmt.Println("adslkjhASLKDJHAKSJLD=================", categoryID)
 	return s.prodRepo.ListByCategory(ctx, categoryID, page, pageSize)
 }
 

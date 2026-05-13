@@ -77,3 +77,44 @@ func (h *CategoryHandler) CreateCategory(ctx context.Context, req *categorypb.Cr
 		Id: categoryModel.ID.String(),
 	}, nil
 }
+
+func (h *CategoryHandler) ListCategories(ctx context.Context, req *categorypb.ListCategoryRequest) (*categorypb.CategoryListResponse, error) {
+	// ── Auth Check ──
+	claims, err := auth.ExtractClaims(ctx, h.cfg.PasetoSecret)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated: %v", err)
+	}
+
+	if !strings.EqualFold(claims.Role, "admin") {
+		return nil, status.Error(codes.PermissionDenied, "access denied: admin only")
+	}
+
+	categories, total, err := h.catSvc.ListCategories(ctx, req.Page, req.PageSize)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var catProducts []*productpb.Category
+	for _, p := range categories {
+		catProducts = append(catProducts, toProtoCategory(&p))
+	}
+
+	return &categorypb.CategoryListResponse{
+		Category: catProducts,
+		Total:    total,
+		Page:     req.Page,
+	}, nil
+}
+
+func toProtoCategory(p *models.Category) *categorypb.Category {
+	return &productpb.Category{
+		Id:          p.ID.String(),
+		Slug:        p.Slug,
+		Name:        p.Name,
+		Description: p.Description.String,
+		IsActive:    p.IsActive,
+		ImageUrl:    p.ImageURL.String,
+		SortOrder:   int32(p.SortOrder),
+		ParentId:    p.ParentID.UUID.String(),
+	}
+}

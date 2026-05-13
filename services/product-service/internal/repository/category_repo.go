@@ -5,7 +5,6 @@ import (
 
 	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/models"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -36,32 +35,48 @@ func (r *CategoryRepo) GetBySlug(ctx context.Context, slug string) (*models.Cate
 	return &c, nil
 }
 
-func (r *CategoryRepo) List(ctx context.Context, parentID *uuid.UUID) ([]models.Category, error) {
-	query := `SELECT id, parent_id, slug, name, description, image_url, sort_order, is_active, created_at
-	          FROM categories WHERE is_active = true`
-	args := []interface{}{}
-	if parentID != nil {
-		query += ` AND parent_id = $1`
-		args = append(args, *parentID)
-	} else {
-		query += ` AND parent_id IS NULL`
-	}
-	query += ` ORDER BY sort_order, name`
+func (r *CategoryRepo) CategoriesList(ctx context.Context, page, pageSize int32) ([]models.Category, int32, error) {
+	countQuery := `SELECT COUNT(*) FROM categories WHERE is_active = true`
 
-	rows, err := r.db.Query(ctx, query, args...)
+	var total int32
+	err := r.db.QueryRow(ctx, countQuery).Scan(&total)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
+	}
+
+	query := `
+		SELECT id, parent_id, slug, name, description, image_url, sort_order, is_active, created_at
+		FROM categories
+		WHERE is_active = true
+		ORDER BY sort_order, name
+		LIMIT $1 OFFSET $2
+	`
+
+	rows, err := r.db.Query(ctx, query, pageSize, (page-1)*pageSize)
+	if err != nil {
+		return nil, 0, err
 	}
 	defer rows.Close()
 
 	var cats []models.Category
 	for rows.Next() {
 		var c models.Category
-		err := rows.Scan(&c.ID, &c.ParentID, &c.Slug, &c.Name, &c.Description, &c.ImageURL, &c.SortOrder, &c.IsActive, &c.CreatedAt)
+		err := rows.Scan(
+			&c.ID,
+			&c.ParentID,
+			&c.Slug,
+			&c.Name,
+			&c.Description,
+			&c.ImageURL,
+			&c.SortOrder,
+			&c.IsActive,
+			&c.CreatedAt,
+		)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		cats = append(cats, c)
 	}
-	return cats, rows.Err()
+
+	return cats, total, rows.Err()
 }
