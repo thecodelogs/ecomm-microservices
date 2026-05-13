@@ -217,11 +217,11 @@ func (r *mutationResolver) CreateCategory(ctx context.Context, input model.Creat
 		}
 
 		key := fmt.Sprintf("categories/%d-%s", time.Now().Unix(), input.Image.Filename)
-		url, err := r.S3Storage.UploadFile(ctx, key, content, input.Image.ContentType)
+		_, err = r.S3Storage.UploadFile(ctx, key, content, input.Image.ContentType)
 		if err != nil {
 			return nil, fmt.Errorf("failed to upload to S3: %w", err)
 		}
-		imageURL = url
+		imageURL = key
 	}
 
 	resp, err := r.ProductClient.Category.CreateCategory(ctx, &productpb.CreateCategoryRequest{
