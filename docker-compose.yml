@@ -136,6 +136,10 @@ services:
       PRODUCT_SERVICE_URL: product-service:50052
       PASETO_SECRET: ${PASETO_SECRET}
       ENV: ${ENV:-development}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      S3_BUCKET: ${S3_BUCKET}
     depends_on:
       user-service:
         condition: service_started

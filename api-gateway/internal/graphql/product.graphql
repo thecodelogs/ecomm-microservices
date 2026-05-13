@@ -48,5 +48,5 @@ input CreateCategoryInput {
   parentId: ID
   SortOrder: Int!
   IsActive: Boolean!
-  ImageUrl: String!
+  image: Upload
 }

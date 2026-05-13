@@ -50,13 +50,13 @@ type AuthPayload struct {
 }
 
 type CreateCategoryInput struct {
-	Name        string  `json:"name"`
-	Slug        string  `json:"slug"`
-	Description *string `json:"description,omitempty"`
-	ParentID    *string `json:"parentId,omitempty"`
-	SortOrder   int     `json:"SortOrder"`
-	IsActive    bool    `json:"IsActive"`
-	ImageURL    string  `json:"ImageUrl"`
+	Name        string          `json:"name"`
+	Slug        string          `json:"slug"`
+	Description *string         `json:"description,omitempty"`
+	ParentID    *string         `json:"parentId,omitempty"`
+	SortOrder   int             `json:"SortOrder"`
+	IsActive    bool            `json:"IsActive"`
+	Image       *graphql.Upload `json:"image,omitempty"`
 }
 
 type CreateProductInput struct {

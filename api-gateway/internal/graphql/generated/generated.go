@@ -989,7 +989,7 @@ input CreateCategoryInput {
   parentId: ID
   SortOrder: Int!
   IsActive: Boolean!
-  ImageUrl: String!
+  image: Upload
 }
 `, BuiltIn: false},
 	{Name: "../query.graphql", Input: `type Query {
@@ -1003,7 +1003,7 @@ input CreateCategoryInput {
 
   # Products
   product(id: ID!): Product
-  products(categoryId: ID, pagination: PaginationInput): ProductConnection!
+  products(categoryId: ID, pagination: PaginationInput): ProductConnection! @auth @admin
   categories: [Category!]!
   category(id: ID!): Category
 }
@@ -3856,7 +3856,27 @@ func (ec *executionContext) _Query_products(ctx context.Context, field graphql.C
 			fc := graphql.GetFieldContext(ctx)
 			return ec.Resolvers.Query().Products(ctx, fc.Args["categoryId"].(*string), fc.Args["pagination"].(*model.PaginationInput))
 		},
-		nil,
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Auth == nil {
+					var zeroVal *model.ProductConnection
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.Directives.Auth(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Admin == nil {
+					var zeroVal *model.ProductConnection
+					return zeroVal, errors.New("directive admin is not implemented")
+				}
+				return ec.Directives.Admin(ctx, nil, directive1)
+			}
+
+			next = directive2
+			return next
+		},
 		func(ctx context.Context, selections ast.SelectionSet, v *model.ProductConnection) graphql.Marshaler {
 			return ec.marshalNProductConnection2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐProductConnection(ctx, selections, v)
 		},
@@ -5664,7 +5684,7 @@ func (ec *executionContext) unmarshalInputCreateCategoryInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "slug", "description", "parentId", "SortOrder", "IsActive", "ImageUrl"}
+	fieldsInOrder := [...]string{"name", "slug", "description", "parentId", "SortOrder", "IsActive", "image"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -5713,13 +5733,13 @@ func (ec *executionContext) unmarshalInputCreateCategoryInput(ctx context.Contex
 				return it, err
 			}
 			it.IsActive = data
-		case "ImageUrl":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ImageUrl"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+		case "image":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
+			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.ImageURL = data
+			it.Image = data
 		}
 	}
 	return it, nil
@@ -8303,6 +8323,24 @@ func (ec *executionContext) marshalOUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlg
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v any) (*graphql.Upload, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalUpload(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v *graphql.Upload) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalUpload(*v)
+	return res
 }
 
 func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {

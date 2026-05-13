@@ -13,6 +13,14 @@ import (
 func main() {
 	cfg := config.Load()
 
+	log.Printf("DEBUG: S3 Config - Region: %s, Bucket: %s, AccessKey present: %v (Prefix: %s)", 
+		cfg.AWSRegion, cfg.S3Bucket, cfg.AWSAccessKey != "", func() string {
+			if len(cfg.AWSAccessKey) > 4 {
+				return cfg.AWSAccessKey[:4] + "..."
+			}
+			return "too short"
+		}())
+
 	// Connect to user-service
 	userClient, err := client.NewUserClient(cfg.UserServiceURL)
 	if err != nil {

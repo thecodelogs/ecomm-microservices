@@ -8,6 +8,8 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"io"
+	"time"
 
 	productpb "github.com/manojnegi/ecomm-microservices/gen/go/product/v1"
 	userpb "github.com/manojnegi/ecomm-microservices/gen/go/user/v1"
@@ -202,11 +204,34 @@ func (r *mutationResolver) CreateCategory(ctx context.Context, input model.Creat
 		parentID = *input.ParentID
 	}
 
+	description := ""
+	if input.Description != nil {
+		description = *input.Description
+	}
+
+	var imageURL string
+	if input.Image != nil {
+		content, err := io.ReadAll(input.Image.File)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read upload file: %w", err)
+		}
+
+		key := fmt.Sprintf("categories/%d-%s", time.Now().Unix(), input.Image.Filename)
+		url, err := r.S3Storage.UploadFile(ctx, key, content, input.Image.ContentType)
+		if err != nil {
+			return nil, fmt.Errorf("failed to upload to S3: %w", err)
+		}
+		imageURL = url
+	}
+
 	resp, err := r.ProductClient.Category.CreateCategory(ctx, &productpb.CreateCategoryRequest{
 		Name:        input.Name,
 		Slug:        input.Slug,
-		Description: *input.Description,
+		Description: description,
 		ParentId:    parentID,
+		ImageUrl:    imageURL,
+		SortOrder:   int32(input.SortOrder),
+		IsActive:    input.IsActive,
 	})
 	if err != nil {
 		return nil, err

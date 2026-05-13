@@ -29,8 +29,9 @@ func NewProductClient(addr string) (*ProductClient, error) {
 	}
 
 	return &ProductClient{
-		conn:    conn,
-		Product: productpb.NewProductServiceClient(conn),
+		conn:     conn,
+		Product:  productpb.NewProductServiceClient(conn),
+		Category: productpb.NewCategoryServiceClient(conn),
 	}, nil
 }
 

@@ -28,6 +28,10 @@ func Load() *Config {
 		ProductServiceURL: getEnv("PRODUCT_SERVICE_URL", "localhost:50052"),
 		JWTSecret:         getEnv("PASETO_SECRET", "change-this-to-32-characters!!"),
 		Environment:       getEnv("ENV", "development"),
+		AWSAccessKey:      getEnv("AWS_ACCESS_KEY_ID", ""),
+		AWSSecretKey:      getEnv("AWS_SECRET_ACCESS_KEY", ""),
+		AWSRegion:         getEnv("AWS_REGION", ""),
+		S3Bucket:          getEnv("S3_BUCKET", ""),
 	}
 
 	if len(cfg.JWTSecret) < 32 {
