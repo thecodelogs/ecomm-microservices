@@ -3,5 +3,6 @@ buf-remote/
 docs.md
 /services/payment-service/target
 /services/user-service/.env
+/services/product-service/.env
 /api-gateway/.env
 .env
