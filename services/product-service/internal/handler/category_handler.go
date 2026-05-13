@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"database/sql"
+	"strings"
 
 	"github.com/google/uuid"
 	categorypb "github.com/manojnegi/ecomm-microservices/gen/go/product/v1"
@@ -10,6 +11,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/auth"
+	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/config"
 	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/models"
 	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/service"
 )
@@ -17,17 +20,25 @@ import (
 type CategoryHandler struct {
 	categorypb.UnimplementedCategoryServiceServer
 
-	// prodSvc *service.ProductService
 	catSvc *service.CategoryService
-	// invSvc  *service.InventoryService
-	// revSvc  *service.ReviewService
+	cfg    *config.Config
 }
 
-func NewCategoryHandler(catSvc *service.CategoryService) *CategoryHandler {
-	return &CategoryHandler{catSvc: catSvc}
+func NewCategoryHandler(catSvc *service.CategoryService, cfg *config.Config) *CategoryHandler {
+	return &CategoryHandler{catSvc: catSvc, cfg: cfg}
 }
 
 func (h *CategoryHandler) CreateCategory(ctx context.Context, req *categorypb.CreateCategoryRequest) (*productpb.CreateCategoryResponse, error) {
+	// ── Auth Check ──
+	claims, err := auth.ExtractClaims(ctx, h.cfg.PasetoSecret)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated: %v", err)
+	}
+
+	if !strings.EqualFold(claims.Role, "admin") {
+		return nil, status.Error(codes.PermissionDenied, "access denied: admin only")
+	}
+
 	var parentID uuid.NullUUID
 
 	if req.ParentId != "" {

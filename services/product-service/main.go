@@ -8,13 +8,11 @@ import (
 	// categorypb "github.com/manojnegi/ecomm-microservices/gen/go/category/v1"
 	productpb "github.com/manojnegi/ecomm-microservices/gen/go/product/v1"
 
-	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/service"
-
-	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/repository"
-
-	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/handler"
-
+	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/auth"
 	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/config"
+	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/handler"
+	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/repository"
+	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/service"
 
 	_ "embed"
 
@@ -52,8 +50,8 @@ func main() {
 	catSvc := service.NewCategoryService(prodRepo, varRepo, catRepo)
 
 	// Handler layer
-	prodHandler := handler.NewProductHandler(prodSvc, invSvc, revSvc)
-	catHandler := handler.NewCategoryHandler(catSvc)
+	prodHandler := handler.NewProductHandler(prodSvc, invSvc, revSvc, cfg)
+	catHandler := handler.NewCategoryHandler(catSvc, cfg)
 
 	// gRPC server
 	lis, err := net.Listen("tcp", ":"+cfg.Port)
@@ -61,7 +59,9 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	srv := grpc.NewServer()
+	srv := grpc.NewServer(
+		grpc.UnaryInterceptor(auth.UnaryInterceptor(cfg.PasetoSecret)),
+	)
 	productpb.RegisterProductServiceServer(srv, prodHandler)
 	productpb.RegisterCategoryServiceServer(srv, catHandler)
 

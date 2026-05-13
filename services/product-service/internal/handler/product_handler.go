@@ -3,12 +3,14 @@ package handler
 import (
 	"context"
 	"database/sql"
+	"strings"
 
 	productpb "github.com/manojnegi/ecomm-microservices/gen/go/product/v1"
 
-	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/service"
-
+	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/auth"
+	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/config"
 	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/models"
+	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/service"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
@@ -22,10 +24,11 @@ type ProductHandler struct {
 	prodSvc *service.ProductService
 	invSvc  *service.InventoryService
 	revSvc  *service.ReviewService
+	cfg     *config.Config
 }
 
-func NewProductHandler(prodSvc *service.ProductService, invSvc *service.InventoryService, revSvc *service.ReviewService) *ProductHandler {
-	return &ProductHandler{prodSvc: prodSvc, invSvc: invSvc, revSvc: revSvc}
+func NewProductHandler(prodSvc *service.ProductService, invSvc *service.InventoryService, revSvc *service.ReviewService, cfg *config.Config) *ProductHandler {
+	return &ProductHandler{prodSvc: prodSvc, invSvc: invSvc, revSvc: revSvc, cfg: cfg}
 }
 
 // ── ProductService RPCs ──
@@ -96,6 +99,16 @@ func NewProductHandler(prodSvc *service.ProductService, invSvc *service.Inventor
 // }
 
 func (h *ProductHandler) ListProducts(ctx context.Context, req *productpb.ListProductsRequest) (*productpb.ProductListResponse, error) {
+	// ── Auth Check ──
+	claims, err := auth.ExtractClaims(ctx, h.cfg.PasetoSecret)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated: %v", err)
+	}
+
+	if !strings.EqualFold(claims.Role, "admin") {
+		return nil, status.Error(codes.PermissionDenied, "access denied: admin only")
+	}
+
 	catID, _ := uuid.Parse(req.CategoryId)
 	products, total, err := h.prodSvc.ListProducts(ctx, catID, req.Page, req.PageSize)
 	if err != nil {
