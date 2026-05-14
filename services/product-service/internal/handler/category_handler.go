@@ -134,6 +134,30 @@ func (h *CategoryHandler) UpdateCategory(ctx context.Context, req *categorypb.Up
 	}, nil
 }
 
+func (h *CategoryHandler) DeleteCategory(ctx context.Context, req *categorypb.DeleteCategoryRequest) (*productpb.DeleteCategoryResponse, error) {
+	// ── Auth Check ──
+	claims, err := auth.ExtractClaims(ctx, h.cfg.PasetoSecret)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated: %v", err)
+	}
+
+	if !strings.EqualFold(claims.Role, "admin") {
+		return nil, status.Error(codes.PermissionDenied, "access denied: admin only")
+	}
+
+	if _, err := uuid.Parse(req.Id); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid category id")
+	}
+
+	if err := h.catSvc.DeleteCategory(ctx, req.Id); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to delete category: %v", err)
+	}
+
+	return &productpb.DeleteCategoryResponse{
+		Success: true,
+	}, nil
+}
+
 func (h *CategoryHandler) GetCategory(ctx context.Context, req *categorypb.GetCategoryRequest) (*productpb.GetCategoryResponse, error) {
 	cat, err := h.catSvc.GetCategory(ctx, req.Id)
 	if err != nil {

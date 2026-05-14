@@ -55,6 +55,12 @@ func (r *CategoryRepo) Update(ctx context.Context, cat *models.Category) error {
 	return err
 }
 
+func (r *CategoryRepo) Delete(ctx context.Context, id string) error {
+	query := `DELETE FROM categories WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, id)
+	return err
+}
+
 func (r *CategoryRepo) CategoriesList(ctx context.Context, page, pageSize int32) ([]models.Category, int32, error) {
 	countQuery := `SELECT COUNT(*) FROM categories WHERE is_active = true`
 

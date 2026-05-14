@@ -297,6 +297,17 @@ func (r *mutationResolver) UpdateCategory(ctx context.Context, id string, input 
 	return mapCategoryFromProto(resp.Category, baseURL), nil
 }
 
+// DeleteCategory is the resolver for the deleteCategory field.
+func (r *mutationResolver) DeleteCategory(ctx context.Context, id string) (bool, error) {
+	resp, err := r.ProductClient.Category.DeleteCategory(ctx, &productpb.DeleteCategoryRequest{
+		Id: id,
+	})
+	if err != nil {
+		return false, err
+	}
+	return resp.Success, nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 

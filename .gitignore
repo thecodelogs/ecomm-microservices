@@ -6,3 +6,4 @@ docs.md
 /services/product-service/.env
 /api-gateway/.env
 .env
+data/

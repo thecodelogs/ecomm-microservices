@@ -40,6 +40,14 @@ func (c *CategoryService) UpdateCategory(ctx context.Context, p *models.Category
 	return nil
 }
 
+func (c *CategoryService) DeleteCategory(ctx context.Context, id string) error {
+	if err := c.catRepo.Delete(ctx, id); err != nil {
+		return fmt.Errorf("delete category: %w", err)
+	}
+
+	return nil
+}
+
 func (c *CategoryService) GetCategory(ctx context.Context, id string) (*models.Category, error) {
 	return c.catRepo.GetByID(ctx, id)
 }
