@@ -33,6 +33,9 @@ type Category struct {
 	Name        string  `json:"name"`
 	Slug        string  `json:"slug"`
 	Description *string `json:"description,omitempty"`
+	ImageURL    *string `json:"imageUrl,omitempty"`
+	SortOrder   int     `json:"sortOrder"`
+	IsActive    bool    `json:"isActive"`
 	ParentID    *string `json:"parentId,omitempty"`
 }
 

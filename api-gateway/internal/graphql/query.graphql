@@ -10,6 +10,6 @@ type Query {
   # Products
   product(id: ID!): Product
   products(categoryId: ID, pagination: PaginationInput): ProductConnection! @auth @admin
-  categories: [Category!]!
+  categories(pagination: PaginationInput): CategoryConnection! @auth @admin
   category(id: ID!): Category
 }

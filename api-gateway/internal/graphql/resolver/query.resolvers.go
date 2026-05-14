@@ -137,8 +137,36 @@ func (r *queryResolver) Products(ctx context.Context, categoryID *string, pagina
 }
 
 // Categories is the resolver for the categories field.
-func (r *queryResolver) Categories(ctx context.Context) ([]*model.Category, error) {
-	return []*model.Category{}, nil
+func (r *queryResolver) Categories(ctx context.Context, pagination *model.PaginationInput) (*model.CategoryConnection, error) {
+	page := int32(1)
+	pageSize := int32(20)
+	if pagination != nil && pagination.First != nil {
+		pageSize = int32(*pagination.First)
+	}
+
+	resp, err := r.ProductClient.Category.ListCategories(ctx, &productpb.ListCategoryRequest{
+		Page:     page,
+		PageSize: pageSize,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	edges := make([]*model.CategoryEdge, len(resp.Category))
+	for i, c := range resp.Category {
+		edges[i] = &model.CategoryEdge{
+			Node:   mapCategoryFromProto(c),
+			Cursor: encodeCursor(c.Id),
+		}
+	}
+
+	return &model.CategoryConnection{
+		Edges: edges,
+		PageInfo: &model.PageInfo{
+			HasNextPage: false,
+			TotalCount:  int(resp.Total),
+		},
+	}, nil
 }
 
 // Category is the resolver for the category field.

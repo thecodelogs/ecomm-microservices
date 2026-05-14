@@ -16,9 +16,22 @@ type Category implements Node {
   name: String!
   slug: String!
   description: String
+  imageUrl: String
+  sortOrder: Int!
+  isActive: Boolean!
   parentId: ID
   children: [Category!]!
   products: [Product!]!
+}
+
+type CategoryConnection {
+  edges: [CategoryEdge!]!
+  pageInfo: PageInfo!
+}
+
+type CategoryEdge {
+  node: Category!
+  cursor: String!
 }
 
 type ProductConnection {

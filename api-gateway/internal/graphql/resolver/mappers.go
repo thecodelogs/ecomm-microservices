@@ -74,7 +74,12 @@ func mapCategoryFromProto(c *productpb.Category) *model.Category {
 	return &model.Category{
 		ID:          c.Id,
 		Name:        c.Name,
+		Slug:        c.Slug,
 		Description: &c.Description,
+		ImageURL:    &c.ImageUrl,
+		SortOrder:   int(c.SortOrder),
+		IsActive:    c.IsActive,
+		ParentID:    &c.ParentId,
 	}
 }
 

@@ -49,6 +49,16 @@ type AuthPayload struct {
 	ExpiresIn    *int   `json:"expiresIn,omitempty"`
 }
 
+type CategoryConnection struct {
+	Edges    []*CategoryEdge `json:"edges"`
+	PageInfo *PageInfo       `json:"pageInfo"`
+}
+
+type CategoryEdge struct {
+	Node   *Category `json:"node"`
+	Cursor string    `json:"cursor"`
+}
+
 type CreateCategoryInput struct {
 	Name        string          `json:"name"`
 	Slug        string          `json:"slug"`
