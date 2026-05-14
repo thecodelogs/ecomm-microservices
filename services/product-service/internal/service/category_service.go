@@ -32,6 +32,18 @@ func (c *CategoryService) CreateCategory(ctx context.Context, p *models.Category
 	return nil
 }
 
+func (c *CategoryService) UpdateCategory(ctx context.Context, p *models.Category) error {
+	if err := c.catRepo.Update(ctx, p); err != nil {
+		return fmt.Errorf("update category: %w", err)
+	}
+
+	return nil
+}
+
+func (c *CategoryService) GetCategory(ctx context.Context, id string) (*models.Category, error) {
+	return c.catRepo.GetByID(ctx, id)
+}
+
 func (c *CategoryService) ListCategories(ctx context.Context, page, pageSize int32) ([]models.Category, int32, error) {
 	return c.catRepo.CategoriesList(ctx, page, pageSize)
 }

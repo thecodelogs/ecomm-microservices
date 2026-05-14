@@ -63,3 +63,13 @@ input CreateCategoryInput {
   IsActive: Boolean!
   image: Upload
 }
+
+input UpdateCategoryInput {
+  name: String!
+  slug: String!
+  description: String
+  parentId: ID
+  sortOrder: Int!
+  isActive: Boolean!
+  image: Upload
+}

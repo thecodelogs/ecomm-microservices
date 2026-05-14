@@ -78,6 +78,73 @@ func (h *CategoryHandler) CreateCategory(ctx context.Context, req *categorypb.Cr
 	}, nil
 }
 
+func (h *CategoryHandler) UpdateCategory(ctx context.Context, req *categorypb.UpdateCategoryRequest) (*productpb.UpdateCategoryResponse, error) {
+	// ── Auth Check ──
+	claims, err := auth.ExtractClaims(ctx, h.cfg.PasetoSecret)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated: %v", err)
+	}
+
+	if !strings.EqualFold(claims.Role, "admin") {
+		return nil, status.Error(codes.PermissionDenied, "access denied: admin only")
+	}
+
+	if _, err := uuid.Parse(req.Id); err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid category id")
+	}
+
+	// Check if exists
+	existing, err := h.catSvc.GetCategory(ctx, req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "category not found")
+	}
+
+	var parentID uuid.NullUUID
+	if req.ParentId != "" {
+		parsedID, err := uuid.Parse(req.ParentId)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid parent id")
+		}
+		parentID = uuid.NullUUID{
+			UUID:  parsedID,
+			Valid: true,
+		}
+	}
+
+	existing.Name = req.Name
+	existing.Slug = req.Slug
+	existing.Description = sql.NullString{
+		String: req.Description,
+		Valid:  req.Description != "",
+	}
+	existing.ImageURL = sql.NullString{
+		String: req.ImageUrl,
+		Valid:  req.ImageUrl != "",
+	}
+	existing.SortOrder = int(req.SortOrder)
+	existing.IsActive = req.IsActive
+	existing.ParentID = parentID
+
+	if err := h.catSvc.UpdateCategory(ctx, existing); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to update category: %v", err)
+	}
+
+	return &productpb.UpdateCategoryResponse{
+		Category: toProtoCategory(existing),
+	}, nil
+}
+
+func (h *CategoryHandler) GetCategory(ctx context.Context, req *categorypb.GetCategoryRequest) (*productpb.GetCategoryResponse, error) {
+	cat, err := h.catSvc.GetCategory(ctx, req.Id)
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, "category not found")
+	}
+
+	return &productpb.GetCategoryResponse{
+		Category: toProtoCategory(cat),
+	}, nil
+}
+
 func (h *CategoryHandler) ListCategories(ctx context.Context, req *categorypb.ListCategoryRequest) (*categorypb.CategoryListResponse, error) {
 	// ── Auth Check ──
 	claims, err := auth.ExtractClaims(ctx, h.cfg.PasetoSecret)

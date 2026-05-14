@@ -246,6 +246,57 @@ func (r *mutationResolver) CreateCategory(ctx context.Context, input model.Creat
 	return mapCategoryFromProto(getResp.Category, baseURL), nil
 }
 
+// UpdateCategory is the resolver for the updateCategory field.
+func (r *mutationResolver) UpdateCategory(ctx context.Context, id string, input model.UpdateCategoryInput) (*model.Category, error) {
+	// Get existing category first
+	existing, err := r.ProductClient.Category.GetCategory(ctx, &productpb.GetCategoryRequest{Id: id})
+	if err != nil {
+		return nil, fmt.Errorf("category not found: %w", err)
+	}
+
+	var parentID string
+	if input.ParentID != nil {
+		parentID = *input.ParentID
+	}
+
+	description := ""
+	if input.Description != nil {
+		description = *input.Description
+	}
+
+	imageURL := existing.Category.ImageUrl
+	if input.Image != nil {
+		content, err := io.ReadAll(input.Image.File)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read upload file: %w", err)
+		}
+
+		key := fmt.Sprintf("categories/%d-%s", time.Now().Unix(), input.Image.Filename)
+		_, err = r.S3Storage.UploadFile(ctx, key, content, input.Image.ContentType)
+		if err != nil {
+			return nil, fmt.Errorf("failed to upload to S3: %w", err)
+		}
+		imageURL = key
+	}
+
+	resp, err := r.ProductClient.Category.UpdateCategory(ctx, &productpb.UpdateCategoryRequest{
+		Id:          id,
+		Name:        input.Name,
+		Slug:        input.Slug,
+		Description: description,
+		ParentId:    parentID,
+		ImageUrl:    imageURL,
+		SortOrder:   int32(input.SortOrder),
+		IsActive:    input.IsActive,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	baseURL := r.S3Storage.GetBaseURL()
+	return mapCategoryFromProto(resp.Category, baseURL), nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 

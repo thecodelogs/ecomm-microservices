@@ -135,6 +135,16 @@ type SigninInput struct {
 	Password string `json:"password"`
 }
 
+type UpdateCategoryInput struct {
+	Name        string          `json:"name"`
+	Slug        string          `json:"slug"`
+	Description *string         `json:"description,omitempty"`
+	ParentID    *string         `json:"parentId,omitempty"`
+	SortOrder   int             `json:"sortOrder"`
+	IsActive    bool            `json:"isActive"`
+	Image       *graphql.Upload `json:"image,omitempty"`
+}
+
 type UpdateProfileInput struct {
 	FirstName *string `json:"firstName,omitempty"`
 	LastName  *string `json:"lastName,omitempty"`

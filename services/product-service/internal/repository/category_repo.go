@@ -35,6 +35,26 @@ func (r *CategoryRepo) GetBySlug(ctx context.Context, slug string) (*models.Cate
 	return &c, nil
 }
 
+func (r *CategoryRepo) GetByID(ctx context.Context, id string) (*models.Category, error) {
+	query := `SELECT id, parent_id, slug, name, description, image_url, sort_order, is_active, created_at
+	          FROM categories WHERE id = $1`
+	row := r.db.QueryRow(ctx, query, id)
+	var c models.Category
+	err := row.Scan(&c.ID, &c.ParentID, &c.Slug, &c.Name, &c.Description, &c.ImageURL, &c.SortOrder, &c.IsActive, &c.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+func (r *CategoryRepo) Update(ctx context.Context, cat *models.Category) error {
+	query := `UPDATE categories 
+	          SET parent_id = $1, slug = $2, name = $3, description = $4, image_url = $5, sort_order = $6, is_active = $7
+	          WHERE id = $8`
+	_, err := r.db.Exec(ctx, query, cat.ParentID, cat.Slug, cat.Name, cat.Description, cat.ImageURL, cat.SortOrder, cat.IsActive, cat.ID)
+	return err
+}
+
 func (r *CategoryRepo) CategoriesList(ctx context.Context, page, pageSize int32) ([]models.Category, int32, error) {
 	countQuery := `SELECT COUNT(*) FROM categories WHERE is_active = true`
 
