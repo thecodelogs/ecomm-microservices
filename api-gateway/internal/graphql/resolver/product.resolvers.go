@@ -27,9 +27,10 @@ func (r *categoryResolver) Products(ctx context.Context, obj *model.Category) ([
 		return nil, err
 	}
 
+	baseURL := r.S3Storage.GetBaseURL()
 	products := make([]*model.Product, len(resp.Products))
 	for i, p := range resp.Products {
-		products[i] = mapProductFromProto(p)
+		products[i] = mapProductFromProto(p, baseURL)
 	}
 	return products, nil
 }
@@ -42,7 +43,8 @@ func (r *productResolver) Category(ctx context.Context, obj *model.Product) (*mo
 	if err != nil {
 		return nil, err
 	}
-	return mapCategoryFromProto(resp.Category), nil
+	baseURL := r.S3Storage.GetBaseURL()
+	return mapCategoryFromProto(resp.Category, baseURL), nil
 }
 
 // Category returns generated.CategoryResolver implementation.

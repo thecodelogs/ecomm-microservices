@@ -119,10 +119,11 @@ func (r *queryResolver) Products(ctx context.Context, categoryID *string, pagina
 		return nil, err
 	}
 
+	baseURL := r.S3Storage.GetBaseURL()
 	edges := make([]*model.ProductEdge, len(resp.Products))
 	for i, p := range resp.Products {
 		edges[i] = &model.ProductEdge{
-			Node:   mapProductFromProto(p),
+			Node:   mapProductFromProto(p, baseURL),
 			Cursor: encodeCursor(p.Id),
 		}
 	}
@@ -152,10 +153,11 @@ func (r *queryResolver) Categories(ctx context.Context, pagination *model.Pagina
 		return nil, err
 	}
 
+	baseURL := r.S3Storage.GetBaseURL()
 	edges := make([]*model.CategoryEdge, len(resp.Category))
 	for i, c := range resp.Category {
 		edges[i] = &model.CategoryEdge{
-			Node:   mapCategoryFromProto(c),
+			Node:   mapCategoryFromProto(c, baseURL),
 			Cursor: encodeCursor(c.Id),
 		}
 	}
@@ -175,7 +177,8 @@ func (r *queryResolver) Category(ctx context.Context, id string) (*model.Categor
 	if err != nil {
 		return nil, err
 	}
-	return mapCategoryFromProto(resp.Category), nil
+	baseURL := r.S3Storage.GetBaseURL()
+	return mapCategoryFromProto(resp.Category, baseURL), nil
 }
 
 // Query returns generated.QueryResolver implementation.

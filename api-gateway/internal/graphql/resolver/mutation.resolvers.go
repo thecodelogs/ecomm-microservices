@@ -242,7 +242,8 @@ func (r *mutationResolver) CreateCategory(ctx context.Context, input model.Creat
 		return &model.Category{ID: resp.Id, Name: input.Name}, nil
 	}
 
-	return mapCategoryFromProto(getResp.Category), nil
+	baseURL := r.S3Storage.GetBaseURL()
+	return mapCategoryFromProto(getResp.Category, baseURL), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

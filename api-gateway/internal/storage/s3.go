@@ -76,3 +76,7 @@ func (s *S3Storage) UploadFile(
 
 	return url, nil
 }
+
+func (s *S3Storage) GetBaseURL() string {
+	return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/", s.bucket, s.region)
+}
