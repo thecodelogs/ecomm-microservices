@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"strings"
 
 	productpb "github.com/manojnegi/ecomm-microservices/gen/go/product/v1"
@@ -42,6 +43,11 @@ func (h *ProductHandler) CreateProduct(ctx context.Context, req *productpb.Creat
 	categoryID, _ := uuid.Parse(req.CategoryId)
 	vendorID, _ := uuid.Parse(req.VendorId)
 
+	var attributes json.RawMessage
+	if req.Attributes != "" {
+		attributes = json.RawMessage(req.Attributes)
+	}
+
 	p := &models.Product{
 		CategoryID:  categoryID,
 		Name:        req.Name,
@@ -56,7 +62,7 @@ func (h *ProductHandler) CreateProduct(ctx context.Context, req *productpb.Creat
 			Valid:  req.Brand != "",
 		},
 		Tags:       req.Tags,
-		Attributes: []byte(req.Attributes),
+		Attributes: attributes,
 		Status:     req.Status,
 		VendorID:   vendorID,
 	}
@@ -121,6 +127,11 @@ func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.Updat
 
 	categoryID, _ := uuid.Parse(req.CategoryId)
 
+	var attributes json.RawMessage
+	if req.Attributes != "" {
+		attributes = json.RawMessage(req.Attributes)
+	}
+
 	p := &models.Product{
 		ID:          id,
 		CategoryID:  categoryID,
@@ -136,7 +147,7 @@ func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.Updat
 			Valid:  req.Brand != "",
 		},
 		Tags:       req.Tags,
-		Attributes: []byte(req.Attributes),
+		Attributes: attributes,
 		Status:     req.Status,
 	}
 
