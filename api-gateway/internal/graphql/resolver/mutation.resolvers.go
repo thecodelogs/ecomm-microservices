@@ -194,7 +194,99 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, id string) (bool, err
 
 // Admin - Products mutations
 func (r *mutationResolver) CreateProduct(ctx context.Context, input model.CreateProductInput) (*model.Product, error) {
-	return nil, fmt.Errorf("CreateProduct not implemented")
+	var imageURL string
+	if input.Image != nil {
+		content, err := io.ReadAll(input.Image.File)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read upload file: %w", err)
+		}
+
+		key := fmt.Sprintf("products/%d-%s", time.Now().Unix(), input.Image.Filename)
+		_, err = r.S3Storage.UploadFile(ctx, key, content, input.Image.ContentType)
+		if err != nil {
+			return nil, fmt.Errorf("failed to upload to S3: %w", err)
+		}
+		imageURL = key
+	}
+
+	resp, err := r.ProductClient.Product.CreateProduct(ctx, &productpb.CreateProductRequest{
+		CategoryId:       input.CategoryID,
+		Name:             input.Name,
+		Description:      input.Description,
+		ImageUrl:         imageURL,
+		Slug:             input.Slug,
+		ShortDescription: stringValue(input.ShortDescription),
+		Brand:            stringValue(input.Brand),
+		Tags:             input.Tags,
+		Attributes:       stringValue(input.Attributes),
+		Status:           stringValue(input.Status),
+		VendorId:         stringValue(input.VendorID),
+		Price:            input.Price,
+		Stock:            int32(input.Stock),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	baseURL := r.S3Storage.GetBaseURL()
+	return mapProductFromProto(resp.Product, baseURL), nil
+}
+
+// UpdateProduct is the resolver for the updateProduct field.
+func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, input model.UpdateProductInput) (*model.Product, error) {
+	// Get existing product first to keep existing image if no new one provided
+	existing, err := r.ProductClient.Product.GetProduct(ctx, &productpb.GetProductRequest{Id: id})
+	if err != nil {
+		return nil, fmt.Errorf("product not found: %w", err)
+	}
+
+	imageURL := existing.Product.ImageUrl
+	if input.Image != nil {
+		content, err := io.ReadAll(input.Image.File)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read upload file: %w", err)
+		}
+
+		key := fmt.Sprintf("products/%d-%s", time.Now().Unix(), input.Image.Filename)
+		_, err = r.S3Storage.UploadFile(ctx, key, content, input.Image.ContentType)
+		if err != nil {
+			return nil, fmt.Errorf("failed to upload to S3: %w", err)
+		}
+		imageURL = key
+	}
+
+	resp, err := r.ProductClient.Product.UpdateProduct(ctx, &productpb.UpdateProductRequest{
+		Id:               id,
+		CategoryId:       input.CategoryID,
+		Name:             input.Name,
+		Description:      input.Description,
+		ImageUrl:         imageURL,
+		Slug:             input.Slug,
+		ShortDescription: stringValue(input.ShortDescription),
+		Brand:            stringValue(input.Brand),
+		Tags:             input.Tags,
+		Attributes:       stringValue(input.Attributes),
+		Status:           stringValue(input.Status),
+		Price:            input.Price,
+		Stock:            int32(input.Stock),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	baseURL := r.S3Storage.GetBaseURL()
+	return mapProductFromProto(resp.Product, baseURL), nil
+}
+
+// DeleteProduct is the resolver for the deleteProduct field.
+func (r *mutationResolver) DeleteProduct(ctx context.Context, id string) (bool, error) {
+	resp, err := r.ProductClient.Product.DeleteProduct(ctx, &productpb.DeleteProductRequest{
+		Id: id,
+	})
+	if err != nil {
+		return false, err
+	}
+	return resp.Success, nil
 }
 
 // CreateCategory is the resolver for the createCategory field.

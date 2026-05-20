@@ -95,7 +95,12 @@ func (r *queryResolver) Users(ctx context.Context, pagination *model.PaginationI
 
 // Products queries
 func (r *queryResolver) Product(ctx context.Context, id string) (*model.Product, error) {
-	return nil, fmt.Errorf("GetProduct not implemented")
+	resp, err := r.ProductClient.Product.GetProduct(ctx, &productpb.GetProductRequest{Id: id})
+	if err != nil {
+		return nil, err
+	}
+	baseURL := r.S3Storage.GetBaseURL()
+	return mapProductFromProto(resp.Product, baseURL), nil
 }
 
 // Products is the resolver for the products field.

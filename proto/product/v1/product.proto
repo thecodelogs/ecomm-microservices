@@ -5,10 +5,10 @@ package product;
 option go_package = "github.com/manojnegi/ecomm-microservices/gen/go/product/v1;productpb";
 
 service ProductService {
-    // rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
-    // rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse);
-    // rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
-    // rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+    rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse);
+    rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse);
+    rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
+    rpc GetProduct(GetProductRequest) returns (GetProductResponse);
     rpc ListProducts(ListProductsRequest) returns (ProductListResponse);
 }
 
@@ -126,7 +126,7 @@ message CreateProductRequest {
     string category_id = 1;
     string name = 2;
     string description = 3;
-    repeated string image_url = 4;
+    string image_url = 4; // Changed to string for simplicity, can be multiple in future
 	string slug = 5;
     string short_description = 6;
     string brand = 7;
@@ -134,36 +134,33 @@ message CreateProductRequest {
 	string attributes = 9;
 	string status = 10;
 	string vendor_id = 11;
+    double price = 12;
+    int32 stock = 13;
 }
 
 message CreateProductResponse {
     string id = 1;
-    string name = 2;
-    string description = 3;
-    double price = 4;
-    int32 stock = 5;
-    string category = 6;
-    string image_url = 7;
+    Product product = 2;
 }
 
 message UpdateProductRequest {
     string id = 1;
-    string name = 2;
-    string description = 3;
-    double price = 4;
-    int32 stock = 5;
-    string category = 6;
-    string image_url = 7;
+    string category_id = 2;
+    string name = 3;
+    string description = 4;
+    string image_url = 5;
+	string slug = 6;
+    string short_description = 7;
+    string brand = 8;
+    repeated string tags = 9;
+	string attributes = 10;
+	string status = 11;
+    double price = 12;
+    int32 stock = 13;
 }
 
 message UpdateProductResponse {
-    string id = 1;
-    string name = 2;
-    string description = 3;
-    double price = 4;
-    int32 stock = 5;
-    string category = 6;
-    string image_url = 7;
+    Product product = 1;
 }
 
 message DeleteProductRequest {
@@ -173,6 +170,7 @@ message DeleteProductRequest {
 message DeleteProductResponse {
     bool success = 1;
 }
+
 message GetProductRequest {
     string id = 1;
 }

@@ -8,8 +8,8 @@ type Query {
   users(pagination: PaginationInput): UserConnection! @auth @admin
 
   # Products
-  product(id: ID!): Product
-  products(categoryId: ID, pagination: PaginationInput): ProductConnection! @auth @admin
-  categories(pagination: PaginationInput): CategoryConnection! @auth @admin
-  category(id: ID!): Category
+  product(id: ID!): Product @auth
+  products(categoryId: ID, pagination: PaginationInput): ProductConnection! @auth
+  categories(pagination: PaginationInput): CategoryConnection! @auth
+  category(id: ID!): Category @auth
 }

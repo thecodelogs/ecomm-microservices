@@ -86,3 +86,18 @@ func (r *InventoryRepo) ReleaseStock(ctx context.Context, variantID uuid.UUID, q
 	_, err := r.db.Exec(ctx, query, quantity, variantID)
 	return err
 }
+func (r *InventoryRepo) Update(ctx context.Context, inv *models.Inventory) error {
+	query := `UPDATE inventory SET 
+				quantity_on_hand = $1, 
+				reorder_point = $2, 
+				updated_at = NOW() 
+			  WHERE variant_id = $3`
+	_, err := r.db.Exec(ctx, query, inv.QuantityOnHand, inv.ReorderPoint, inv.VariantID)
+	return err
+}
+
+func (r *InventoryRepo) DeleteByVariantID(ctx context.Context, variantID uuid.UUID) error {
+	query := `DELETE FROM inventory WHERE variant_id = $1`
+	_, err := r.db.Exec(ctx, query, variantID)
+	return err
+}

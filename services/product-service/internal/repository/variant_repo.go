@@ -72,6 +72,29 @@ func (r *VariantRepo) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]models.V
 	return variants, rows.Err()
 }
 
+func (r *VariantRepo) Update(ctx context.Context, v *models.Variant) error {
+	query := `UPDATE variants SET 
+				sku = $1, 
+				name = $2, 
+				options = $3, 
+				price = $4, 
+				compare_at_price = $5, 
+				cost_price = $6, 
+				weight_grams = $7, 
+				image_url = $8, 
+				is_active = $9, 
+				updated_at = NOW() 
+			  WHERE id = $10`
+	_, err := r.db.Exec(ctx, query, v.SKU, v.Name, v.Options, v.Price, v.CompareAtPrice, v.CostPrice, v.WeightGrams, v.ImageURL, v.IsActive, v.ID)
+	return err
+}
+
+func (r *VariantRepo) DeleteByProductID(ctx context.Context, productID uuid.UUID) error {
+	query := `DELETE FROM variants WHERE product_id = $1`
+	_, err := r.db.Exec(ctx, query, productID)
+	return err
+}
+
 func (r *VariantRepo) scanVariant(row pgx.Row) (*models.Variant, error) {
 	var v models.Variant
 	err := row.Scan(&v.ID, &v.ProductID, &v.SKU, &v.Name, &v.Options, &v.Price, &v.CompareAtPrice, &v.CostPrice, &v.WeightGrams, &v.ImageURL, &v.IsActive, &v.CreatedAt, &v.UpdatedAt)

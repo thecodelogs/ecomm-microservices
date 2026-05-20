@@ -21,6 +21,8 @@ type Mutation {
 
   # Admin - Products
   createProduct(input: CreateProductInput!): Product! @auth @admin
+  updateProduct(id: ID!, input: UpdateProductInput!): Product! @auth @admin
+  deleteProduct(id: ID!): Boolean! @auth @admin
   createCategory(input: CreateCategoryInput!): Category! @auth @admin
   updateCategory(id: ID!, input: UpdateCategoryInput!): Category! @auth @admin
   deleteCategory(id: ID!): Boolean! @auth @admin

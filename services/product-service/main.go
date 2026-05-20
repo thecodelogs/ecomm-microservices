@@ -44,7 +44,7 @@ func main() {
 	revRepo := repository.NewReviewRepo(pool)
 
 	// Service layer
-	prodSvc := service.NewProductService(prodRepo, varRepo, catRepo)
+	prodSvc := service.NewProductService(prodRepo, varRepo, catRepo, invRepo)
 	invSvc := service.NewInventoryService(invRepo)
 	revSvc := service.NewReviewService(revRepo, prodRepo)
 	catSvc := service.NewCategoryService(prodRepo, varRepo, catRepo)

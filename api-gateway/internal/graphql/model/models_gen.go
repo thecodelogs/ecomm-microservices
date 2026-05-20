@@ -70,13 +70,20 @@ type CreateCategoryInput struct {
 }
 
 type CreateProductInput struct {
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	Price       float64           `json:"price"`
-	Sku         string            `json:"sku"`
-	Stock       int               `json:"stock"`
-	CategoryID  string            `json:"categoryId"`
-	Images      []*graphql.Upload `json:"images,omitempty"`
+	Name             string          `json:"name"`
+	Description      string          `json:"description"`
+	Price            float64         `json:"price"`
+	Sku              string          `json:"sku"`
+	Stock            int             `json:"stock"`
+	CategoryID       string          `json:"categoryId"`
+	Image            *graphql.Upload `json:"image,omitempty"`
+	Slug             string          `json:"slug"`
+	ShortDescription *string         `json:"shortDescription,omitempty"`
+	Brand            *string         `json:"brand,omitempty"`
+	Tags             []string        `json:"tags,omitempty"`
+	Attributes       *string         `json:"attributes,omitempty"`
+	Status           *string         `json:"status,omitempty"`
+	VendorID         *string         `json:"vendorId,omitempty"`
 }
 
 type HealthCheck struct {
@@ -143,6 +150,22 @@ type UpdateCategoryInput struct {
 	SortOrder   int             `json:"sortOrder"`
 	IsActive    bool            `json:"isActive"`
 	Image       *graphql.Upload `json:"image,omitempty"`
+}
+
+type UpdateProductInput struct {
+	Name             string          `json:"name"`
+	Description      string          `json:"description"`
+	Price            float64         `json:"price"`
+	Sku              string          `json:"sku"`
+	Stock            int             `json:"stock"`
+	CategoryID       string          `json:"categoryId"`
+	Image            *graphql.Upload `json:"image,omitempty"`
+	Slug             string          `json:"slug"`
+	ShortDescription *string         `json:"shortDescription,omitempty"`
+	Brand            *string         `json:"brand,omitempty"`
+	Tags             []string        `json:"tags,omitempty"`
+	Attributes       *string         `json:"attributes,omitempty"`
+	Status           *string         `json:"status,omitempty"`
 }
 
 type UpdateProfileInput struct {

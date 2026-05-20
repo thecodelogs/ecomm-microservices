@@ -51,7 +51,30 @@ input CreateProductInput {
   sku: String!
   stock: Int!
   categoryId: ID!
-  images: [Upload!]
+  image: Upload
+  slug: String!
+  shortDescription: String
+  brand: String
+  tags: [String!]
+  attributes: String
+  status: String
+  vendorId: ID
+}
+
+input UpdateProductInput {
+  name: String!
+  description: String!
+  price: Float!
+  sku: String!
+  stock: Int!
+  categoryId: ID!
+  image: Upload
+  slug: String!
+  shortDescription: String
+  brand: String
+  tags: [String!]
+  attributes: String
+  status: String
 }
 
 input CreateCategoryInput {

@@ -170,15 +170,6 @@ func (h *CategoryHandler) GetCategory(ctx context.Context, req *categorypb.GetCa
 }
 
 func (h *CategoryHandler) ListCategories(ctx context.Context, req *categorypb.ListCategoryRequest) (*categorypb.CategoryListResponse, error) {
-	// ── Auth Check ──
-	claims, err := auth.ExtractClaims(ctx, h.cfg.PasetoSecret)
-	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated: %v", err)
-	}
-
-	if !strings.EqualFold(claims.Role, "admin") {
-		return nil, status.Error(codes.PermissionDenied, "access denied: admin only")
-	}
 
 	categories, total, err := h.catSvc.ListCategories(ctx, req.Page, req.PageSize)
 	if err != nil {

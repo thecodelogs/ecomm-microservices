@@ -25,9 +25,32 @@ func (r *ProductRepo) Create(ctx context.Context, p *models.Product) error {
 	return err
 }
 
+func (r *ProductRepo) Update(ctx context.Context, p *models.Product) error {
+	query := `UPDATE products SET 
+				category_id = $1, 
+				slug = $2, 
+				name = $3, 
+				description = $4, 
+				short_description = $5, 
+				brand = $6, 
+				tags = $7, 
+				attributes = $8, 
+				status = $9, 
+				updated_at = NOW() 
+			  WHERE id = $10`
+	_, err := r.db.Exec(ctx, query, p.CategoryID, p.Slug, p.Name, p.Description, p.ShortDescription, p.Brand, p.Tags, p.Attributes, p.Status, p.ID)
+	return err
+}
+
+func (r *ProductRepo) Delete(ctx context.Context, id uuid.UUID) error {
+	query := `DELETE FROM products WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, id)
+	return err
+}
+
 func (r *ProductRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, error) {
 	query := `SELECT id, category_id, slug, name, description, short_description, brand, tags, attributes, status, vendor_id, avg_rating, review_count, created_at, updated_at
-	          FROM products WHERE id = $1 AND status = 'active'`
+	          FROM products WHERE id = $1`
 	row := r.db.QueryRow(ctx, query, id)
 	return r.scanProduct(row)
 }
@@ -39,15 +62,33 @@ func (r *ProductRepo) GetBySlug(ctx context.Context, slug string) (*models.Produ
 	return r.scanProduct(row)
 }
 
-func (r *ProductRepo) ListByCategory(ctx context.Context, categoryID uuid.UUID, page, pageSize int32) ([]models.Product, int32, error) {
-	countQuery := `SELECT COUNT(*) FROM products WHERE category_id = $1 AND status = 'active'`
+func (r *ProductRepo) List(ctx context.Context, categoryID uuid.UUID, page, pageSize int32) ([]models.Product, int32, error) {
+	countWhere := "WHERE status = 'active'"
+	queryWhere := "WHERE status = 'active'"
+	
+	var countArgs []interface{}
+	queryArgs := []interface{}{pageSize, (page-1)*pageSize}
+	
+	if categoryID != uuid.Nil {
+		countWhere += " AND category_id = $1"
+		countArgs = append(countArgs, categoryID)
+		
+		queryWhere += " AND category_id = $3"
+		queryArgs = append(queryArgs, categoryID)
+	}
+
+	countQuery := `SELECT COUNT(*) FROM products ` + countWhere
 	var total int32
-	_ = r.db.QueryRow(ctx, countQuery, categoryID).Scan(&total)
+	err := r.db.QueryRow(ctx, countQuery, countArgs...).Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
 
 	query := `SELECT id, category_id, slug, name, description, short_description, brand, tags, attributes, status, vendor_id, avg_rating, review_count, created_at, updated_at
-	          FROM products WHERE category_id = $1 AND status = 'active'
-	          ORDER BY created_at DESC LIMIT $2 OFFSET $3`
-	rows, err := r.db.Query(ctx, query, categoryID, pageSize, (page-1)*pageSize)
+	          FROM products ` + queryWhere + `
+	          ORDER BY created_at DESC LIMIT $1 OFFSET $2`
+	
+	rows, err := r.db.Query(ctx, query, queryArgs...)
 	if err != nil {
 		return nil, 0, err
 	}

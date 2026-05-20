@@ -32,82 +32,154 @@ func NewProductHandler(prodSvc *service.ProductService, invSvc *service.Inventor
 }
 
 // ── ProductService RPCs ──
-// func (h *ProductHandler) CreateProduct(ctx context.Context, req *productpb.CreateProductRequest) (*productpb.CreateProductResponse, error) {
-// 	categoryID, err := uuid.Parse(req.CategoryId)
-// 	if err != nil {
-// 		return nil, status.Error(codes.InvalidArgument, "invalid category id")
-// 	}
+func (h *ProductHandler) CreateProduct(ctx context.Context, req *productpb.CreateProductRequest) (*productpb.CreateProductResponse, error) {
+	// ── Auth Check ──
+	_, err := h.checkAdminAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-// 	vendorID, err := uuid.Parse(req.VendorId)
-// 	if err != nil {
-// 		return nil, status.Error(codes.InvalidArgument, "invalid vendor id")
-// 	}
+	categoryID, _ := uuid.Parse(req.CategoryId)
+	vendorID, _ := uuid.Parse(req.VendorId)
 
-// 	productModel := &models.Product{
-// 		Name:        req.Name,
-// 		Description: req.Description,
-// 		CategoryID:  categoryID,
-// 		ImageUrl:    req.ImageUrl,
-// 		Slug:        req.Slug,
-// 		ShortDescription: sql.NullString{
-// 			String: req.ShortDescription,
-// 			Valid:  req.ShortDescription != "",
-// 		},
-// 		Brand: sql.NullString{
-// 			String: req.Brand,
-// 			Valid:  req.Brand != "",
-// 		},
-// 		Tags:       req.Tags,
-// 		Attributes: json.RawMessage(req.Attributes),
-// 		Status:     req.Status,
-// 		VendorID:   vendorID,
-// 	}
+	p := &models.Product{
+		CategoryID:  categoryID,
+		Name:        req.Name,
+		Description: req.Description,
+		Slug:        req.Slug,
+		ShortDescription: sql.NullString{
+			String: req.ShortDescription,
+			Valid:  req.ShortDescription != "",
+		},
+		Brand: sql.NullString{
+			String: req.Brand,
+			Valid:  req.Brand != "",
+		},
+		Tags:       req.Tags,
+		Attributes: []byte(req.Attributes),
+		Status:     req.Status,
+		VendorID:   vendorID,
+	}
 
-// 	// 2. Call your service layer to persist the data
-// 	// Assuming your service updates productModel with a new UUID/ID
-// 	if err := h.prodSvc.CreateProduct(ctx, productModel); err != nil {
-// 		return nil, status.Errorf(codes.Internal, "failed to create product: %v", err)
-// 	}
+	// Create default variant
+	v := models.Variant{
+		SKU:      req.Slug + "-default",
+		Name:     req.Name,
+		Price:    int64(req.Price * 100), // Convert to cents
+		IsActive: true,
+		// Using weight_grams as placeholder for stock in req if needed
+		WeightGrams: int(req.Stock),
+	}
 
-// 	// 3. Return the EXACT response type requested by the .proto file
-// 	return &productpb.CreateProductResponse{
-// 		Id:          productModel.ID.String(),
-// 		Name:        productModel.Name,
-// 		Description: productModel.Description,
-// 		Price:       req.Price, // Usually you'd return the saved value
-// 		Stock:       req.Stock, // Usually you'd return the saved value
-// 		Category:    req.Category,
-// 		ImageUrl:    req.ImageUrl,
-// 	}, nil
-// }
+	if err := h.prodSvc.CreateProduct(ctx, p, []models.Variant{v}); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to create product: %v", err)
+	}
 
-// func (h *ProductHandler) GetProduct(ctx context.Context, req *productpb.GetProductRequest) (*productpb.ProductDetail, error) {
-// 	id, err := uuid.Parse(req.ProductId)
-// 	if err != nil {
-// 		return nil, status.Error(codes.InvalidArgument, "invalid product id")
-// 	}
+	return &productpb.CreateProductResponse{
+		Id:      p.ID.String(),
+		Product: toProtoProduct(p),
+	}, nil
+}
 
-// 	product, variants, err := h.prodSvc.GetProduct(ctx, id)
-// 	if err != nil {
-// 		return nil, status.Error(codes.NotFound, err.Error())
-// 	}
+func (h *ProductHandler) GetProduct(ctx context.Context, req *productpb.GetProductRequest) (*productpb.GetProductResponse, error) {
+	id, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product id")
+	}
 
-// 	return &productpb.ProductDetail{
-// 		Product:  toProtoProduct(product),
-// 		Variants: toProtoVariants(variants),
-// 	}, nil
-// }
+	product, variants, err := h.prodSvc.GetProduct(ctx, id)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, err.Error())
+	}
+
+	pbProd := toProtoProduct(product)
+	if len(variants) > 0 {
+		pbProd.Price = float64(variants[0].Price) / 100.0
+		// Get stock from inventory for the first variant
+		inv, err := h.invSvc.GetInventory(ctx, variants[0].ID)
+		if err == nil {
+			pbProd.Stock = int32(inv.QuantityAvailable)
+		}
+	}
+
+	return &productpb.GetProductResponse{
+		Product: pbProd,
+	}, nil
+}
+
+func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.UpdateProductRequest) (*productpb.UpdateProductResponse, error) {
+	// ── Auth Check ──
+	_, err := h.checkAdminAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product id")
+	}
+
+	categoryID, _ := uuid.Parse(req.CategoryId)
+
+	p := &models.Product{
+		ID:          id,
+		CategoryID:  categoryID,
+		Name:        req.Name,
+		Description: req.Description,
+		Slug:        req.Slug,
+		ShortDescription: sql.NullString{
+			String: req.ShortDescription,
+			Valid:  req.ShortDescription != "",
+		},
+		Brand: sql.NullString{
+			String: req.Brand,
+			Valid:  req.Brand != "",
+		},
+		Tags:       req.Tags,
+		Attributes: []byte(req.Attributes),
+		Status:     req.Status,
+	}
+
+	// Update default variant
+	v := models.Variant{
+		ProductID: id,
+		SKU:       req.Slug + "-default",
+		Name:      req.Name,
+		Price:     int64(req.Price * 100),
+		IsActive:  true,
+		// Using weight_grams as stock placeholder
+		WeightGrams: int(req.Stock),
+	}
+
+	if err := h.prodSvc.UpdateProduct(ctx, p, []models.Variant{v}); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to update product: %v", err)
+	}
+
+	return &productpb.UpdateProductResponse{
+		Product: toProtoProduct(p),
+	}, nil
+}
+
+func (h *ProductHandler) DeleteProduct(ctx context.Context, req *productpb.DeleteProductRequest) (*productpb.DeleteProductResponse, error) {
+	// ── Auth Check ──
+	_, err := h.checkAdminAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product id")
+	}
+
+	if err := h.prodSvc.DeleteProduct(ctx, id); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to delete product: %v", err)
+	}
+
+	return &productpb.DeleteProductResponse{Success: true}, nil
+}
 
 func (h *ProductHandler) ListProducts(ctx context.Context, req *productpb.ListProductsRequest) (*productpb.ProductListResponse, error) {
-	// ── Auth Check ──
-	claims, err := auth.ExtractClaims(ctx, h.cfg.PasetoSecret)
-	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated: %v", err)
-	}
-
-	if !strings.EqualFold(claims.Role, "admin") {
-		return nil, status.Error(codes.PermissionDenied, "access denied: admin only")
-	}
 
 	catID, _ := uuid.Parse(req.CategoryId)
 	products, total, err := h.prodSvc.ListProducts(ctx, catID, req.Page, req.PageSize)
@@ -127,19 +199,18 @@ func (h *ProductHandler) ListProducts(ctx context.Context, req *productpb.ListPr
 	}, nil
 }
 
-// func (h *ProductHandler) GetVariantsBatch(ctx context.Context, req *productpb.GetVariantsBatchRequest) (*productpb.VariantList, error) {
-// 	var ids []uuid.UUID
-// 	for _, id := range req.VariantIds {
-// 		ids = append(ids, uuid.MustParse(id))
-// 	}
+func (h *ProductHandler) checkAdminAuth(ctx context.Context) (*auth.AccessTokenClaims, error) {
+	claims, err := auth.ExtractClaims(ctx, h.cfg.PasetoSecret)
+	if err != nil {
+		return nil, status.Errorf(codes.Unauthenticated, "unauthenticated: %v", err)
+	}
 
-// 	variants, err := h.prodSvc.GetVariantsBatch(ctx, ids)
-// 	if err != nil {
-// 		return nil, status.Error(codes.Internal, err.Error())
-// 	}
+	if !strings.EqualFold(claims.Role, "admin") {
+		return nil, status.Error(codes.PermissionDenied, "access denied: admin only")
+	}
+	return claims, nil
+}
 
-// 	return &productpb.VariantList{Variants: toProtoVariants(variants)}, nil
-// }
 
 // ── InventoryService RPCs ──
 
@@ -202,6 +273,10 @@ func (h *ProductHandler) ListProducts(ctx context.Context, req *productpb.ListPr
 // ── Helpers ──
 
 func toProtoProduct(p *models.Product) *productpb.Product {
+	imageURL := ""
+	if len(p.ImageUrl) > 0 {
+		imageURL = p.ImageUrl[0]
+	}
 	return &productpb.Product{
 		Id:          p.ID.String(),
 		CategoryId:  p.CategoryID.String(),
@@ -213,6 +288,7 @@ func toProtoProduct(p *models.Product) *productpb.Product {
 		VendorId:    p.VendorID.String(),
 		AvgRating:   float64(p.AvgRating),
 		ReviewCount: int32(p.ReviewCount),
+		ImageUrl:    imageURL,
 	}
 }
 
