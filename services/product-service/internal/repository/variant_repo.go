@@ -95,6 +95,12 @@ func (r *VariantRepo) DeleteByProductID(ctx context.Context, productID uuid.UUID
 	return err
 }
 
+func (r *VariantRepo) Delete(ctx context.Context, id uuid.UUID) error {
+	query := `DELETE FROM variants WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, id)
+	return err
+}
+
 func (r *VariantRepo) scanVariant(row pgx.Row) (*models.Variant, error) {
 	var v models.Variant
 	err := row.Scan(&v.ID, &v.ProductID, &v.SKU, &v.Name, &v.Options, &v.Price, &v.CompareAtPrice, &v.CostPrice, &v.WeightGrams, &v.ImageURL, &v.IsActive, &v.CreatedAt, &v.UpdatedAt)

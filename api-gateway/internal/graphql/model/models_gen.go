@@ -86,6 +86,19 @@ type CreateProductInput struct {
 	VendorID         *string         `json:"vendorId,omitempty"`
 }
 
+type CreateVariantInput struct {
+	ProductID      string          `json:"productId"`
+	Sku            string          `json:"sku"`
+	Name           string          `json:"name"`
+	Options        *string         `json:"options,omitempty"`
+	Price          float64         `json:"price"`
+	CompareAtPrice *float64        `json:"compareAtPrice,omitempty"`
+	CostPrice      *float64        `json:"costPrice,omitempty"`
+	WeightGrams    int             `json:"weightGrams"`
+	Image          *graphql.Upload `json:"image,omitempty"`
+	IsActive       bool            `json:"isActive"`
+}
+
 type HealthCheck struct {
 	Status    string           `json:"status"`
 	Timestamp time.Time        `json:"timestamp"`
@@ -174,6 +187,19 @@ type UpdateProfileInput struct {
 	Phone     *string `json:"phone,omitempty"`
 }
 
+type UpdateVariantInput struct {
+	ProductID      string          `json:"productId"`
+	Sku            string          `json:"sku"`
+	Name           string          `json:"name"`
+	Options        *string         `json:"options,omitempty"`
+	Price          float64         `json:"price"`
+	CompareAtPrice *float64        `json:"compareAtPrice,omitempty"`
+	CostPrice      *float64        `json:"costPrice,omitempty"`
+	WeightGrams    int             `json:"weightGrams"`
+	Image          *graphql.Upload `json:"image,omitempty"`
+	IsActive       bool            `json:"isActive"`
+}
+
 type UserConnection struct {
 	Edges    []*UserEdge `json:"edges"`
 	PageInfo *PageInfo   `json:"pageInfo"`
@@ -183,6 +209,25 @@ type UserEdge struct {
 	Node   *User  `json:"node"`
 	Cursor string `json:"cursor"`
 }
+
+type Variant struct {
+	ID             string    `json:"id"`
+	ProductID      string    `json:"productId"`
+	Sku            string    `json:"sku"`
+	Name           string    `json:"name"`
+	Options        *string   `json:"options,omitempty"`
+	Price          float64   `json:"price"`
+	CompareAtPrice *float64  `json:"compareAtPrice,omitempty"`
+	CostPrice      *float64  `json:"costPrice,omitempty"`
+	WeightGrams    int       `json:"weightGrams"`
+	ImageURL       *string   `json:"imageUrl,omitempty"`
+	IsActive       bool      `json:"isActive"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
+}
+
+func (Variant) IsNode()            {}
+func (this Variant) GetID() string { return this.ID }
 
 type Role string
 

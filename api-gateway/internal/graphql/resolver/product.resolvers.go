@@ -7,6 +7,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	productpb "github.com/manojnegi/ecomm-microservices/gen/go/product/v1"
 	"github.com/manojnegi/ecommerce/api-gateway/internal/graphql/generated"
@@ -45,6 +46,11 @@ func (r *productResolver) Category(ctx context.Context, obj *model.Product) (*mo
 	}
 	baseURL := r.S3Storage.GetBaseURL()
 	return mapCategoryFromProto(resp.Category, baseURL), nil
+}
+
+// Variants is the resolver for the variants field.
+func (r *productResolver) Variants(ctx context.Context, obj *model.Product) ([]*model.Variant, error) {
+	panic(fmt.Errorf("not implemented: Variants - variants"))
 }
 
 // Category returns generated.CategoryResolver implementation.

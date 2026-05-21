@@ -58,6 +58,49 @@ func mapProductFromProto(p *productpb.Product, baseURL string) *model.Product {
 		imageUrl = baseURL + imageUrl
 	}
 
+	var variants []*model.Variant
+	for _, v := range p.Variants {
+		vImageUrl := v.ImageUrl
+		if vImageUrl != "" && !strings.HasPrefix(vImageUrl, "http") {
+			vImageUrl = baseURL + vImageUrl
+		}
+		var optionsPtr *string
+		if v.Options != "" {
+			opts := v.Options
+			optionsPtr = &opts
+		}
+		var cmpPricePtr *float64
+		if v.CompareAtPrice > 0 {
+			cmp := v.CompareAtPrice
+			cmpPricePtr = &cmp
+		}
+		var costPricePtr *float64
+		if v.CostPrice > 0 {
+			cst := v.CostPrice
+			costPricePtr = &cst
+		}
+		var vImageUrlPtr *string
+		if vImageUrl != "" {
+			vImageUrlPtr = &vImageUrl
+		}
+
+		variants = append(variants, &model.Variant{
+			ID:             v.Id,
+			ProductID:      v.ProductId,
+			Sku:            v.Sku,
+			Name:           v.Name,
+			Options:        optionsPtr,
+			Price:          v.Price,
+			CompareAtPrice: cmpPricePtr,
+			CostPrice:      costPricePtr,
+			WeightGrams:    int(v.WeightGrams),
+			ImageURL:       vImageUrlPtr,
+			IsActive:       v.IsActive,
+			CreatedAt:      time.Unix(v.CreatedAt, 0),
+			UpdatedAt:      time.Unix(v.UpdatedAt, 0),
+		})
+	}
+
 	return &model.Product{
 		ID:          p.Id,
 		Name:        p.Name,
@@ -67,8 +110,55 @@ func mapProductFromProto(p *productpb.Product, baseURL string) *model.Product {
 		Stock:       int(p.Stock),
 		CategoryID:  p.CategoryId,
 		Images:      []string{imageUrl}, // Wrap ImageUrl in a slice
+		Variants:    variants,
 		CreatedAt:   time.Unix(p.CreatedAt, 0),
 		UpdatedAt:   time.Unix(p.CreatedAt, 0),
+	}
+}
+
+func mapVariantFromProto(v *productpb.Variant, baseURL string) *model.Variant {
+	if v == nil {
+		return nil
+	}
+
+	vImageUrl := v.ImageUrl
+	if vImageUrl != "" && !strings.HasPrefix(vImageUrl, "http") {
+		vImageUrl = baseURL + vImageUrl
+	}
+	var optionsPtr *string
+	if v.Options != "" {
+		opts := v.Options
+		optionsPtr = &opts
+	}
+	var cmpPricePtr *float64
+	if v.CompareAtPrice > 0 {
+		cmp := v.CompareAtPrice
+		cmpPricePtr = &cmp
+	}
+	var costPricePtr *float64
+	if v.CostPrice > 0 {
+		cst := v.CostPrice
+		costPricePtr = &cst
+	}
+	var vImageUrlPtr *string
+	if vImageUrl != "" {
+		vImageUrlPtr = &vImageUrl
+	}
+
+	return &model.Variant{
+		ID:             v.Id,
+		ProductID:      v.ProductId,
+		Sku:            v.Sku,
+		Name:           v.Name,
+		Options:        optionsPtr,
+		Price:          v.Price,
+		CompareAtPrice: cmpPricePtr,
+		CostPrice:      costPricePtr,
+		WeightGrams:    int(v.WeightGrams),
+		ImageURL:       vImageUrlPtr,
+		IsActive:       v.IsActive,
+		CreatedAt:      time.Unix(v.CreatedAt, 0),
+		UpdatedAt:      time.Unix(v.UpdatedAt, 0),
 	}
 }
 
@@ -120,4 +210,11 @@ func mapStatusToProto(s model.UserStatus) string {
 
 func encodeCursor(id string) string {
 	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("cursor:%s", id)))
+}
+
+func floatValue(f *float64) float64 {
+	if f != nil {
+		return *f
+	}
+	return 0
 }

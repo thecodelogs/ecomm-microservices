@@ -10,6 +10,10 @@ service ProductService {
     rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
     rpc GetProduct(GetProductRequest) returns (GetProductResponse);
     rpc ListProducts(ListProductsRequest) returns (ProductListResponse);
+
+    rpc CreateVariant(CreateVariantRequest) returns (CreateVariantResponse);
+    rpc UpdateVariant(UpdateVariantRequest) returns (UpdateVariantResponse);
+    rpc DeleteVariant(DeleteVariantRequest) returns (DeleteVariantResponse);
 }
 
 service CategoryService {
@@ -120,6 +124,66 @@ message Product {
     double price = 12;
     int32 stock = 13;
     string image_url = 14;
+    repeated Variant variants = 15;
+}
+
+message Variant {
+    string id = 1;
+    string product_id = 2;
+    string sku = 3;
+    string name = 4;
+    string options = 5;
+    double price = 6;
+    double compare_at_price = 7;
+    double cost_price = 8;
+    int32 weight_grams = 9;
+    string image_url = 10;
+    bool is_active = 11;
+    int64 created_at = 12;
+    int64 updated_at = 13;
+}
+
+message CreateVariantRequest {
+    string product_id = 1;
+    string sku = 2;
+    string name = 3;
+    string options = 4;
+    double price = 5;
+    double compare_at_price = 6;
+    double cost_price = 7;
+    int32 weight_grams = 8;
+    string image_url = 9;
+    bool is_active = 10;
+}
+
+message CreateVariantResponse {
+    Variant variant = 1;
+}
+
+message UpdateVariantRequest {
+    string id = 1;
+    string product_id = 2;
+    string sku = 3;
+    string name = 4;
+    string options = 5;
+    double price = 6;
+    double compare_at_price = 7;
+    double cost_price = 8;
+    int32 weight_grams = 9;
+    string image_url = 10;
+    bool is_active = 11;
+}
+
+message UpdateVariantResponse {
+    Variant variant = 1;
+}
+
+message DeleteVariantRequest {
+    string id = 1;
+}
+
+message DeleteVariantResponse {
+    bool success = 1;
 }
 
 message CreateProductRequest {

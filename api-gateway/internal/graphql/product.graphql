@@ -7,6 +7,23 @@ type Product implements Node {
   stock: Int!
   category: Category!
   images: [String!]!
+  variants: [Variant!]!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type Variant implements Node {
+  id: ID!
+  productId: ID!
+  sku: String!
+  name: String!
+  options: String
+  price: Float!
+  compareAtPrice: Float
+  costPrice: Float
+  weightGrams: Int!
+  imageUrl: String
+  isActive: Boolean!
   createdAt: Time!
   updatedAt: Time!
 }
@@ -95,4 +112,30 @@ input UpdateCategoryInput {
   sortOrder: Int!
   isActive: Boolean!
   image: Upload
+}
+
+input CreateVariantInput {
+  productId: ID!
+  sku: String!
+  name: String!
+  options: String
+  price: Float!
+  compareAtPrice: Float
+  costPrice: Float
+  weightGrams: Int!
+  image: Upload
+  isActive: Boolean!
+}
+
+input UpdateVariantInput {
+  productId: ID!
+  sku: String!
+  name: String!
+  options: String
+  price: Float!
+  compareAtPrice: Float
+  costPrice: Float
+  weightGrams: Int!
+  image: Upload
+  isActive: Boolean!
 }

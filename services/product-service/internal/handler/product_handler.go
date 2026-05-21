@@ -83,7 +83,7 @@ func (h *ProductHandler) CreateProduct(ctx context.Context, req *productpb.Creat
 
 	return &productpb.CreateProductResponse{
 		Id:      p.ID.String(),
-		Product: toProtoProduct(p),
+		Product: toProtoProduct(p, []models.Variant{v}),
 	}, nil
 }
 
@@ -95,21 +95,11 @@ func (h *ProductHandler) GetProduct(ctx context.Context, req *productpb.GetProdu
 
 	product, variants, err := h.prodSvc.GetProduct(ctx, id)
 	if err != nil {
-		return nil, status.Error(codes.NotFound, err.Error())
-	}
-
-	pbProd := toProtoProduct(product)
-	if len(variants) > 0 {
-		pbProd.Price = float64(variants[0].Price) / 100.0
-		// Get stock from inventory for the first variant
-		inv, err := h.invSvc.GetInventory(ctx, variants[0].ID)
-		if err == nil {
-			pbProd.Stock = int32(inv.QuantityAvailable)
-		}
+		return nil, status.Error(codes.NotFound, "product not found")
 	}
 
 	return &productpb.GetProductResponse{
-		Product: pbProd,
+		Product: toProtoProduct(product, variants),
 	}, nil
 }
 
@@ -167,7 +157,7 @@ func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.Updat
 	}
 
 	return &productpb.UpdateProductResponse{
-		Product: toProtoProduct(p),
+		Product: toProtoProduct(p, []models.Variant{v}),
 	}, nil
 }
 
@@ -200,7 +190,7 @@ func (h *ProductHandler) ListProducts(ctx context.Context, req *productpb.ListPr
 
 	var pbProducts []*productpb.Product
 	for _, p := range products {
-		pbProducts = append(pbProducts, toProtoProduct(&p))
+		pbProducts = append(pbProducts, toProtoProduct(&p, nil)) // List products doesn't include variants yet
 	}
 
 	return &productpb.ProductListResponse{
@@ -208,6 +198,105 @@ func (h *ProductHandler) ListProducts(ctx context.Context, req *productpb.ListPr
 		Total:    total,
 		Page:     req.Page,
 	}, nil
+}
+
+func (h *ProductHandler) CreateVariant(ctx context.Context, req *productpb.CreateVariantRequest) (*productpb.CreateVariantResponse, error) {
+	_, err := h.checkAdminAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	productID, err := uuid.Parse(req.ProductId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product id")
+	}
+
+	options := []byte(req.Options)
+	if req.Options == "" {
+		options = nil
+	}
+
+	v := &models.Variant{
+		ProductID:      productID,
+		SKU:            req.Sku,
+		Name:           req.Name,
+		Options:        options,
+		Price:          int64(req.Price * 100),
+		CompareAtPrice: sql.NullInt64{Int64: int64(req.CompareAtPrice * 100), Valid: req.CompareAtPrice > 0},
+		CostPrice:      sql.NullInt64{Int64: int64(req.CostPrice * 100), Valid: req.CostPrice > 0},
+		WeightGrams:    int(req.WeightGrams),
+		ImageURL:       toNullString(req.ImageUrl),
+		IsActive:       req.IsActive,
+	}
+
+	if err := h.prodSvc.CreateVariant(ctx, v); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to create variant: %v", err)
+	}
+
+	return &productpb.CreateVariantResponse{
+		Variant: toProtoVariants([]models.Variant{*v})[0],
+	}, nil
+}
+
+func (h *ProductHandler) UpdateVariant(ctx context.Context, req *productpb.UpdateVariantRequest) (*productpb.UpdateVariantResponse, error) {
+	_, err := h.checkAdminAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid variant id")
+	}
+	productID, err := uuid.Parse(req.ProductId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid product id")
+	}
+
+	options := []byte(req.Options)
+	if req.Options == "" {
+		options = nil
+	}
+
+	v := &models.Variant{
+		ID:             id,
+		ProductID:      productID,
+		SKU:            req.Sku,
+		Name:           req.Name,
+		Options:        options,
+		Price:          int64(req.Price * 100),
+		CompareAtPrice: sql.NullInt64{Int64: int64(req.CompareAtPrice * 100), Valid: req.CompareAtPrice > 0},
+		CostPrice:      sql.NullInt64{Int64: int64(req.CostPrice * 100), Valid: req.CostPrice > 0},
+		WeightGrams:    int(req.WeightGrams),
+		ImageURL:       toNullString(req.ImageUrl),
+		IsActive:       req.IsActive,
+	}
+
+	if err := h.prodSvc.UpdateVariant(ctx, v); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to update variant: %v", err)
+	}
+
+	return &productpb.UpdateVariantResponse{
+		Variant: toProtoVariants([]models.Variant{*v})[0],
+	}, nil
+}
+
+func (h *ProductHandler) DeleteVariant(ctx context.Context, req *productpb.DeleteVariantRequest) (*productpb.DeleteVariantResponse, error) {
+	_, err := h.checkAdminAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid variant id")
+	}
+
+	if err := h.prodSvc.DeleteVariant(ctx, id); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to delete variant: %v", err)
+	}
+
+	return &productpb.DeleteVariantResponse{Success: true}, nil
 }
 
 func (h *ProductHandler) checkAdminAuth(ctx context.Context) (*auth.AccessTokenClaims, error) {
@@ -283,12 +372,12 @@ func (h *ProductHandler) checkAdminAuth(ctx context.Context) (*auth.AccessTokenC
 
 // ── Helpers ──
 
-func toProtoProduct(p *models.Product) *productpb.Product {
+func toProtoProduct(p *models.Product, variants []models.Variant) *productpb.Product {
 	imageURL := ""
 	if len(p.ImageUrl) > 0 {
 		imageURL = p.ImageUrl[0]
 	}
-	return &productpb.Product{
+	pb := &productpb.Product{
 		Id:          p.ID.String(),
 		CategoryId:  p.CategoryID.String(),
 		Slug:        p.Slug,
@@ -301,22 +390,48 @@ func toProtoProduct(p *models.Product) *productpb.Product {
 		ReviewCount: int32(p.ReviewCount),
 		ImageUrl:    imageURL,
 	}
+
+	if len(variants) > 0 {
+		pb.Variants = toProtoVariants(variants)
+		// For backward compatibility, map the first variant's price/stock to the product level
+		pb.Price = float64(variants[0].Price) / 100.0
+		pb.Stock = int32(variants[0].WeightGrams) // Using WeightGrams as stock for now
+	}
+
+	return pb
 }
 
-// func toProtoVariants(vs []models.Variant) []*productpb.Variant {
-// 	var result []*productpb.Variant
-// 	for _, v := range vs {
-// 		result = append(result, &productpb.Variant{
-// 			Id:        v.ID.String(),
-// 			ProductId: v.ProductID.String(),
-// 			Sku:       v.SKU,
-// 			Name:      v.Name,
-// 			Price:     v.Price,
-// 			IsActive:  v.IsActive,
-// 		})
-// 	}
-// 	return result
-// }
+func toProtoVariants(vs []models.Variant) []*productpb.Variant {
+	var result []*productpb.Variant
+	for _, v := range vs {
+		optionsStr := ""
+		if v.Options != nil {
+			optionsStr = string(v.Options)
+		}
+		
+		imageURL := ""
+		if v.ImageURL.Valid {
+			imageURL = v.ImageURL.String
+		}
+
+		result = append(result, &productpb.Variant{
+			Id:             v.ID.String(),
+			ProductId:      v.ProductID.String(),
+			Sku:            v.SKU,
+			Name:           v.Name,
+			Options:        optionsStr,
+			Price:          float64(v.Price) / 100.0,
+			CompareAtPrice: float64(v.CompareAtPrice.Int64) / 100.0,
+			CostPrice:      float64(v.CostPrice.Int64) / 100.0,
+			WeightGrams:    int32(v.WeightGrams),
+			ImageUrl:       imageURL,
+			IsActive:       v.IsActive,
+			CreatedAt:      v.CreatedAt.Unix(),
+			UpdatedAt:      v.UpdatedAt.Unix(),
+		})
+	}
+	return result
+}
 
 func toProtoInventory(i *models.Inventory) *productpb.Inventory {
 	return &productpb.Inventory{

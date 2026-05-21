@@ -26,4 +26,8 @@ type Mutation {
   createCategory(input: CreateCategoryInput!): Category! @auth @admin
   updateCategory(id: ID!, input: UpdateCategoryInput!): Category! @auth @admin
   deleteCategory(id: ID!): Boolean! @auth @admin
+
+  createVariant(input: CreateVariantInput!): Variant! @auth @admin
+  updateVariant(id: ID!, input: UpdateVariantInput!): Variant! @auth @admin
+  deleteVariant(id: ID!): Boolean! @auth @admin
 }

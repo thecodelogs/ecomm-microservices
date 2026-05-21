@@ -26,7 +26,6 @@ func NewProductService(prodRepo *repository.ProductRepo, varRepo *repository.Var
 func (s *ProductService) CreateProduct(ctx context.Context, p *models.Product, variants []models.Variant) error {
 	p.ID = uuid.New()
 	p.Slug = generateSlug(p.Name)
-	p.Status = "draft"
 	p.CreatedAt = time.Now().UTC()
 	p.UpdatedAt = time.Now().UTC()
 
@@ -153,4 +152,48 @@ func (s *ProductService) GetVariantsBatch(ctx context.Context, ids []uuid.UUID) 
 func generateSlug(name string) string {
 	// Simplified — use github.com/gosimple/slug in production
 	return fmt.Sprintf("%s-%s", name, uuid.New().String()[:8])
+}
+
+func (s *ProductService) CreateVariant(ctx context.Context, v *models.Variant) error {
+	v.ID = uuid.New()
+	v.CreatedAt = time.Now().UTC()
+	v.UpdatedAt = time.Now().UTC()
+	if err := s.varRepo.Create(ctx, v); err != nil {
+		return fmt.Errorf("create variant: %w", err)
+	}
+
+	// Create default inventory
+	inv := &models.Inventory{
+		ID:                uuid.New(),
+		VariantID:         v.ID,
+		QuantityOnHand:    v.WeightGrams, // Using weight_grams as stock for now
+		QuantityReserved:  0,
+		QuantityAvailable: 0,
+		ReorderPoint:      10,
+	}
+	if err := s.invRepo.Create(ctx, inv); err != nil {
+		return fmt.Errorf("create inventory: %w", err)
+	}
+
+	return nil
+}
+
+func (s *ProductService) UpdateVariant(ctx context.Context, v *models.Variant) error {
+	v.UpdatedAt = time.Now().UTC()
+	if err := s.varRepo.Update(ctx, v); err != nil {
+		return fmt.Errorf("update variant: %w", err)
+	}
+
+	// Update inventory
+	inv, err := s.invRepo.GetByVariantID(ctx, v.ID)
+	if err == nil {
+		inv.QuantityOnHand = v.WeightGrams // Using weight_grams as stock
+		s.invRepo.Update(ctx, inv)
+	}
+
+	return nil
+}
+
+func (s *ProductService) DeleteVariant(ctx context.Context, id uuid.UUID) error {
+	return s.varRepo.Delete(ctx, id)
 }

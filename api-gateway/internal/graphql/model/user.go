@@ -16,16 +16,17 @@ type User struct {
 }
 
 type Product struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Price       float64   `json:"price"`
-	Sku         string    `json:"sku"`
-	Stock       int       `json:"stock"`
-	CategoryID  string    `json:"categoryId"`
-	Images      []string  `json:"images"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID          string     `json:"id"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	Price       float64    `json:"price"`
+	Sku         string     `json:"sku"`
+	Stock       int        `json:"stock"`
+	CategoryID  string     `json:"categoryId"`
+	Images      []string   `json:"images"`
+	Variants    []*Variant `json:"variants"`
+	CreatedAt   time.Time  `json:"createdAt"`
+	UpdatedAt   time.Time  `json:"updatedAt"`
 }
 
 type Category struct {
