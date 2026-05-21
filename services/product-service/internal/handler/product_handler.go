@@ -66,15 +66,10 @@ func (h *ProductHandler) CreateProduct(ctx context.Context, req *productpb.Creat
 		Status:     req.Status,
 		VendorID:   vendorID,
 	}
-
-	// Create default variant
 	v := models.Variant{
 		SKU:      req.Slug + "-default",
 		Name:     req.Name,
-		Price:    int64(req.Price * 100), // Convert to cents
 		IsActive: true,
-		// Using weight_grams as placeholder for stock in req if needed
-		WeightGrams: int(req.Stock),
 	}
 
 	if err := h.prodSvc.CreateProduct(ctx, p, []models.Variant{v}); err != nil {
@@ -146,10 +141,7 @@ func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.Updat
 		ProductID: id,
 		SKU:       req.Slug + "-default",
 		Name:      req.Name,
-		Price:     int64(req.Price * 100),
 		IsActive:  true,
-		// Using weight_grams as stock placeholder
-		WeightGrams: int(req.Stock),
 	}
 
 	if err := h.prodSvc.UpdateProduct(ctx, p, []models.Variant{v}); err != nil {
@@ -311,72 +303,7 @@ func (h *ProductHandler) checkAdminAuth(ctx context.Context) (*auth.AccessTokenC
 	return claims, nil
 }
 
-
-// ── InventoryService RPCs ──
-
-// func (h *ProductHandler) ReserveStock(ctx context.Context, req *productpb.ReserveStockRequest) (*productpb.ReserveStockResponse, error) {
-// 	variantID, err := uuid.Parse(req.VariantId)
-// 	if err != nil {
-// 		return nil, status.Error(codes.InvalidArgument, "invalid variant id")
-// 	}
-
-// 	if err := h.invSvc.ReserveStock(ctx, variantID, int(req.Quantity)); err != nil {
-// 		return nil, status.Error(codes.FailedPrecondition, err.Error())
-// 	}
-
-// 	return &productpb.ReserveStockResponse{
-// 		ReservationId: uuid.New().String(),
-// 		Success:       true,
-// 	}, nil
-// }
-
-// func (h *ProductHandler) CommitStock(ctx context.Context, req *productpb.CommitStockRequest) (*productpb.Empty, error) {
-// 	variantID, err := uuid.Parse(req.VariantId)
-// 	if err != nil {
-// 		return nil, status.Error(codes.InvalidArgument, "invalid variant id")
-// 	}
-
-// 	if err := h.invSvc.CommitStock(ctx, variantID, int(req.Quantity)); err != nil {
-// 		return nil, status.Error(codes.Internal, err.Error())
-// 	}
-
-// 	return &productpb.Empty{}, nil
-// }
-
-// func (h *ProductHandler) ReleaseStock(ctx context.Context, req *productpb.ReleaseStockRequest) (*productpb.Empty, error) {
-// 	variantID, err := uuid.Parse(req.VariantId)
-// 	if err != nil {
-// 		return nil, status.Error(codes.InvalidArgument, "invalid variant id")
-// 	}
-
-// 	if err := h.invSvc.ReleaseStock(ctx, variantID, int(req.Quantity)); err != nil {
-// 		return nil, status.Error(codes.Internal, err.Error())
-// 	}
-
-// 	return &productpb.Empty{}, nil
-// }
-
-// func (h *ProductHandler) GetInventory(ctx context.Context, req *productpb.GetInventoryRequest) (*productpb.Inventory, error) {
-// 	variantID, err := uuid.Parse(req.VariantId)
-// 	if err != nil {
-// 		return nil, status.Error(codes.InvalidArgument, "invalid variant id")
-// 	}
-
-// 	inv, err := h.invSvc.GetInventory(ctx, variantID)
-// 	if err != nil {
-// 		return nil, status.Error(codes.NotFound, err.Error())
-// 	}
-
-// 	return toProtoInventory(inv), nil
-// }
-
-// ── Helpers ──
-
 func toProtoProduct(p *models.Product, variants []models.Variant) *productpb.Product {
-	imageURL := ""
-	if len(p.ImageUrl) > 0 {
-		imageURL = p.ImageUrl[0]
-	}
 	pb := &productpb.Product{
 		Id:          p.ID.String(),
 		CategoryId:  p.CategoryID.String(),
@@ -388,14 +315,10 @@ func toProtoProduct(p *models.Product, variants []models.Variant) *productpb.Pro
 		VendorId:    p.VendorID.String(),
 		AvgRating:   float64(p.AvgRating),
 		ReviewCount: int32(p.ReviewCount),
-		ImageUrl:    imageURL,
 	}
 
 	if len(variants) > 0 {
 		pb.Variants = toProtoVariants(variants)
-		// For backward compatibility, map the first variant's price/stock to the product level
-		pb.Price = float64(variants[0].Price) / 100.0
-		pb.Stock = int32(variants[0].WeightGrams) // Using WeightGrams as stock for now
 	}
 
 	return pb
@@ -408,7 +331,7 @@ func toProtoVariants(vs []models.Variant) []*productpb.Variant {
 		if v.Options != nil {
 			optionsStr = string(v.Options)
 		}
-		
+
 		imageURL := ""
 		if v.ImageURL.Valid {
 			imageURL = v.ImageURL.String

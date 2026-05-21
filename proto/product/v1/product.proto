@@ -120,11 +120,7 @@ message Product {
     double avg_rating = 9;
     int32 review_count = 10;
     int64 created_at = 11;
-
-    double price = 12;
-    int32 stock = 13;
-    string image_url = 14;
-    repeated Variant variants = 15;
+    repeated Variant variants = 12;
 }
 
 message Variant {
@@ -190,16 +186,13 @@ message CreateProductRequest {
     string category_id = 1;
     string name = 2;
     string description = 3;
-    string image_url = 4; // Changed to string for simplicity, can be multiple in future
-	string slug = 5;
-    string short_description = 6;
-    string brand = 7;
-    repeated string tags = 8;
-	string attributes = 9;
-	string status = 10;
-	string vendor_id = 11;
-    double price = 12;
-    int32 stock = 13;
+	string slug = 4;
+    string short_description = 5;
+    string brand = 6;
+    repeated string tags = 7;
+	string attributes = 8;
+	string status = 9;
+	string vendor_id = 10;
 }
 
 message CreateProductResponse {
@@ -212,15 +205,13 @@ message UpdateProductRequest {
     string category_id = 2;
     string name = 3;
     string description = 4;
-    string image_url = 5;
-	string slug = 6;
-    string short_description = 7;
-    string brand = 8;
-    repeated string tags = 9;
-	string attributes = 10;
-	string status = 11;
-    double price = 12;
-    int32 stock = 13;
+	string slug = 5;
+    string short_description = 6;
+    string brand = 7;
+    repeated string tags = 8;
+	string attributes = 9;
+	string status = 10;
+    string vendor_id = 11;
 }
 
 message UpdateProductResponse {
