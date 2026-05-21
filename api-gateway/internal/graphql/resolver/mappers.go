@@ -53,11 +53,6 @@ func mapProductFromProto(p *productpb.Product, baseURL string) *model.Product {
 		return nil
 	}
 
-	imageUrl := p.ImageUrl
-	if imageUrl != "" && !strings.HasPrefix(imageUrl, "http") {
-		imageUrl = baseURL + imageUrl
-	}
-
 	var variants []*model.Variant
 	for _, v := range p.Variants {
 		vImageUrl := v.ImageUrl
@@ -105,11 +100,8 @@ func mapProductFromProto(p *productpb.Product, baseURL string) *model.Product {
 		ID:          p.Id,
 		Name:        p.Name,
 		Description: p.Description,
-		Price:       p.Price,
-		Sku:         p.Slug, // Use Slug as Sku since Sku is missing
-		Stock:       int(p.Stock),
+		Sku:         p.Slug,
 		CategoryID:  p.CategoryId,
-		Images:      []string{imageUrl}, // Wrap ImageUrl in a slice
 		Variants:    variants,
 		CreatedAt:   time.Unix(p.CreatedAt, 0),
 		UpdatedAt:   time.Unix(p.CreatedAt, 0),

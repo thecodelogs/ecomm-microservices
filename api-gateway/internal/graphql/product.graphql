@@ -2,11 +2,7 @@ type Product implements Node {
   id: ID!
   name: String!
   description: String!
-  price: Float!
-  sku: String!
-  stock: Int!
   category: Category!
-  images: [String!]!
   variants: [Variant!]!
   createdAt: Time!
   updatedAt: Time!
@@ -64,11 +60,7 @@ type ProductEdge {
 input CreateProductInput {
   name: String!
   description: String!
-  price: Float!
-  sku: String!
-  stock: Int!
   categoryId: ID!
-  image: Upload
   slug: String!
   shortDescription: String
   brand: String
@@ -81,11 +73,7 @@ input CreateProductInput {
 input UpdateProductInput {
   name: String!
   description: String!
-  price: Float!
-  sku: String!
-  stock: Int!
   categoryId: ID!
-  image: Upload
   slug: String!
   shortDescription: String
   brand: String

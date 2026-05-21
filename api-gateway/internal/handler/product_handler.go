@@ -2,8 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -114,52 +112,6 @@ func (p *ProductHandler) CreateCategory(c *gin.Context) {
 	}
 
 	isActive := isActiveStr == "true"
-
-	// Upload image to S3
-	var imageURL string
-
-	file, err := c.FormFile("image")
-
-	if err == nil {
-
-		f, err := file.Open()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "failed to open image",
-			})
-			return
-		}
-		defer f.Close()
-
-		data, err := io.ReadAll(f)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "failed to read image",
-			})
-			return
-		}
-
-		key := fmt.Sprintf(
-			"categories/%s-%s",
-			uuid.New().String(),
-			file.Filename,
-		)
-
-		imageURL, err = p.s3.UploadFile(
-			c.Request.Context(),
-			key,
-			data,
-			file.Header.Get("Content-Type"),
-		)
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-	}
-
 	ctx, cancel := context.WithTimeout(
 		c.Request.Context(),
 		5*time.Second,
@@ -172,7 +124,6 @@ func (p *ProductHandler) CreateCategory(c *gin.Context) {
 			Name:        name,
 			Description: description,
 			Slug:        slug,
-			ImageUrl:    imageURL,
 			SortOrder:   int32(sortOrder),
 			IsActive:    isActive,
 			ParentId:    parentID,
@@ -187,7 +138,6 @@ func (p *ProductHandler) CreateCategory(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"id":        resp.Id,
-		"image_url": imageURL,
+		"id": resp.Id,
 	})
 }

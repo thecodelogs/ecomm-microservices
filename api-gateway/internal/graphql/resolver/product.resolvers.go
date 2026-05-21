@@ -7,7 +7,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
 	productpb "github.com/manojnegi/ecomm-microservices/gen/go/product/v1"
 	"github.com/manojnegi/ecommerce/api-gateway/internal/graphql/generated"
@@ -48,11 +47,6 @@ func (r *productResolver) Category(ctx context.Context, obj *model.Product) (*mo
 	return mapCategoryFromProto(resp.Category, baseURL), nil
 }
 
-// Variants is the resolver for the variants field.
-func (r *productResolver) Variants(ctx context.Context, obj *model.Product) ([]*model.Variant, error) {
-	panic(fmt.Errorf("not implemented: Variants - variants"))
-}
-
 // Category returns generated.CategoryResolver implementation.
 func (r *Resolver) Category() generated.CategoryResolver { return &categoryResolver{r} }
 
@@ -61,3 +55,15 @@ func (r *Resolver) Product() generated.ProductResolver { return &productResolver
 
 type categoryResolver struct{ *Resolver }
 type productResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *productResolver) Variants(ctx context.Context, obj *model.Product) ([]*model.Variant, error) {
+	panic(fmt.Errorf("not implemented: Variants - variants"))
+}
+*/
