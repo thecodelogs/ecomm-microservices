@@ -80,6 +80,7 @@ input UpdateProductInput {
   tags: [String!]
   attributes: String
   status: String
+  variants: [ProductVariantInput!]
 }
 
 input CreateCategoryInput {
@@ -100,6 +101,19 @@ input UpdateCategoryInput {
   sortOrder: Int!
   isActive: Boolean!
   image: Upload
+}
+
+input ProductVariantInput {
+  id: ID
+  sku: String!
+  name: String!
+  options: String
+  price: Float!
+  compareAtPrice: Float
+  costPrice: Float
+  weightGrams: Int!
+  image: Upload
+  isActive: Boolean!
 }
 
 input CreateVariantInput {

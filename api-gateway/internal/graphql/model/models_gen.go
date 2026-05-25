@@ -129,6 +129,19 @@ type ProductEdge struct {
 	Cursor string   `json:"cursor"`
 }
 
+type ProductVariantInput struct {
+	ID             *string         `json:"id,omitempty"`
+	Sku            string          `json:"sku"`
+	Name           string          `json:"name"`
+	Options        *string         `json:"options,omitempty"`
+	Price          float64         `json:"price"`
+	CompareAtPrice *float64        `json:"compareAtPrice,omitempty"`
+	CostPrice      *float64        `json:"costPrice,omitempty"`
+	WeightGrams    int             `json:"weightGrams"`
+	Image          *graphql.Upload `json:"image,omitempty"`
+	IsActive       bool            `json:"isActive"`
+}
+
 type Query struct {
 }
 
@@ -162,15 +175,16 @@ type UpdateCategoryInput struct {
 }
 
 type UpdateProductInput struct {
-	Name             string   `json:"name"`
-	Description      string   `json:"description"`
-	CategoryID       string   `json:"categoryId"`
-	Slug             string   `json:"slug"`
-	ShortDescription *string  `json:"shortDescription,omitempty"`
-	Brand            *string  `json:"brand,omitempty"`
-	Tags             []string `json:"tags,omitempty"`
-	Attributes       *string  `json:"attributes,omitempty"`
-	Status           *string  `json:"status,omitempty"`
+	Name             string                 `json:"name"`
+	Description      string                 `json:"description"`
+	CategoryID       string                 `json:"categoryId"`
+	Slug             string                 `json:"slug"`
+	ShortDescription *string                `json:"shortDescription,omitempty"`
+	Brand            *string                `json:"brand,omitempty"`
+	Tags             []string               `json:"tags,omitempty"`
+	Attributes       *string                `json:"attributes,omitempty"`
+	Status           *string                `json:"status,omitempty"`
+	Variants         []*ProductVariantInput `json:"variants,omitempty"`
 }
 
 type UpdateProfileInput struct {

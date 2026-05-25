@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	productpb "github.com/manojnegi/ecomm-microservices/gen/go/product/v1"
@@ -67,6 +68,7 @@ func (h *ProductHandler) CreateProduct(ctx context.Context, req *productpb.Creat
 		VendorID:   vendorID,
 	}
 	v := models.Variant{
+		ID:       uuid.New(),
 		SKU:      req.Slug + "-default",
 		Name:     req.Name,
 		IsActive: true,
@@ -89,6 +91,7 @@ func (h *ProductHandler) GetProduct(ctx context.Context, req *productpb.GetProdu
 	}
 
 	product, variants, err := h.prodSvc.GetProduct(ctx, id)
+	fmt.Printf("GetProduct id=%s, variants=%+v, err=%v\n", id, variants, err)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "product not found")
 	}
@@ -136,20 +139,53 @@ func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.Updat
 		Status:     req.Status,
 	}
 
-	// Update default variant
-	v := models.Variant{
-		ProductID: id,
-		SKU:       req.Slug + "-default",
-		Name:      req.Name,
-		IsActive:  true,
+	var variantsToUpdate []models.Variant
+	if len(req.Variants) > 0 {
+		for _, v := range req.Variants {
+			var vID uuid.UUID
+			if v.Id != "" {
+				parsed, err := uuid.Parse(v.Id)
+				if err == nil {
+					vID = parsed
+				}
+			}
+			
+			options := json.RawMessage(nil)
+			if v.Options != "" {
+				options = json.RawMessage(v.Options)
+			}
+
+			variantsToUpdate = append(variantsToUpdate, models.Variant{
+				ID:             vID,
+				ProductID:      id,
+				SKU:            v.Sku,
+				Name:           v.Name,
+				Options:        options,
+				Price:          int64(v.Price * 100), // Note: Since we changed DB to BIGINT, we keep storing as cents? Wait!
+				CompareAtPrice: sql.NullInt64{Int64: int64(v.CompareAtPrice * 100), Valid: v.CompareAtPrice > 0},
+				CostPrice:      sql.NullInt64{Int64: int64(v.CostPrice * 100), Valid: v.CostPrice > 0},
+				WeightGrams:    int(v.WeightGrams),
+				IsActive:       v.IsActive,
+			})
+		}
+	} else {
+		// Fallback to updating default variant if no variants provided
+		variantsToUpdate = []models.Variant{
+			{
+				ProductID: id,
+				SKU:       req.Slug + "-default",
+				Name:      req.Name,
+				IsActive:  true,
+			},
+		}
 	}
 
-	if err := h.prodSvc.UpdateProduct(ctx, p, []models.Variant{v}); err != nil {
+	if err := h.prodSvc.UpdateProduct(ctx, p, variantsToUpdate); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to update product: %v", err)
 	}
 
 	return &productpb.UpdateProductResponse{
-		Product: toProtoProduct(p, []models.Variant{v}),
+		Product: toProtoProduct(p, variantsToUpdate),
 	}, nil
 }
 
@@ -182,7 +218,8 @@ func (h *ProductHandler) ListProducts(ctx context.Context, req *productpb.ListPr
 
 	var pbProducts []*productpb.Product
 	for _, p := range products {
-		pbProducts = append(pbProducts, toProtoProduct(&p, nil)) // List products doesn't include variants yet
+		variants, _ := h.prodSvc.GetVariantsByProductID(ctx, p.ID)
+		pbProducts = append(pbProducts, toProtoProduct(&p, variants))
 	}
 
 	return &productpb.ProductListResponse{

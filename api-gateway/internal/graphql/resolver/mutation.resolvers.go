@@ -216,7 +216,7 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.Create
 
 // UpdateProduct is the resolver for the updateProduct field.
 func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, input model.UpdateProductInput) (*model.Product, error) {
-	resp, err := r.ProductClient.Product.UpdateProduct(ctx, &productpb.UpdateProductRequest{
+	req := &productpb.UpdateProductRequest{
 		Id:               id,
 		CategoryId:       input.CategoryID,
 		Name:             input.Name,
@@ -227,7 +227,35 @@ func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, input m
 		Tags:             input.Tags,
 		Attributes:       stringValue(input.Attributes),
 		Status:           stringValue(input.Status),
-	})
+	}
+
+	if input.Variants != nil {
+		var pbVariants []*productpb.Variant
+		for _, v := range input.Variants {
+			pbVariant := &productpb.Variant{
+				Sku:            v.Sku,
+				Name:           v.Name,
+				Options:        stringValue(v.Options),
+				Price:          v.Price,
+				WeightGrams:    int32(v.WeightGrams),
+				IsActive:       v.IsActive,
+			}
+			if v.ID != nil {
+				pbVariant.Id = *v.ID
+			}
+			if v.CompareAtPrice != nil {
+				pbVariant.CompareAtPrice = *v.CompareAtPrice
+			}
+			if v.CostPrice != nil {
+				pbVariant.CostPrice = *v.CostPrice
+			}
+			// image uploading would be handled separately if provided
+			pbVariants = append(pbVariants, pbVariant)
+		}
+		req.Variants = pbVariants
+	}
+
+	resp, err := r.ProductClient.Product.UpdateProduct(ctx, req)
 	if err != nil {
 		return nil, err
 	}

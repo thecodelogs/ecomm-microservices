@@ -212,6 +212,7 @@ message UpdateProductRequest {
 	string attributes = 9;
 	string status = 10;
     string vendor_id = 11;
+    repeated Variant variants = 12;
 }
 
 message UpdateProductResponse {

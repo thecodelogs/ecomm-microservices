@@ -34,7 +34,9 @@ func (s *ProductService) CreateProduct(ctx context.Context, p *models.Product, v
 	}
 
 	for i := range variants {
-		variants[i].ID = uuid.New()
+		if variants[i].ID == uuid.Nil {
+			variants[i].ID = uuid.New()
+		}
 		variants[i].ProductID = p.ID
 		variants[i].CreatedAt = time.Now().UTC()
 		if err := s.varRepo.Create(ctx, &variants[i]); err != nil {
@@ -64,43 +66,23 @@ func (s *ProductService) UpdateProduct(ctx context.Context, p *models.Product, v
 		return fmt.Errorf("update product: %w", err)
 	}
 
-	// Simple logic: if variants are provided, we should ideally sync them.
-	// For now, if only one variant is provided, we update it or create it if missing.
 	for i := range variants {
 		if variants[i].ID == uuid.Nil {
-			// Try to find existing variant for this product
-			existing, err := s.varRepo.GetByProductID(ctx, p.ID)
-			if err == nil && len(existing) > 0 {
-				variants[i].ID = existing[0].ID
-				variants[i].ProductID = p.ID
-				variants[i].UpdatedAt = time.Now().UTC()
-				if err := s.varRepo.Update(ctx, &variants[i]); err != nil {
-					return fmt.Errorf("update variant: %w", err)
-				}
-				// Update inventory
-				inv, err := s.invRepo.GetByVariantID(ctx, variants[i].ID)
-				if err == nil {
-					inv.QuantityOnHand = int(variants[i].WeightGrams) // Using weight_grams as stock placeholder
-					if err := s.invRepo.Update(ctx, inv); err != nil {
-						return fmt.Errorf("update inventory: %w", err)
-					}
-				}
-			} else {
-				// Create new variant and inventory
-				variants[i].ID = uuid.New()
-				variants[i].ProductID = p.ID
-				variants[i].CreatedAt = time.Now().UTC()
-				if err := s.varRepo.Create(ctx, &variants[i]); err != nil {
-					return fmt.Errorf("create variant: %w", err)
-				}
-				inv := &models.Inventory{
-					ID:             uuid.New(),
-					VariantID:      variants[i].ID,
-					QuantityOnHand: int(variants[i].WeightGrams),
-				}
-				s.invRepo.Create(ctx, inv)
+			// Create new variant and inventory
+			variants[i].ID = uuid.New()
+			variants[i].ProductID = p.ID
+			variants[i].CreatedAt = time.Now().UTC()
+			if err := s.varRepo.Create(ctx, &variants[i]); err != nil {
+				return fmt.Errorf("create variant: %w", err)
 			}
+			inv := &models.Inventory{
+				ID:             uuid.New(),
+				VariantID:      variants[i].ID,
+				QuantityOnHand: int(variants[i].WeightGrams),
+			}
+			s.invRepo.Create(ctx, inv)
 		} else {
+			variants[i].ProductID = p.ID
 			variants[i].UpdatedAt = time.Now().UTC()
 			if err := s.varRepo.Update(ctx, &variants[i]); err != nil {
 				return fmt.Errorf("update variant: %w", err)
@@ -110,6 +92,14 @@ func (s *ProductService) UpdateProduct(ctx context.Context, p *models.Product, v
 			if err == nil {
 				inv.QuantityOnHand = int(variants[i].WeightGrams)
 				s.invRepo.Update(ctx, inv)
+			} else {
+				// If inventory didn't exist for some reason, create it
+				inv = &models.Inventory{
+					ID:             uuid.New(),
+					VariantID:      variants[i].ID,
+					QuantityOnHand: int(variants[i].WeightGrams),
+				}
+				s.invRepo.Create(ctx, inv)
 			}
 		}
 	}
@@ -134,6 +124,10 @@ func (s *ProductService) GetProduct(ctx context.Context, id uuid.UUID) (*models.
 	}
 
 	return product, variants, nil
+}
+
+func (s *ProductService) GetVariantsByProductID(ctx context.Context, productID uuid.UUID) ([]models.Variant, error) {
+	return s.varRepo.GetByProductID(ctx, productID)
 }
 
 func (s *ProductService) GetProductBySlug(ctx context.Context, slug string) (*models.Product, []models.Variant, error) {
