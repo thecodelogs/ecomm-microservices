@@ -95,6 +95,7 @@ message ListProductsRequest {
     int32 page = 1;
     int32 page_size = 2;
     string category_id = 3;
+    bool is_admin = 4;
 }
 
 message CategoryListResponse {

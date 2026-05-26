@@ -244,7 +244,7 @@ func (h *ProductHandler) DeleteProduct(ctx context.Context, req *productpb.Delet
 func (h *ProductHandler) ListProducts(ctx context.Context, req *productpb.ListProductsRequest) (*productpb.ProductListResponse, error) {
 
 	catID, _ := uuid.Parse(req.CategoryId)
-	products, total, err := h.prodSvc.ListProducts(ctx, catID, req.Page, req.PageSize)
+	products, total, err := h.prodSvc.ListProducts(ctx, catID, req.Page, req.PageSize, req.IsAdmin)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

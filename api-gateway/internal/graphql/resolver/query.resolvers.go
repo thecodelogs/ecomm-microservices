@@ -8,6 +8,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	productpb "github.com/manojnegi/ecomm-microservices/gen/go/product/v1"
@@ -157,10 +158,21 @@ func (r *queryResolver) Products(ctx context.Context, categoryID *string, pagina
 		pageSize = int32(*pagination.First)
 	}
 
+	isAdmin := false
+	gc, err := GinContextFromContext(ctx)
+	if err == nil {
+		if role, exists := gc.Get("role"); exists {
+			if rStr, ok := role.(string); ok && strings.EqualFold(rStr, "admin") {
+				isAdmin = true
+			}
+		}
+	}
+
 	resp, err := r.ProductClient.Product.ListProducts(ctx, &productpb.ListProductsRequest{
 		CategoryId: catID,
 		Page:       page,
 		PageSize:   pageSize,
+		IsAdmin:    isAdmin,
 	})
 	if err != nil {
 		return nil, err

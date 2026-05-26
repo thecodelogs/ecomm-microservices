@@ -62,18 +62,27 @@ func (r *ProductRepo) GetBySlug(ctx context.Context, slug string) (*models.Produ
 	return r.scanProduct(row)
 }
 
-func (r *ProductRepo) List(ctx context.Context, categoryID uuid.UUID, page, pageSize int32) ([]models.Product, int32, error) {
-	countWhere := "WHERE status = 'active'"
-	queryWhere := "WHERE status = 'active'"
+func (r *ProductRepo) List(ctx context.Context, categoryID uuid.UUID, page, pageSize int32, isAdmin bool) ([]models.Product, int32, error) {
+	countWhere := "WHERE 1=1"
+	queryWhere := "WHERE 1=1"
+	
+	if !isAdmin {
+		countWhere = "WHERE status = 'active'"
+		queryWhere = "WHERE status = 'active'"
+	}
 	
 	var countArgs []interface{}
 	queryArgs := []interface{}{pageSize, (page-1)*pageSize}
 	
 	if categoryID != uuid.Nil {
-		countWhere += " AND category_id = $1"
+		if !isAdmin {
+			countWhere += " AND category_id = $1"
+			queryWhere += " AND category_id = $3"
+		} else {
+			countWhere += " AND category_id = $1"
+			queryWhere += " AND category_id = $3"
+		}
 		countArgs = append(countArgs, categoryID)
-		
-		queryWhere += " AND category_id = $3"
 		queryArgs = append(queryArgs, categoryID)
 	}
 
@@ -86,7 +95,7 @@ func (r *ProductRepo) List(ctx context.Context, categoryID uuid.UUID, page, page
 
 	query := `SELECT id, category_id, slug, name, description, short_description, brand, tags, attributes, status, vendor_id, avg_rating, review_count, created_at, updated_at
 	          FROM products ` + queryWhere + `
-	          ORDER BY created_at DESC LIMIT $1 OFFSET $2`
+	          ORDER BY updated_at DESC LIMIT $1 OFFSET $2`
 	
 	rows, err := r.db.Query(ctx, query, queryArgs...)
 	if err != nil {

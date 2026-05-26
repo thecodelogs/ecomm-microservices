@@ -135,8 +135,14 @@ func (s *ProductService) GetProductBySlug(ctx context.Context, slug string) (*mo
 	return nil, nil, fmt.Errorf("not implemented")
 }
 
-func (s *ProductService) ListProducts(ctx context.Context, categoryID uuid.UUID, page, pageSize int32) ([]models.Product, int32, error) {
-	return s.prodRepo.List(ctx, categoryID, page, pageSize)
+func (s *ProductService) ListProducts(ctx context.Context, categoryID uuid.UUID, page, pageSize int32, isAdmin bool) ([]models.Product, int32, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 || pageSize > 100 {
+		pageSize = 20
+	}
+	return s.prodRepo.List(ctx, categoryID, page, pageSize, isAdmin)
 }
 
 func (s *ProductService) GetVariantsBatch(ctx context.Context, ids []uuid.UUID) ([]models.Variant, error) {
