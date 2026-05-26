@@ -22,6 +22,10 @@ func (s *InventoryService) GetInventory(ctx context.Context, variantID uuid.UUID
 	return s.invRepo.GetByVariantID(ctx, variantID)
 }
 
+func (s *InventoryService) ListInventory(ctx context.Context, limit, offset int32) ([]*models.Inventory, int32, error) {
+	return s.invRepo.List(ctx, limit, offset)
+}
+
 func (s *InventoryService) ReserveStock(ctx context.Context, variantID uuid.UUID, quantity int) error {
 	return s.invRepo.ReserveStock(ctx, variantID, quantity)
 }

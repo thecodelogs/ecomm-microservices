@@ -2,6 +2,9 @@ type Query {
   # Health
   health: HealthCheck!
 
+  # Admin queries
+  inventories(first: Int, after: String): InventoryConnection! @auth @admin
+
   # Auth/User
   me: User! @auth
   user(id: ID!): User @auth @admin

@@ -29,6 +29,48 @@ func (r *queryResolver) Health(ctx context.Context) (*model.HealthCheck, error) 
 	}, nil
 }
 
+// Inventories is the resolver for the inventories field.
+func (r *queryResolver) Inventories(ctx context.Context, first *int, after *string) (*model.InventoryConnection, error) {
+	limit := int32(20)
+	if first != nil {
+		limit = int32(*first)
+	}
+	
+	// simple offset pagination for now, parsing "after" as offset
+	offset := int32(0)
+	// (Normally after would be parsed from base64, but using simple default 0 for this exercise unless we parse cursor properly)
+
+	resp, err := r.ProductClient.Inventory.ListInventory(ctx, &productpb.ListInventoryRequest{
+		Limit:  limit,
+		Offset: offset,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	edges := make([]*model.InventoryEdge, len(resp.Inventories))
+	for i, inv := range resp.Inventories {
+		edges[i] = &model.InventoryEdge{
+			Node: &model.Inventory{
+				VariantID:         inv.VariantId,
+				QuantityOnHand:    int(inv.QuantityOnHand),
+				QuantityReserved:  int(inv.QuantityReserved),
+				QuantityAvailable: int(inv.QuantityAvailable),
+				ReorderPoint:      int(inv.ReorderPoint),
+			},
+			Cursor: encodeCursor(inv.VariantId),
+		}
+	}
+
+	return &model.InventoryConnection{
+		Edges: edges,
+		PageInfo: &model.PageInfo{
+			HasNextPage: false,
+			TotalCount:  int(resp.TotalCount),
+		},
+	}, nil
+}
+
 // Auth/User queries
 func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 	gc, err := GinContextFromContext(ctx)

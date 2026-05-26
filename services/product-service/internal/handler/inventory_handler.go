@@ -75,6 +75,40 @@ func (h *InventoryHandler) UpdateInventory(ctx context.Context, req *productpb.U
 	}, nil
 }
 
+func (h *InventoryHandler) ListInventory(ctx context.Context, req *productpb.ListInventoryRequest) (*productpb.ListInventoryResponse, error) {
+	_, err := h.checkAdminAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	limit := req.Limit
+	if limit <= 0 || limit > 100 {
+		limit = 20
+	}
+	offset := req.Offset
+
+	invs, totalCount, err := h.invSvc.ListInventory(ctx, limit, offset)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list inventory: %v", err)
+	}
+
+	var pbInvs []*productpb.Inventory
+	for _, inv := range invs {
+		pbInvs = append(pbInvs, &productpb.Inventory{
+			VariantId:         inv.VariantID.String(),
+			QuantityOnHand:    int32(inv.QuantityOnHand),
+			QuantityReserved:  int32(inv.QuantityReserved),
+			QuantityAvailable: int32(inv.QuantityAvailable),
+			ReorderPoint:      int32(inv.ReorderPoint),
+		})
+	}
+
+	return &productpb.ListInventoryResponse{
+		Inventories: pbInvs,
+		TotalCount:  totalCount,
+	}, nil
+}
+
 func (h *InventoryHandler) checkAdminAuth(ctx context.Context) (*auth.AccessTokenClaims, error) {
 	claims, err := auth.ExtractClaims(ctx, h.cfg.PasetoSecret)
 	if err != nil {

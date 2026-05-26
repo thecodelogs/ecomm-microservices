@@ -38,6 +38,39 @@ func (r *InventoryRepo) GetByVariantID(ctx context.Context, variantID uuid.UUID)
 	return &i, nil
 }
 
+func (r *InventoryRepo) List(ctx context.Context, limit, offset int32) ([]*models.Inventory, int32, error) {
+	var totalCount int32
+	countQuery := `SELECT COUNT(*) FROM inventory`
+	err := r.db.QueryRow(ctx, countQuery).Scan(&totalCount)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	query := `SELECT id, variant_id, quantity_on_hand, quantity_reserved, quantity_available, reorder_point, updated_at
+	          FROM inventory ORDER BY updated_at DESC LIMIT $1 OFFSET $2`
+	rows, err := r.db.Query(ctx, query, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var inventories []*models.Inventory
+	for rows.Next() {
+		var i models.Inventory
+		err := rows.Scan(&i.ID, &i.VariantID, &i.QuantityOnHand, &i.QuantityReserved, &i.QuantityAvailable, &i.ReorderPoint, &i.UpdatedAt)
+		if err != nil {
+			return nil, 0, err
+		}
+		inventories = append(inventories, &i)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	return inventories, totalCount, nil
+}
+
 // ReserveStock uses SELECT FOR UPDATE to prevent overselling
 func (r *InventoryRepo) ReserveStock(ctx context.Context, variantID uuid.UUID, quantity int) error {
 	tx, err := r.db.Begin(ctx)

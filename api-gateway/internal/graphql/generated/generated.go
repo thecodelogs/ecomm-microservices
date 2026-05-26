@@ -99,6 +99,16 @@ type ComplexityRoot struct {
 		VariantID         func(childComplexity int) int
 	}
 
+	InventoryConnection struct {
+		Edges    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
+	}
+
+	InventoryEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
 	Mutation struct {
 		AdminLogin        func(childComplexity int, input model.SigninInput) int
 		CreateAddress     func(childComplexity int, input model.AddressInput) int
@@ -153,14 +163,15 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Categories func(childComplexity int, pagination *model.PaginationInput) int
-		Category   func(childComplexity int, id string) int
-		Health     func(childComplexity int) int
-		Me         func(childComplexity int) int
-		Product    func(childComplexity int, id string) int
-		Products   func(childComplexity int, categoryID *string, pagination *model.PaginationInput) int
-		User       func(childComplexity int, id string) int
-		Users      func(childComplexity int, pagination *model.PaginationInput) int
+		Categories  func(childComplexity int, pagination *model.PaginationInput) int
+		Category    func(childComplexity int, id string) int
+		Health      func(childComplexity int) int
+		Inventories func(childComplexity int, first *int, after *string) int
+		Me          func(childComplexity int) int
+		Product     func(childComplexity int, id string) int
+		Products    func(childComplexity int, categoryID *string, pagination *model.PaginationInput) int
+		User        func(childComplexity int, id string) int
+		Users       func(childComplexity int, pagination *model.PaginationInput) int
 	}
 
 	ServiceHealth struct {
@@ -245,6 +256,7 @@ type ProductResolver interface {
 }
 type QueryResolver interface {
 	Health(ctx context.Context) (*model.HealthCheck, error)
+	Inventories(ctx context.Context, first *int, after *string) (*model.InventoryConnection, error)
 	Me(ctx context.Context) (*model.User, error)
 	User(ctx context.Context, id string) (*model.User, error)
 	Users(ctx context.Context, pagination *model.PaginationInput) (*model.UserConnection, error)
@@ -491,6 +503,32 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Inventory.VariantID(childComplexity), true
+
+	case "InventoryConnection.edges":
+		if e.ComplexityRoot.InventoryConnection.Edges == nil {
+			break
+		}
+
+		return e.ComplexityRoot.InventoryConnection.Edges(childComplexity), true
+	case "InventoryConnection.pageInfo":
+		if e.ComplexityRoot.InventoryConnection.PageInfo == nil {
+			break
+		}
+
+		return e.ComplexityRoot.InventoryConnection.PageInfo(childComplexity), true
+
+	case "InventoryEdge.cursor":
+		if e.ComplexityRoot.InventoryEdge.Cursor == nil {
+			break
+		}
+
+		return e.ComplexityRoot.InventoryEdge.Cursor(childComplexity), true
+	case "InventoryEdge.node":
+		if e.ComplexityRoot.InventoryEdge.Node == nil {
+			break
+		}
+
+		return e.ComplexityRoot.InventoryEdge.Node(childComplexity), true
 
 	case "Mutation.adminLogin":
 		if e.ComplexityRoot.Mutation.AdminLogin == nil {
@@ -859,6 +897,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Query.Health(childComplexity), true
 
+	case "Query.inventories":
+		if e.ComplexityRoot.Query.Inventories == nil {
+			break
+		}
+
+		args, err := ec.field_Query_inventories_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Inventories(childComplexity, args["first"].(*int), args["after"].(*string)), true
 	case "Query.me":
 		if e.ComplexityRoot.Query.Me == nil {
 			break
@@ -1286,6 +1335,16 @@ type Inventory {
   reorderPoint: Int!
 }
 
+type InventoryConnection {
+  edges: [InventoryEdge!]!
+  pageInfo: PageInfo!
+}
+
+type InventoryEdge {
+  node: Inventory!
+  cursor: String!
+}
+
 type Category implements Node {
   id: ID!
   name: String!
@@ -1408,6 +1467,9 @@ input UpdateVariantInput {
 	{Name: "../query.graphql", Input: `type Query {
   # Health
   health: HealthCheck!
+
+  # Admin queries
+  inventories(first: Int, after: String): InventoryConnection! @auth @admin
 
   # Auth/User
   me: User! @auth
@@ -1663,6 +1725,26 @@ func (ec *executionContext) childFields_Inventory(ctx context.Context, field gra
 		return ec.fieldContext_Inventory_reorderPoint(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Inventory", field.Name)
+}
+
+func (ec *executionContext) childFields_InventoryConnection(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "edges":
+		return ec.fieldContext_InventoryConnection_edges(ctx, field)
+	case "pageInfo":
+		return ec.fieldContext_InventoryConnection_pageInfo(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type InventoryConnection", field.Name)
+}
+
+func (ec *executionContext) childFields_InventoryEdge(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "node":
+		return ec.fieldContext_InventoryEdge_node(ctx, field)
+	case "cursor":
+		return ec.fieldContext_InventoryEdge_cursor(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type InventoryEdge", field.Name)
 }
 
 func (ec *executionContext) childFields_PageInfo(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -2314,6 +2396,28 @@ func (ec *executionContext) field_Query_category_args(ctx context.Context, rawAr
 		return nil, err
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_inventories_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "first",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "after",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg1
 	return args, nil
 }
 
@@ -3311,6 +3415,125 @@ func (ec *executionContext) _Inventory_reorderPoint(ctx context.Context, field g
 }
 func (ec *executionContext) fieldContext_Inventory_reorderPoint(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Inventory", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _InventoryConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.InventoryConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_InventoryConnection_edges(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.InventoryEdge) graphql.Marshaler {
+			return ec.marshalNInventoryEdge2ᚕᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐInventoryEdgeᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_InventoryConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InventoryConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_InventoryEdge(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InventoryConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.InventoryConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_InventoryConnection_pageInfo(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.PageInfo) graphql.Marshaler {
+			return ec.marshalNPageInfo2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐPageInfo(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_InventoryConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InventoryConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_PageInfo(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InventoryEdge_node(ctx context.Context, field graphql.CollectedField, obj *model.InventoryEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_InventoryEdge_node(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Inventory) graphql.Marshaler {
+			return ec.marshalNInventory2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐInventory(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_InventoryEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InventoryEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Inventory(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InventoryEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model.InventoryEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_InventoryEdge_cursor(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_InventoryEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("InventoryEdge", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Mutation_register(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5019,6 +5242,70 @@ func (ec *executionContext) fieldContext_Query_health(_ context.Context, field g
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return ec.childFields_HealthCheck(ctx, field)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_inventories(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_inventories(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Inventories(ctx, fc.Args["first"].(*int), fc.Args["after"].(*string))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Auth == nil {
+					var zeroVal *model.InventoryConnection
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.Directives.Auth(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Admin == nil {
+					var zeroVal *model.InventoryConnection
+					return zeroVal, errors.New("directive admin is not implemented")
+				}
+				return ec.Directives.Admin(ctx, nil, directive1)
+			}
+
+			next = directive2
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v *model.InventoryConnection) graphql.Marshaler {
+			return ec.marshalNInventoryConnection2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐInventoryConnection(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_inventories(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_InventoryConnection(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_inventories_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -8803,6 +9090,94 @@ func (ec *executionContext) _Inventory(ctx context.Context, sel ast.SelectionSet
 	return out
 }
 
+var inventoryConnectionImplementors = []string{"InventoryConnection"}
+
+func (ec *executionContext) _InventoryConnection(ctx context.Context, sel ast.SelectionSet, obj *model.InventoryConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, inventoryConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("InventoryConnection")
+		case "edges":
+			out.Values[i] = ec._InventoryConnection_edges(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pageInfo":
+			out.Values[i] = ec._InventoryConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var inventoryEdgeImplementors = []string{"InventoryEdge"}
+
+func (ec *executionContext) _InventoryEdge(ctx context.Context, sel ast.SelectionSet, obj *model.InventoryEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, inventoryEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("InventoryEdge")
+		case "node":
+			out.Values[i] = ec._InventoryEdge_node(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cursor":
+			out.Values[i] = ec._InventoryEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -9269,6 +9644,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_health(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "inventories":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_inventories(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -10423,6 +10820,46 @@ func (ec *executionContext) marshalNInventory2ᚖgithubᚗcomᚋmanojnegiᚋecom
 		return graphql.Null
 	}
 	return ec._Inventory(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNInventoryConnection2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐInventoryConnection(ctx context.Context, sel ast.SelectionSet, v model.InventoryConnection) graphql.Marshaler {
+	return ec._InventoryConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNInventoryConnection2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐInventoryConnection(ctx context.Context, sel ast.SelectionSet, v *model.InventoryConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._InventoryConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNInventoryEdge2ᚕᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐInventoryEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.InventoryEdge) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNInventoryEdge2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐInventoryEdge(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNInventoryEdge2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐInventoryEdge(ctx context.Context, sel ast.SelectionSet, v *model.InventoryEdge) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._InventoryEdge(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNPageInfo2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v *model.PageInfo) graphql.Marshaler {

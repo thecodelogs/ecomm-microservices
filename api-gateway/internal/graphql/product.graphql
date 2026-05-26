@@ -33,6 +33,16 @@ type Inventory {
   reorderPoint: Int!
 }
 
+type InventoryConnection {
+  edges: [InventoryEdge!]!
+  pageInfo: PageInfo!
+}
+
+type InventoryEdge {
+  node: Inventory!
+  cursor: String!
+}
+
 type Category implements Node {
   id: ID!
   name: String!

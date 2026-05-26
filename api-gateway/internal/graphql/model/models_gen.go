@@ -110,6 +110,16 @@ type Inventory struct {
 	ReorderPoint      int    `json:"reorderPoint"`
 }
 
+type InventoryConnection struct {
+	Edges    []*InventoryEdge `json:"edges"`
+	PageInfo *PageInfo        `json:"pageInfo"`
+}
+
+type InventoryEdge struct {
+	Node   *Inventory `json:"node"`
+	Cursor string     `json:"cursor"`
+}
+
 type Mutation struct {
 }
 

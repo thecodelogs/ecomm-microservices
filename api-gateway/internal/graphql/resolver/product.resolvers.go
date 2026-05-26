@@ -55,7 +55,7 @@ func (r *variantResolver) Inventory(ctx context.Context, obj *model.Variant) (*m
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &model.Inventory{
 		VariantID:         resp.Inventory.VariantId,
 		QuantityOnHand:    int(resp.Inventory.QuantityOnHand),
