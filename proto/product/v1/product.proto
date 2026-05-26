@@ -193,6 +193,7 @@ message CreateProductRequest {
 	string attributes = 8;
 	string status = 9;
 	string vendor_id = 10;
+    repeated Variant variants = 11;
 }
 
 message CreateProductResponse {

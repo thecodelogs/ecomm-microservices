@@ -70,16 +70,17 @@ type CreateCategoryInput struct {
 }
 
 type CreateProductInput struct {
-	Name             string   `json:"name"`
-	Description      string   `json:"description"`
-	CategoryID       string   `json:"categoryId"`
-	Slug             string   `json:"slug"`
-	ShortDescription *string  `json:"shortDescription,omitempty"`
-	Brand            *string  `json:"brand,omitempty"`
-	Tags             []string `json:"tags,omitempty"`
-	Attributes       *string  `json:"attributes,omitempty"`
-	Status           *string  `json:"status,omitempty"`
-	VendorID         *string  `json:"vendorId,omitempty"`
+	Name             string                 `json:"name"`
+	Description      string                 `json:"description"`
+	CategoryID       string                 `json:"categoryId"`
+	Slug             string                 `json:"slug"`
+	ShortDescription *string                `json:"shortDescription,omitempty"`
+	Brand            *string                `json:"brand,omitempty"`
+	Tags             []string               `json:"tags,omitempty"`
+	Attributes       *string                `json:"attributes,omitempty"`
+	Status           *string                `json:"status,omitempty"`
+	VendorID         *string                `json:"vendorId,omitempty"`
+	Variants         []*ProductVariantInput `json:"variants,omitempty"`
 }
 
 type CreateVariantInput struct {

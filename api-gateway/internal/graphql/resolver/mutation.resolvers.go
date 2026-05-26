@@ -194,7 +194,7 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, id string) (bool, err
 
 // Admin - Products mutations
 func (r *mutationResolver) CreateProduct(ctx context.Context, input model.CreateProductInput) (*model.Product, error) {
-	resp, err := r.ProductClient.Product.CreateProduct(ctx, &productpb.CreateProductRequest{
+	req := &productpb.CreateProductRequest{
 		CategoryId:       input.CategoryID,
 		Name:             input.Name,
 		Description:      input.Description,
@@ -205,7 +205,34 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.Create
 		Attributes:       stringValue(input.Attributes),
 		Status:           stringValue(input.Status),
 		VendorId:         stringValue(input.VendorID),
-	})
+	}
+
+	if input.Variants != nil {
+		var pbVariants []*productpb.Variant
+		for _, v := range input.Variants {
+			pbVariant := &productpb.Variant{
+				Sku:            v.Sku,
+				Name:           v.Name,
+				Options:        stringValue(v.Options),
+				Price:          v.Price,
+				WeightGrams:    int32(v.WeightGrams),
+				IsActive:       v.IsActive,
+			}
+			if v.ID != nil {
+				pbVariant.Id = *v.ID
+			}
+			if v.CompareAtPrice != nil {
+				pbVariant.CompareAtPrice = *v.CompareAtPrice
+			}
+			if v.CostPrice != nil {
+				pbVariant.CostPrice = *v.CostPrice
+			}
+			pbVariants = append(pbVariants, pbVariant)
+		}
+		req.Variants = pbVariants
+	}
+
+	resp, err := r.ProductClient.Product.CreateProduct(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -233,12 +260,12 @@ func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, input m
 		var pbVariants []*productpb.Variant
 		for _, v := range input.Variants {
 			pbVariant := &productpb.Variant{
-				Sku:            v.Sku,
-				Name:           v.Name,
-				Options:        stringValue(v.Options),
-				Price:          v.Price,
-				WeightGrams:    int32(v.WeightGrams),
-				IsActive:       v.IsActive,
+				Sku:         v.Sku,
+				Name:        v.Name,
+				Options:     stringValue(v.Options),
+				Price:       v.Price,
+				WeightGrams: int32(v.WeightGrams),
+				IsActive:    v.IsActive,
 			}
 			if v.ID != nil {
 				pbVariant.Id = *v.ID

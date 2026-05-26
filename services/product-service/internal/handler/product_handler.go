@@ -67,20 +67,53 @@ func (h *ProductHandler) CreateProduct(ctx context.Context, req *productpb.Creat
 		Status:     req.Status,
 		VendorID:   vendorID,
 	}
-	v := models.Variant{
-		ID:       uuid.New(),
-		SKU:      req.Slug + "-default",
-		Name:     req.Name,
-		IsActive: true,
+
+	var variantsToCreate []models.Variant
+	if len(req.Variants) > 0 {
+		for _, v := range req.Variants {
+			var vID uuid.UUID
+			if v.Id != "" {
+				parsed, err := uuid.Parse(v.Id)
+				if err == nil {
+					vID = parsed
+				}
+			}
+			
+			options := json.RawMessage(nil)
+			if v.Options != "" {
+				options = json.RawMessage(v.Options)
+			}
+
+			variantsToCreate = append(variantsToCreate, models.Variant{
+				ID:             vID,
+				SKU:            v.Sku,
+				Name:           v.Name,
+				Options:        options,
+				Price:          int64(v.Price * 100),
+				CompareAtPrice: sql.NullInt64{Int64: int64(v.CompareAtPrice * 100), Valid: v.CompareAtPrice > 0},
+				CostPrice:      sql.NullInt64{Int64: int64(v.CostPrice * 100), Valid: v.CostPrice > 0},
+				WeightGrams:    int(v.WeightGrams),
+				IsActive:       v.IsActive,
+			})
+		}
+	} else {
+		variantsToCreate = []models.Variant{
+			{
+				ID:       uuid.New(),
+				SKU:      req.Slug + "-default",
+				Name:     req.Name,
+				IsActive: true,
+			},
+		}
 	}
 
-	if err := h.prodSvc.CreateProduct(ctx, p, []models.Variant{v}); err != nil {
+	if err := h.prodSvc.CreateProduct(ctx, p, variantsToCreate); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create product: %v", err)
 	}
 
 	return &productpb.CreateProductResponse{
 		Id:      p.ID.String(),
-		Product: toProtoProduct(p, []models.Variant{v}),
+		Product: toProtoProduct(p, variantsToCreate),
 	}, nil
 }
 

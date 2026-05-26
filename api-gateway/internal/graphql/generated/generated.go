@@ -1249,6 +1249,7 @@ input CreateProductInput {
   attributes: String
   status: String
   vendorId: ID
+  variants: [ProductVariantInput!]
 }
 
 input UpdateProductInput {
@@ -7194,7 +7195,7 @@ func (ec *executionContext) unmarshalInputCreateProductInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "description", "categoryId", "slug", "shortDescription", "brand", "tags", "attributes", "status", "vendorId"}
+	fieldsInOrder := [...]string{"name", "description", "categoryId", "slug", "shortDescription", "brand", "tags", "attributes", "status", "vendorId", "variants"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7271,6 +7272,13 @@ func (ec *executionContext) unmarshalInputCreateProductInput(ctx context.Context
 				return it, err
 			}
 			it.VendorID = data
+		case "variants":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("variants"))
+			data, err := ec.unmarshalOProductVariantInput2ᚕᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐProductVariantInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Variants = data
 		}
 	}
 	return it, nil

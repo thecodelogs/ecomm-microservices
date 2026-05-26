@@ -68,6 +68,7 @@ input CreateProductInput {
   attributes: String
   status: String
   vendorId: ID
+  variants: [ProductVariantInput!]
 }
 
 input UpdateProductInput {
