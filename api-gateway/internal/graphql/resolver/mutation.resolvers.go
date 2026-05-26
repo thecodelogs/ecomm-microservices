@@ -211,12 +211,12 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.Create
 		var pbVariants []*productpb.Variant
 		for _, v := range input.Variants {
 			pbVariant := &productpb.Variant{
-				Sku:            v.Sku,
-				Name:           v.Name,
-				Options:        stringValue(v.Options),
-				Price:          v.Price,
-				WeightGrams:    int32(v.WeightGrams),
-				IsActive:       v.IsActive,
+				Sku:         v.Sku,
+				Name:        v.Name,
+				Options:     stringValue(v.Options),
+				Price:       v.Price,
+				WeightGrams: int32(v.WeightGrams),
+				IsActive:    v.IsActive,
 			}
 			if v.ID != nil {
 				pbVariant.Id = *v.ID
@@ -495,6 +495,26 @@ func (r *mutationResolver) DeleteVariant(ctx context.Context, id string) (bool, 
 		return false, err
 	}
 	return resp.Success, nil
+}
+
+// UpdateInventory is the resolver for the updateInventory field.
+func (r *mutationResolver) UpdateInventory(ctx context.Context, variantID string, input model.UpdateInventoryInput) (*model.Inventory, error) {
+	resp, err := r.ProductClient.Inventory.UpdateInventory(ctx, &productpb.UpdateInventoryRequest{
+		VariantId:      variantID,
+		QuantityOnHand: int32(input.QuantityOnHand),
+		ReorderPoint:   int32(input.ReorderPoint),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Inventory{
+		VariantID:         resp.Inventory.VariantId,
+		QuantityOnHand:    int(resp.Inventory.QuantityOnHand),
+		QuantityReserved:  int(resp.Inventory.QuantityReserved),
+		QuantityAvailable: int(resp.Inventory.QuantityAvailable),
+		ReorderPoint:      int(resp.Inventory.ReorderPoint),
+	}, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

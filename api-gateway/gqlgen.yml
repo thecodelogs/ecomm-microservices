@@ -26,6 +26,10 @@ models:
     model: github.com/99designs/gqlgen/graphql.Upload
   Time:
     model: github.com/99designs/gqlgen/graphql.Time
+  Variant:
+    fields:
+      inventory:
+        resolver: true
 
 directives:
   auth:

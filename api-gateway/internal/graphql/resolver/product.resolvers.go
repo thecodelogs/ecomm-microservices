@@ -47,11 +47,33 @@ func (r *productResolver) Category(ctx context.Context, obj *model.Product) (*mo
 	return mapCategoryFromProto(resp.Category, baseURL), nil
 }
 
+// Inventory is the resolver for the inventory field.
+func (r *variantResolver) Inventory(ctx context.Context, obj *model.Variant) (*model.Inventory, error) {
+	resp, err := r.ProductClient.Inventory.GetInventory(ctx, &productpb.GetInventoryRequest{
+		VariantId: obj.ID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	
+	return &model.Inventory{
+		VariantID:         resp.Inventory.VariantId,
+		QuantityOnHand:    int(resp.Inventory.QuantityOnHand),
+		QuantityReserved:  int(resp.Inventory.QuantityReserved),
+		QuantityAvailable: int(resp.Inventory.QuantityAvailable),
+		ReorderPoint:      int(resp.Inventory.ReorderPoint),
+	}, nil
+}
+
 // Category returns generated.CategoryResolver implementation.
 func (r *Resolver) Category() generated.CategoryResolver { return &categoryResolver{r} }
 
 // Product returns generated.ProductResolver implementation.
 func (r *Resolver) Product() generated.ProductResolver { return &productResolver{r} }
 
+// Variant returns generated.VariantResolver implementation.
+func (r *Resolver) Variant() generated.VariantResolver { return &variantResolver{r} }
+
 type categoryResolver struct{ *Resolver }
 type productResolver struct{ *Resolver }
+type variantResolver struct{ *Resolver }

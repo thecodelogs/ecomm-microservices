@@ -52,6 +52,7 @@ func main() {
 	// Handler layer
 	prodHandler := handler.NewProductHandler(prodSvc, invSvc, revSvc, cfg)
 	catHandler := handler.NewCategoryHandler(catSvc, cfg)
+	invHandler := handler.NewInventoryHandler(invSvc, cfg)
 
 	// gRPC server
 	lis, err := net.Listen("tcp", ":"+cfg.Port)
@@ -64,6 +65,7 @@ func main() {
 	)
 	productpb.RegisterProductServiceServer(srv, prodHandler)
 	productpb.RegisterCategoryServiceServer(srv, catHandler)
+	productpb.RegisterInventoryServiceServer(srv, invHandler)
 
 	reflection.Register(srv)
 

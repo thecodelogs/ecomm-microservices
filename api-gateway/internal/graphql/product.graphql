@@ -22,6 +22,15 @@ type Variant implements Node {
   isActive: Boolean!
   createdAt: Time!
   updatedAt: Time!
+  inventory: Inventory!
+}
+
+type Inventory {
+  variantId: ID!
+  quantityOnHand: Int!
+  quantityReserved: Int!
+  quantityAvailable: Int!
+  reorderPoint: Int!
 }
 
 type Category implements Node {

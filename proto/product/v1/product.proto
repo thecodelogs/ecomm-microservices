@@ -26,6 +26,7 @@ service CategoryService {
 
 service InventoryService {
     rpc GetInventory(GetInventoryRequest) returns (GetInventoryResponse);
+    rpc UpdateInventory(UpdateInventoryRequest) returns (UpdateInventoryResponse);
 }
 
 message Category {
@@ -245,8 +246,19 @@ message Inventory {
     int32 quantity_on_hand = 2;
     int32 quantity_reserved = 3;
     int32 quantity_available = 4;
+    int32 reorder_point = 5;
 }
 
 message GetInventoryResponse {
+    Inventory inventory = 1;
+}
+
+message UpdateInventoryRequest {
+    string variant_id = 1;
+    int32 quantity_on_hand = 2;
+    int32 reorder_point = 3;
+}
+
+message UpdateInventoryResponse {
     Inventory inventory = 1;
 }

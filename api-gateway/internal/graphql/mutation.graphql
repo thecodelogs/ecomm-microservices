@@ -30,4 +30,12 @@ type Mutation {
   createVariant(input: CreateVariantInput!): Variant! @auth @admin
   updateVariant(id: ID!, input: UpdateVariantInput!): Variant! @auth @admin
   deleteVariant(id: ID!): Boolean! @auth @admin
+
+  # Admin - Inventory
+  updateInventory(variantId: ID!, input: UpdateInventoryInput!): Inventory! @auth @admin
+}
+
+input UpdateInventoryInput {
+  quantityOnHand: Int!
+  reorderPoint: Int!
 }

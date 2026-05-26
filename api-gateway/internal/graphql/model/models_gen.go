@@ -102,6 +102,14 @@ type HealthCheck struct {
 	Services  []*ServiceHealth `json:"services"`
 }
 
+type Inventory struct {
+	VariantID         string `json:"variantId"`
+	QuantityOnHand    int    `json:"quantityOnHand"`
+	QuantityReserved  int    `json:"quantityReserved"`
+	QuantityAvailable int    `json:"quantityAvailable"`
+	ReorderPoint      int    `json:"reorderPoint"`
+}
+
 type Mutation struct {
 }
 
@@ -175,6 +183,11 @@ type UpdateCategoryInput struct {
 	Image       *graphql.Upload `json:"image,omitempty"`
 }
 
+type UpdateInventoryInput struct {
+	QuantityOnHand int `json:"quantityOnHand"`
+	ReorderPoint   int `json:"reorderPoint"`
+}
+
 type UpdateProductInput struct {
 	Name             string                 `json:"name"`
 	Description      string                 `json:"description"`
@@ -218,19 +231,20 @@ type UserEdge struct {
 }
 
 type Variant struct {
-	ID             string    `json:"id"`
-	ProductID      string    `json:"productId"`
-	Sku            string    `json:"sku"`
-	Name           string    `json:"name"`
-	Options        *string   `json:"options,omitempty"`
-	Price          float64   `json:"price"`
-	CompareAtPrice *float64  `json:"compareAtPrice,omitempty"`
-	CostPrice      *float64  `json:"costPrice,omitempty"`
-	WeightGrams    int       `json:"weightGrams"`
-	ImageURL       *string   `json:"imageUrl,omitempty"`
-	IsActive       bool      `json:"isActive"`
-	CreatedAt      time.Time `json:"createdAt"`
-	UpdatedAt      time.Time `json:"updatedAt"`
+	ID             string     `json:"id"`
+	ProductID      string     `json:"productId"`
+	Sku            string     `json:"sku"`
+	Name           string     `json:"name"`
+	Options        *string    `json:"options,omitempty"`
+	Price          float64    `json:"price"`
+	CompareAtPrice *float64   `json:"compareAtPrice,omitempty"`
+	CostPrice      *float64   `json:"costPrice,omitempty"`
+	WeightGrams    int        `json:"weightGrams"`
+	ImageURL       *string    `json:"imageUrl,omitempty"`
+	IsActive       bool       `json:"isActive"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
+	Inventory      *Inventory `json:"inventory"`
 }
 
 func (Variant) IsNode()            {}

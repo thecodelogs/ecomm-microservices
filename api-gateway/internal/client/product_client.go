@@ -12,8 +12,9 @@ import (
 
 type ProductClient struct {
 	conn     *grpc.ClientConn
-	Category productpb.CategoryServiceClient
-	Product  productpb.ProductServiceClient
+	Category  productpb.CategoryServiceClient
+	Product   productpb.ProductServiceClient
+	Inventory productpb.InventoryServiceClient
 }
 
 func NewProductClient(addr string) (*ProductClient, error) {
@@ -30,8 +31,9 @@ func NewProductClient(addr string) (*ProductClient, error) {
 
 	return &ProductClient{
 		conn:     conn,
-		Product:  productpb.NewProductServiceClient(conn),
-		Category: productpb.NewCategoryServiceClient(conn),
+		Product:   productpb.NewProductServiceClient(conn),
+		Category:  productpb.NewCategoryServiceClient(conn),
+		Inventory: productpb.NewInventoryServiceClient(conn),
 	}, nil
 }
 

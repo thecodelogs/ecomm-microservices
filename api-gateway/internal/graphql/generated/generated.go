@@ -34,6 +34,7 @@ type ResolverRoot interface {
 	Product() ProductResolver
 	Query() QueryResolver
 	User() UserResolver
+	Variant() VariantResolver
 }
 
 type DirectiveRoot struct {
@@ -90,6 +91,14 @@ type ComplexityRoot struct {
 		Timestamp func(childComplexity int) int
 	}
 
+	Inventory struct {
+		QuantityAvailable func(childComplexity int) int
+		QuantityOnHand    func(childComplexity int) int
+		QuantityReserved  func(childComplexity int) int
+		ReorderPoint      func(childComplexity int) int
+		VariantID         func(childComplexity int) int
+	}
+
 	Mutation struct {
 		AdminLogin        func(childComplexity int, input model.SigninInput) int
 		CreateAddress     func(childComplexity int, input model.AddressInput) int
@@ -108,6 +117,7 @@ type ComplexityRoot struct {
 		Signin            func(childComplexity int, input model.SigninInput) int
 		UpdateAddress     func(childComplexity int, id string, input model.AddressInput) int
 		UpdateCategory    func(childComplexity int, id string, input model.UpdateCategoryInput) int
+		UpdateInventory   func(childComplexity int, variantID string, input model.UpdateInventoryInput) int
 		UpdateProduct     func(childComplexity int, id string, input model.UpdateProductInput) int
 		UpdateProfile     func(childComplexity int, input model.UpdateProfileInput) int
 		UpdateUserStatus  func(childComplexity int, id string, status model.UserStatus) int
@@ -190,6 +200,7 @@ type ComplexityRoot struct {
 		CreatedAt      func(childComplexity int) int
 		ID             func(childComplexity int) int
 		ImageURL       func(childComplexity int) int
+		Inventory      func(childComplexity int) int
 		IsActive       func(childComplexity int) int
 		Name           func(childComplexity int) int
 		Options        func(childComplexity int) int
@@ -227,6 +238,7 @@ type MutationResolver interface {
 	CreateVariant(ctx context.Context, input model.CreateVariantInput) (*model.Variant, error)
 	UpdateVariant(ctx context.Context, id string, input model.UpdateVariantInput) (*model.Variant, error)
 	DeleteVariant(ctx context.Context, id string) (bool, error)
+	UpdateInventory(ctx context.Context, variantID string, input model.UpdateInventoryInput) (*model.Inventory, error)
 }
 type ProductResolver interface {
 	Category(ctx context.Context, obj *model.Product) (*model.Category, error)
@@ -244,6 +256,9 @@ type QueryResolver interface {
 type UserResolver interface {
 	Addresses(ctx context.Context, obj *model.User) ([]*model.Address, error)
 	DefaultAddress(ctx context.Context, obj *model.User) (*model.Address, error)
+}
+type VariantResolver interface {
+	Inventory(ctx context.Context, obj *model.Variant) (*model.Inventory, error)
 }
 
 type executableSchema graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot]
@@ -446,6 +461,37 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.HealthCheck.Timestamp(childComplexity), true
 
+	case "Inventory.quantityAvailable":
+		if e.ComplexityRoot.Inventory.QuantityAvailable == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Inventory.QuantityAvailable(childComplexity), true
+	case "Inventory.quantityOnHand":
+		if e.ComplexityRoot.Inventory.QuantityOnHand == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Inventory.QuantityOnHand(childComplexity), true
+	case "Inventory.quantityReserved":
+		if e.ComplexityRoot.Inventory.QuantityReserved == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Inventory.QuantityReserved(childComplexity), true
+	case "Inventory.reorderPoint":
+		if e.ComplexityRoot.Inventory.ReorderPoint == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Inventory.ReorderPoint(childComplexity), true
+	case "Inventory.variantId":
+		if e.ComplexityRoot.Inventory.VariantID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Inventory.VariantID(childComplexity), true
+
 	case "Mutation.adminLogin":
 		if e.ComplexityRoot.Mutation.AdminLogin == nil {
 			break
@@ -628,6 +674,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.UpdateCategory(childComplexity, args["id"].(string), args["input"].(model.UpdateCategoryInput)), true
+	case "Mutation.updateInventory":
+		if e.ComplexityRoot.Mutation.UpdateInventory == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateInventory_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.UpdateInventory(childComplexity, args["variantId"].(string), args["input"].(model.UpdateInventoryInput)), true
 	case "Mutation.updateProduct":
 		if e.ComplexityRoot.Mutation.UpdateProduct == nil {
 			break
@@ -1001,6 +1058,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Variant.ImageURL(childComplexity), true
+	case "Variant.inventory":
+		if e.ComplexityRoot.Variant.Inventory == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Variant.Inventory(childComplexity), true
 	case "Variant.isActive":
 		if e.ComplexityRoot.Variant.IsActive == nil {
 			break
@@ -1067,6 +1130,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputRegisterInput,
 		ec.unmarshalInputSigninInput,
 		ec.unmarshalInputUpdateCategoryInput,
+		ec.unmarshalInputUpdateInventoryInput,
 		ec.unmarshalInputUpdateProductInput,
 		ec.unmarshalInputUpdateProfileInput,
 		ec.unmarshalInputUpdateVariantInput,
@@ -1177,6 +1241,14 @@ var sources = []*ast.Source{
   createVariant(input: CreateVariantInput!): Variant! @auth @admin
   updateVariant(id: ID!, input: UpdateVariantInput!): Variant! @auth @admin
   deleteVariant(id: ID!): Boolean! @auth @admin
+
+  # Admin - Inventory
+  updateInventory(variantId: ID!, input: UpdateInventoryInput!): Inventory! @auth @admin
+}
+
+input UpdateInventoryInput {
+  quantityOnHand: Int!
+  reorderPoint: Int!
 }
 `, BuiltIn: false},
 	{Name: "../product.graphql", Input: `type Product implements Node {
@@ -1203,6 +1275,15 @@ type Variant implements Node {
   isActive: Boolean!
   createdAt: Time!
   updatedAt: Time!
+  inventory: Inventory!
+}
+
+type Inventory {
+  variantId: ID!
+  quantityOnHand: Int!
+  quantityReserved: Int!
+  quantityAvailable: Int!
+  reorderPoint: Int!
 }
 
 type Category implements Node {
@@ -1568,6 +1649,22 @@ func (ec *executionContext) childFields_HealthCheck(ctx context.Context, field g
 	return nil, fmt.Errorf("no field named %q was found under type HealthCheck", field.Name)
 }
 
+func (ec *executionContext) childFields_Inventory(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "variantId":
+		return ec.fieldContext_Inventory_variantId(ctx, field)
+	case "quantityOnHand":
+		return ec.fieldContext_Inventory_quantityOnHand(ctx, field)
+	case "quantityReserved":
+		return ec.fieldContext_Inventory_quantityReserved(ctx, field)
+	case "quantityAvailable":
+		return ec.fieldContext_Inventory_quantityAvailable(ctx, field)
+	case "reorderPoint":
+		return ec.fieldContext_Inventory_reorderPoint(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Inventory", field.Name)
+}
+
 func (ec *executionContext) childFields_PageInfo(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "hasNextPage":
@@ -1714,6 +1811,8 @@ func (ec *executionContext) childFields_Variant(ctx context.Context, field graph
 		return ec.fieldContext_Variant_createdAt(ctx, field)
 	case "updatedAt":
 		return ec.fieldContext_Variant_updatedAt(ctx, field)
+	case "inventory":
+		return ec.fieldContext_Variant_inventory(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Variant", field.Name)
 }
@@ -2066,6 +2165,28 @@ func (ec *executionContext) field_Mutation_updateCategory_args(ctx context.Conte
 	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.UpdateCategoryInput, error) {
 			return ec.unmarshalNUpdateCategoryInput2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐUpdateCategoryInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateInventory_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "variantId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["variantId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.UpdateInventoryInput, error) {
+			return ec.unmarshalNUpdateInventoryInput2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐUpdateInventoryInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -3075,6 +3196,121 @@ func (ec *executionContext) fieldContext_HealthCheck_services(_ context.Context,
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _Inventory_variantId(ctx context.Context, field graphql.CollectedField, obj *model.Inventory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Inventory_variantId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.VariantID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Inventory_variantId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Inventory", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _Inventory_quantityOnHand(ctx context.Context, field graphql.CollectedField, obj *model.Inventory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Inventory_quantityOnHand(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.QuantityOnHand, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Inventory_quantityOnHand(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Inventory", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _Inventory_quantityReserved(ctx context.Context, field graphql.CollectedField, obj *model.Inventory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Inventory_quantityReserved(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.QuantityReserved, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Inventory_quantityReserved(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Inventory", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _Inventory_quantityAvailable(ctx context.Context, field graphql.CollectedField, obj *model.Inventory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Inventory_quantityAvailable(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.QuantityAvailable, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Inventory_quantityAvailable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Inventory", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _Inventory_reorderPoint(ctx context.Context, field graphql.CollectedField, obj *model.Inventory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Inventory_reorderPoint(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ReorderPoint, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Inventory_reorderPoint(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Inventory", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _Mutation_register(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4272,6 +4508,70 @@ func (ec *executionContext) fieldContext_Mutation_deleteVariant(ctx context.Cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteVariant_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateInventory(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_updateInventory(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().UpdateInventory(ctx, fc.Args["variantId"].(string), fc.Args["input"].(model.UpdateInventoryInput))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Auth == nil {
+					var zeroVal *model.Inventory
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.Directives.Auth(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Admin == nil {
+					var zeroVal *model.Inventory
+					return zeroVal, errors.New("directive admin is not implemented")
+				}
+				return ec.Directives.Admin(ctx, nil, directive1)
+			}
+
+			next = directive2
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Inventory) graphql.Marshaler {
+			return ec.marshalNInventory2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐInventory(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_updateInventory(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Inventory(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateInventory_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -5981,6 +6281,38 @@ func (ec *executionContext) fieldContext_Variant_updatedAt(_ context.Context, fi
 	return graphql.NewScalarFieldContext("Variant", field, false, false, errors.New("field of type Time does not have child fields"))
 }
 
+func (ec *executionContext) _Variant_inventory(ctx context.Context, field graphql.CollectedField, obj *model.Variant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Variant_inventory(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Variant().Inventory(ctx, obj)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Inventory) graphql.Marshaler {
+			return ec.marshalNInventory2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐInventory(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Variant_inventory(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Variant",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Inventory(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -7688,6 +8020,43 @@ func (ec *executionContext) unmarshalInputUpdateCategoryInput(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateInventoryInput(ctx context.Context, obj any) (model.UpdateInventoryInput, error) {
+	var it model.UpdateInventoryInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"quantityOnHand", "reorderPoint"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "quantityOnHand":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantityOnHand"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuantityOnHand = data
+		case "reorderPoint":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reorderPoint"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReorderPoint = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateProductInput(ctx context.Context, obj any) (model.UpdateProductInput, error) {
 	var it model.UpdateProductInput
 	if obj == nil {
@@ -8375,6 +8744,65 @@ func (ec *executionContext) _HealthCheck(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
+var inventoryImplementors = []string{"Inventory"}
+
+func (ec *executionContext) _Inventory(ctx context.Context, sel ast.SelectionSet, obj *model.Inventory) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, inventoryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Inventory")
+		case "variantId":
+			out.Values[i] = ec._Inventory_variantId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "quantityOnHand":
+			out.Values[i] = ec._Inventory_quantityOnHand(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "quantityReserved":
+			out.Values[i] = ec._Inventory_quantityReserved(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "quantityAvailable":
+			out.Values[i] = ec._Inventory_quantityAvailable(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reorderPoint":
+			out.Values[i] = ec._Inventory_reorderPoint(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -8537,6 +8965,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "deleteVariant":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteVariant(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateInventory":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateInventory(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -9320,29 +9755,29 @@ func (ec *executionContext) _Variant(ctx context.Context, sel ast.SelectionSet, 
 		case "id":
 			out.Values[i] = ec._Variant_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "productId":
 			out.Values[i] = ec._Variant_productId(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "sku":
 			out.Values[i] = ec._Variant_sku(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "name":
 			out.Values[i] = ec._Variant_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "options":
 			out.Values[i] = ec._Variant_options(ctx, field, obj)
 		case "price":
 			out.Values[i] = ec._Variant_price(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "compareAtPrice":
 			out.Values[i] = ec._Variant_compareAtPrice(ctx, field, obj)
@@ -9351,25 +9786,61 @@ func (ec *executionContext) _Variant(ctx context.Context, sel ast.SelectionSet, 
 		case "weightGrams":
 			out.Values[i] = ec._Variant_weightGrams(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "imageUrl":
 			out.Values[i] = ec._Variant_imageUrl(ctx, field, obj)
 		case "isActive":
 			out.Values[i] = ec._Variant_isActive(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "createdAt":
 			out.Values[i] = ec._Variant_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "updatedAt":
 			out.Values[i] = ec._Variant_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "inventory":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Variant_inventory(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9940,6 +10411,20 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) marshalNInventory2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐInventory(ctx context.Context, sel ast.SelectionSet, v model.Inventory) graphql.Marshaler {
+	return ec._Inventory(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNInventory2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐInventory(ctx context.Context, sel ast.SelectionSet, v *model.Inventory) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Inventory(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNPageInfo2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v *model.PageInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -10105,6 +10590,11 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 
 func (ec *executionContext) unmarshalNUpdateCategoryInput2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐUpdateCategoryInput(ctx context.Context, v any) (model.UpdateCategoryInput, error) {
 	res, err := ec.unmarshalInputUpdateCategoryInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateInventoryInput2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐUpdateInventoryInput(ctx context.Context, v any) (model.UpdateInventoryInput, error) {
+	res, err := ec.unmarshalInputUpdateInventoryInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
