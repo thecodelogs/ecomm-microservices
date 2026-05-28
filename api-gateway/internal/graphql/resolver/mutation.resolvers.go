@@ -243,7 +243,7 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.Create
 						if err != nil {
 							return nil, fmt.Errorf("failed to upload variant image to S3: %w", err)
 						}
-						
+
 						pbImages = append(pbImages, &productpb.VariantImage{
 							Url:       key,
 							SortOrder: int32(i),
@@ -317,7 +317,7 @@ func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, input m
 						if err != nil {
 							return nil, fmt.Errorf("failed to upload variant image to S3: %w", err)
 						}
-						
+
 						pbImages = append(pbImages, &productpb.VariantImage{
 							Url:       key,
 							SortOrder: int32(i),

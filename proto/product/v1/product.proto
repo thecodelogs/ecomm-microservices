@@ -10,6 +10,7 @@ service ProductService {
     rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
     rpc GetProduct(GetProductRequest) returns (GetProductResponse);
     rpc ListProducts(ListProductsRequest) returns (ProductListResponse);
+    rpc SearchProducts(SearchProductsRequest) returns (ProductListResponse);
 
     rpc CreateVariant(CreateVariantRequest) returns (CreateVariantResponse);
     rpc UpdateVariant(UpdateVariantRequest) returns (UpdateVariantResponse);
@@ -99,6 +100,18 @@ message ListProductsRequest {
     int32 page = 1;
     int32 page_size = 2;
     string category_id = 3;
+    bool is_admin = 4;
+    double min_price = 5;
+    double max_price = 6;
+    repeated string brands = 7;
+    string sort_field = 8;
+    string sort_direction = 9;
+}
+
+message SearchProductsRequest {
+    string query = 1;
+    int32 page = 2;
+    int32 page_size = 3;
     bool is_admin = 4;
 }
 

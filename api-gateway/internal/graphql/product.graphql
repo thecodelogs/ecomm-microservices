@@ -171,3 +171,25 @@ input UpdateVariantInput {
   image: Upload
   isActive: Boolean!
 }
+
+input ProductFilterInput {
+  minPrice: Float
+  maxPrice: Float
+  brands: [String!]
+}
+
+enum ProductSortField {
+  PRICE
+  CREATED_AT
+  RATING
+}
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+input ProductSortInput {
+  field: ProductSortField!
+  direction: SortDirection!
+}

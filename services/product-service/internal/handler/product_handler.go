@@ -281,7 +281,7 @@ func (h *ProductHandler) DeleteProduct(ctx context.Context, req *productpb.Delet
 func (h *ProductHandler) ListProducts(ctx context.Context, req *productpb.ListProductsRequest) (*productpb.ProductListResponse, error) {
 
 	catID, _ := uuid.Parse(req.CategoryId)
-	products, total, err := h.prodSvc.ListProducts(ctx, catID, req.Page, req.PageSize, req.IsAdmin)
+	products, total, err := h.prodSvc.ListProducts(ctx, catID, req.Page, req.PageSize, req.IsAdmin, req.MinPrice, req.MaxPrice, req.Brands, req.SortField, req.SortDirection)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -293,6 +293,25 @@ func (h *ProductHandler) ListProducts(ctx context.Context, req *productpb.ListPr
 		if len(variants) > 0 {
 			fmt.Printf("DEBUG ListProducts product %s variant 0 has %d images\n", p.ID, len(variants[0].Images))
 		}
+		pbProducts = append(pbProducts, toProtoProduct(&p, variants))
+	}
+
+	return &productpb.ProductListResponse{
+		Products: pbProducts,
+		Total:    total,
+		Page:     req.Page,
+	}, nil
+}
+
+func (h *ProductHandler) SearchProducts(ctx context.Context, req *productpb.SearchProductsRequest) (*productpb.ProductListResponse, error) {
+	products, total, err := h.prodSvc.SearchProducts(ctx, req.Query, req.Page, req.PageSize, req.IsAdmin)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var pbProducts []*productpb.Product
+	for _, p := range products {
+		variants, _ := h.prodSvc.GetVariantsByProductID(ctx, p.ID)
 		pbProducts = append(pbProducts, toProtoProduct(&p, variants))
 	}
 

@@ -150,7 +150,7 @@ func (r *queryResolver) Product(ctx context.Context, id string) (*model.Product,
 }
 
 // Products is the resolver for the products field.
-func (r *queryResolver) Products(ctx context.Context, categoryID *string, pagination *model.PaginationInput) (*model.ProductConnection, error) {
+func (r *queryResolver) Products(ctx context.Context, categoryID *string, filter *model.ProductFilterInput, sort *model.ProductSortInput, pagination *model.PaginationInput) (*model.ProductConnection, error) {
 	page := int32(1)
 	pageSize := int32(20)
 	var catID string
@@ -171,11 +171,76 @@ func (r *queryResolver) Products(ctx context.Context, categoryID *string, pagina
 		}
 	}
 
-	resp, err := r.ProductClient.Product.ListProducts(ctx, &productpb.ListProductsRequest{
+	req := &productpb.ListProductsRequest{
 		CategoryId: catID,
 		Page:       page,
 		PageSize:   pageSize,
 		IsAdmin:    isAdmin,
+	}
+
+	if filter != nil {
+		if filter.MinPrice != nil {
+			req.MinPrice = *filter.MinPrice
+		}
+		if filter.MaxPrice != nil {
+			req.MaxPrice = *filter.MaxPrice
+		}
+		if len(filter.Brands) > 0 {
+			req.Brands = filter.Brands
+		}
+	}
+
+	if sort != nil {
+		req.SortField = string(sort.Field)
+		req.SortDirection = string(sort.Direction)
+	}
+
+	resp, err := r.ProductClient.Product.ListProducts(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	baseURL := r.S3Storage.GetBaseURL()
+	edges := make([]*model.ProductEdge, len(resp.Products))
+	for i, p := range resp.Products {
+		edges[i] = &model.ProductEdge{
+			Node:   mapProductFromProto(p, baseURL),
+			Cursor: encodeCursor(p.Id),
+		}
+	}
+
+	return &model.ProductConnection{
+		Edges: edges,
+		PageInfo: &model.PageInfo{
+			HasNextPage: false,
+			TotalCount:  int(resp.Total),
+		},
+	}, nil
+}
+
+// SearchProducts is the resolver for the searchProducts field.
+func (r *queryResolver) SearchProducts(ctx context.Context, query string, pagination *model.PaginationInput) (*model.ProductConnection, error) {
+	page := int32(1)
+	pageSize := int32(20)
+	if pagination != nil && pagination.First != nil {
+		pageSize = int32(*pagination.First)
+	}
+
+	isAdmin := false
+	gc, err := GinContextFromContext(ctx)
+	if err == nil {
+		if role, exists := gc.Get("role"); exists {
+			if rStr, ok := role.(string); ok && strings.EqualFold(rStr, "admin") {
+				isAdmin = true
+			}
+		}
+	}
+
+	resp, err := r.ProductClient.Product.SearchProducts(ctx, &productpb.SearchProductsRequest{
+		Query:    query,
+		Page:     page,
+		PageSize: pageSize,
+		IsAdmin:  isAdmin,
 	})
 	if err != nil {
 		return nil, err
