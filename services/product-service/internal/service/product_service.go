@@ -115,21 +115,23 @@ func (s *ProductService) UpdateProduct(ctx context.Context, p *models.Product, v
 			}
 		}
 
-		// Clear existing images for the updated variant
-		if variants[i].ID != uuid.Nil {
-			if err := s.imgRepo.DeleteByVariantID(ctx, variants[i].ID); err != nil {
-				return fmt.Errorf("delete old variant images: %w", err)
+		if len(variants[i].Images) > 0 {
+			// Clear existing images for the updated variant
+			if variants[i].ID != uuid.Nil {
+				if err := s.imgRepo.DeleteByVariantID(ctx, variants[i].ID); err != nil {
+					return fmt.Errorf("delete old variant images: %w", err)
+				}
 			}
-		}
 
-		for j := range variants[i].Images {
-			if variants[i].Images[j].ID == uuid.Nil {
-				variants[i].Images[j].ID = uuid.New()
-			}
-			variants[i].Images[j].VariantID = variants[i].ID
-			variants[i].Images[j].CreatedAt = time.Now().UTC()
-			if err := s.imgRepo.Create(ctx, &variants[i].Images[j]); err != nil {
-				return fmt.Errorf("create variant image: %w", err)
+			for j := range variants[i].Images {
+				if variants[i].Images[j].ID == uuid.Nil {
+					variants[i].Images[j].ID = uuid.New()
+				}
+				variants[i].Images[j].VariantID = variants[i].ID
+				variants[i].Images[j].CreatedAt = time.Now().UTC()
+				if err := s.imgRepo.Create(ctx, &variants[i].Images[j]); err != nil {
+					return fmt.Errorf("create variant image: %w", err)
+				}
 			}
 		}
 	}

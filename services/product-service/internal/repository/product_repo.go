@@ -45,7 +45,7 @@ func (r *ProductRepo) Update(ctx context.Context, p *models.Product) error {
 }
 
 func (r *ProductRepo) Delete(ctx context.Context, id uuid.UUID) error {
-	query := `DELETE FROM products WHERE id = $1`
+	query := `UPDATE products SET status = 'deleted', updated_at = NOW() WHERE id = $1`
 	_, err := r.db.Exec(ctx, query, id)
 	return err
 }

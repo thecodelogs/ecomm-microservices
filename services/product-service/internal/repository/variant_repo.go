@@ -27,7 +27,7 @@ func (r *VariantRepo) Create(ctx context.Context, v *models.Variant) error {
 
 func (r *VariantRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.Variant, error) {
 	query := `SELECT id, product_id, sku, name, options, price, compare_at_price, cost_price, weight_grams, image_url, is_active, created_at, updated_at
-	          FROM variants WHERE id = $1 AND is_active = true`
+	          FROM variants WHERE id = $1`
 	row := r.db.QueryRow(ctx, query, id)
 	return r.scanVariant(row)
 }
@@ -54,7 +54,7 @@ func (r *VariantRepo) GetByProductID(ctx context.Context, productID uuid.UUID) (
 
 func (r *VariantRepo) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]models.Variant, error) {
 	query := `SELECT id, product_id, sku, name, options, price, compare_at_price, cost_price, weight_grams, image_url, is_active, created_at, updated_at
-	          FROM variants WHERE id = ANY($1) AND is_active = true`
+	          FROM variants WHERE id = ANY($1)`
 	rows, err := r.db.Query(ctx, query, ids)
 	if err != nil {
 		return nil, err
@@ -90,13 +90,13 @@ func (r *VariantRepo) Update(ctx context.Context, v *models.Variant) error {
 }
 
 func (r *VariantRepo) DeleteByProductID(ctx context.Context, productID uuid.UUID) error {
-	query := `DELETE FROM variants WHERE product_id = $1`
+	query := `UPDATE variants SET is_active = false, updated_at = NOW() WHERE product_id = $1`
 	_, err := r.db.Exec(ctx, query, productID)
 	return err
 }
 
 func (r *VariantRepo) Delete(ctx context.Context, id uuid.UUID) error {
-	query := `DELETE FROM variants WHERE id = $1`
+	query := `UPDATE variants SET is_active = false, updated_at = NOW() WHERE id = $1`
 	_, err := r.db.Exec(ctx, query, id)
 	return err
 }

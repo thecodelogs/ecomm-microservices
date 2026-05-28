@@ -167,6 +167,8 @@ func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.Updat
 
 	categoryID, _ := uuid.Parse(req.CategoryId)
 
+	fmt.Printf("DEBUG UpdateProduct request for product ID: %s, Variants count: %d\n", id, len(req.Variants))
+
 	var attributes json.RawMessage
 	if req.Attributes != "" {
 		attributes = json.RawMessage(req.Attributes)
@@ -199,9 +201,13 @@ func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.Updat
 				parsed, err := uuid.Parse(v.Id)
 				if err == nil {
 					vID = parsed
+				} else {
+					fmt.Printf("DEBUG UpdateProduct variant ID parsing failed for '%s': %v\n", v.Id, err)
 				}
 			}
 			
+			fmt.Printf("DEBUG UpdateProduct processing variant: ID=%s, parsed UUID=%s, SKU=%s, Price=%f\n", v.Id, vID, v.Sku, v.Price)
+
 			options := json.RawMessage(nil)
 			if v.Options != "" {
 				options = json.RawMessage(v.Options)
@@ -254,8 +260,14 @@ func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.Updat
 		return nil, status.Errorf(codes.Internal, "failed to update product: %v", err)
 	}
 
+	updatedVariants, err := h.prodSvc.GetVariantsByProductID(ctx, p.ID)
+	if err != nil {
+		// fallback to variantsToUpdate if fetch fails
+		updatedVariants = variantsToUpdate
+	}
+
 	return &productpb.UpdateProductResponse{
-		Product: toProtoProduct(p, variantsToUpdate),
+		Product: toProtoProduct(p, updatedVariants),
 	}, nil
 }
 

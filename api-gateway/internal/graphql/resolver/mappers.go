@@ -95,10 +95,6 @@ func mapVariantFromProto(v *productpb.Variant, baseURL string) *model.Variant {
 	if vImageUrl != "" && !strings.HasPrefix(vImageUrl, "http") {
 		vImageUrl = baseURL + vImageUrl
 	}
-	var vImageUrlPtr *string
-	if vImageUrl != "" {
-		vImageUrlPtr = &vImageUrl
-	}
 
 	var images []*model.VariantImage
 	for _, img := range v.Images {
@@ -127,6 +123,16 @@ func mapVariantFromProto(v *productpb.Variant, baseURL string) *model.Variant {
 
 	if len(images) > 0 {
 		println("API GATEWAY mapVariantFromProto mapped images:", len(images), "ID:", images[0].ID, "URL:", images[0].URL)
+	}
+
+	// Fallback to first image from Images array if ImageURL is empty
+	if vImageUrl == "" && len(images) > 0 {
+		vImageUrl = images[0].URL
+	}
+	
+	var vImageUrlPtr *string
+	if vImageUrl != "" {
+		vImageUrlPtr = &vImageUrl
 	}
 
 	return &model.Variant{
