@@ -110,28 +110,31 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AdminLogin        func(childComplexity int, input model.SigninInput) int
-		CreateAddress     func(childComplexity int, input model.AddressInput) int
-		CreateCategory    func(childComplexity int, input model.CreateCategoryInput) int
-		CreateProduct     func(childComplexity int, input model.CreateProductInput) int
-		CreateVariant     func(childComplexity int, input model.CreateVariantInput) int
-		DeleteAddress     func(childComplexity int, id string) int
-		DeleteCategory    func(childComplexity int, id string) int
-		DeleteProduct     func(childComplexity int, id string) int
-		DeleteUser        func(childComplexity int, id string) int
-		DeleteVariant     func(childComplexity int, id string) int
-		Logout            func(childComplexity int) int
-		RefreshToken      func(childComplexity int, token string) int
-		Register          func(childComplexity int, input model.RegisterInput) int
-		SetDefaultAddress func(childComplexity int, id string) int
-		Signin            func(childComplexity int, input model.SigninInput) int
-		UpdateAddress     func(childComplexity int, id string, input model.AddressInput) int
-		UpdateCategory    func(childComplexity int, id string, input model.UpdateCategoryInput) int
-		UpdateInventory   func(childComplexity int, variantID string, input model.UpdateInventoryInput) int
-		UpdateProduct     func(childComplexity int, id string, input model.UpdateProductInput) int
-		UpdateProfile     func(childComplexity int, input model.UpdateProfileInput) int
-		UpdateUserStatus  func(childComplexity int, id string, status model.UserStatus) int
-		UpdateVariant     func(childComplexity int, id string, input model.UpdateVariantInput) int
+		AddVariantImage      func(childComplexity int, variantID string, url string, altText *string, sortOrder *int) int
+		AdminLogin           func(childComplexity int, input model.SigninInput) int
+		CreateAddress        func(childComplexity int, input model.AddressInput) int
+		CreateCategory       func(childComplexity int, input model.CreateCategoryInput) int
+		CreateProduct        func(childComplexity int, input model.CreateProductInput) int
+		CreateVariant        func(childComplexity int, input model.CreateVariantInput) int
+		DeleteAddress        func(childComplexity int, id string) int
+		DeleteCategory       func(childComplexity int, id string) int
+		DeleteProduct        func(childComplexity int, id string) int
+		DeleteUser           func(childComplexity int, id string) int
+		DeleteVariant        func(childComplexity int, id string) int
+		Logout               func(childComplexity int) int
+		RefreshToken         func(childComplexity int, token string) int
+		Register             func(childComplexity int, input model.RegisterInput) int
+		RemoveVariantImage   func(childComplexity int, id string) int
+		ReorderVariantImages func(childComplexity int, variantID string, orders []*model.ImageOrderInput) int
+		SetDefaultAddress    func(childComplexity int, id string) int
+		Signin               func(childComplexity int, input model.SigninInput) int
+		UpdateAddress        func(childComplexity int, id string, input model.AddressInput) int
+		UpdateCategory       func(childComplexity int, id string, input model.UpdateCategoryInput) int
+		UpdateInventory      func(childComplexity int, variantID string, input model.UpdateInventoryInput) int
+		UpdateProduct        func(childComplexity int, id string, input model.UpdateProductInput) int
+		UpdateProfile        func(childComplexity int, input model.UpdateProfileInput) int
+		UpdateUserStatus     func(childComplexity int, id string, status model.UserStatus) int
+		UpdateVariant        func(childComplexity int, id string, input model.UpdateVariantInput) int
 	}
 
 	PageInfo struct {
@@ -211,6 +214,7 @@ type ComplexityRoot struct {
 		CreatedAt      func(childComplexity int) int
 		ID             func(childComplexity int) int
 		ImageURL       func(childComplexity int) int
+		Images         func(childComplexity int) int
 		Inventory      func(childComplexity int) int
 		IsActive       func(childComplexity int) int
 		Name           func(childComplexity int) int
@@ -220,6 +224,15 @@ type ComplexityRoot struct {
 		Sku            func(childComplexity int) int
 		UpdatedAt      func(childComplexity int) int
 		WeightGrams    func(childComplexity int) int
+	}
+
+	VariantImage struct {
+		AltText   func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		SortOrder func(childComplexity int) int
+		URL       func(childComplexity int) int
+		VariantID func(childComplexity int) int
 	}
 }
 
@@ -250,6 +263,9 @@ type MutationResolver interface {
 	UpdateVariant(ctx context.Context, id string, input model.UpdateVariantInput) (*model.Variant, error)
 	DeleteVariant(ctx context.Context, id string) (bool, error)
 	UpdateInventory(ctx context.Context, variantID string, input model.UpdateInventoryInput) (*model.Inventory, error)
+	AddVariantImage(ctx context.Context, variantID string, url string, altText *string, sortOrder *int) (*model.VariantImage, error)
+	RemoveVariantImage(ctx context.Context, id string) (bool, error)
+	ReorderVariantImages(ctx context.Context, variantID string, orders []*model.ImageOrderInput) (bool, error)
 }
 type ProductResolver interface {
 	Category(ctx context.Context, obj *model.Product) (*model.Category, error)
@@ -530,6 +546,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.InventoryEdge.Node(childComplexity), true
 
+	case "Mutation.addVariantImage":
+		if e.ComplexityRoot.Mutation.AddVariantImage == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addVariantImage_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.AddVariantImage(childComplexity, args["variantId"].(string), args["url"].(string), args["altText"].(*string), args["sortOrder"].(*int)), true
 	case "Mutation.adminLogin":
 		if e.ComplexityRoot.Mutation.AdminLogin == nil {
 			break
@@ -668,6 +695,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.Register(childComplexity, args["input"].(model.RegisterInput)), true
+	case "Mutation.removeVariantImage":
+		if e.ComplexityRoot.Mutation.RemoveVariantImage == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_removeVariantImage_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.RemoveVariantImage(childComplexity, args["id"].(string)), true
+	case "Mutation.reorderVariantImages":
+		if e.ComplexityRoot.Mutation.ReorderVariantImages == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_reorderVariantImages_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.ReorderVariantImages(childComplexity, args["variantId"].(string), args["orders"].([]*model.ImageOrderInput)), true
 	case "Mutation.setDefaultAddress":
 		if e.ComplexityRoot.Mutation.SetDefaultAddress == nil {
 			break
@@ -1107,6 +1156,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Variant.ImageURL(childComplexity), true
+	case "Variant.images":
+		if e.ComplexityRoot.Variant.Images == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Variant.Images(childComplexity), true
 	case "Variant.inventory":
 		if e.ComplexityRoot.Variant.Inventory == nil {
 			break
@@ -1162,6 +1217,43 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Variant.WeightGrams(childComplexity), true
 
+	case "VariantImage.altText":
+		if e.ComplexityRoot.VariantImage.AltText == nil {
+			break
+		}
+
+		return e.ComplexityRoot.VariantImage.AltText(childComplexity), true
+	case "VariantImage.createdAt":
+		if e.ComplexityRoot.VariantImage.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.VariantImage.CreatedAt(childComplexity), true
+	case "VariantImage.id":
+		if e.ComplexityRoot.VariantImage.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.VariantImage.ID(childComplexity), true
+	case "VariantImage.sortOrder":
+		if e.ComplexityRoot.VariantImage.SortOrder == nil {
+			break
+		}
+
+		return e.ComplexityRoot.VariantImage.SortOrder(childComplexity), true
+	case "VariantImage.url":
+		if e.ComplexityRoot.VariantImage.URL == nil {
+			break
+		}
+
+		return e.ComplexityRoot.VariantImage.URL(childComplexity), true
+	case "VariantImage.variantId":
+		if e.ComplexityRoot.VariantImage.VariantID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.VariantImage.VariantID(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -1174,6 +1266,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateCategoryInput,
 		ec.unmarshalInputCreateProductInput,
 		ec.unmarshalInputCreateVariantInput,
+		ec.unmarshalInputImageOrderInput,
 		ec.unmarshalInputPaginationInput,
 		ec.unmarshalInputProductVariantInput,
 		ec.unmarshalInputRegisterInput,
@@ -1293,6 +1386,16 @@ var sources = []*ast.Source{
 
   # Admin - Inventory
   updateInventory(variantId: ID!, input: UpdateInventoryInput!): Inventory! @auth @admin
+
+  # Images
+  addVariantImage(variantId: ID!, url: String!, altText: String, sortOrder: Int): VariantImage! @auth @admin
+  removeVariantImage(id: ID!): Boolean! @auth @admin
+  reorderVariantImages(variantId: ID!, orders: [ImageOrderInput!]!): Boolean! @auth @admin
+}
+
+input ImageOrderInput {
+  id: ID!
+  sortOrder: Int!
 }
 
 input UpdateInventoryInput {
@@ -1325,6 +1428,16 @@ type Variant implements Node {
   createdAt: Time!
   updatedAt: Time!
   inventory: Inventory!
+  images: [VariantImage!]!
+}
+
+type VariantImage implements Node {
+  id: ID!
+  variantId: ID!
+  url: String!
+  altText: String
+  sortOrder: Int!
+  createdAt: Time!
 }
 
 type Inventory {
@@ -1434,7 +1547,7 @@ input ProductVariantInput {
   compareAtPrice: Float
   costPrice: Float
   weightGrams: Int!
-  image: Upload
+  images: [Upload!]
   isActive: Boolean!
 }
 
@@ -1895,8 +2008,28 @@ func (ec *executionContext) childFields_Variant(ctx context.Context, field graph
 		return ec.fieldContext_Variant_updatedAt(ctx, field)
 	case "inventory":
 		return ec.fieldContext_Variant_inventory(ctx, field)
+	case "images":
+		return ec.fieldContext_Variant_images(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Variant", field.Name)
+}
+
+func (ec *executionContext) childFields_VariantImage(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_VariantImage_id(ctx, field)
+	case "variantId":
+		return ec.fieldContext_VariantImage_variantId(ctx, field)
+	case "url":
+		return ec.fieldContext_VariantImage_url(ctx, field)
+	case "altText":
+		return ec.fieldContext_VariantImage_altText(ctx, field)
+	case "sortOrder":
+		return ec.fieldContext_VariantImage_sortOrder(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_VariantImage_createdAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type VariantImage", field.Name)
 }
 
 func (ec *executionContext) childFields___Directive(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -2014,6 +2147,44 @@ func (ec *executionContext) childFields___Type(ctx context.Context, field graphq
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_addVariantImage_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "variantId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["variantId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "url",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["url"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "altText",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["altText"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "sortOrder",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["sortOrder"] = arg3
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_adminLogin_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
@@ -2180,6 +2351,42 @@ func (ec *executionContext) field_Mutation_register_args(ctx context.Context, ra
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_removeVariantImage_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_reorderVariantImages_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "variantId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["variantId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "orders",
+		func(ctx context.Context, v any) ([]*model.ImageOrderInput, error) {
+			return ec.unmarshalNImageOrderInput2ᚕᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐImageOrderInputᚄ(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["orders"] = arg1
 	return args, nil
 }
 
@@ -4801,6 +5008,198 @@ func (ec *executionContext) fieldContext_Mutation_updateInventory(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_addVariantImage(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_addVariantImage(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().AddVariantImage(ctx, fc.Args["variantId"].(string), fc.Args["url"].(string), fc.Args["altText"].(*string), fc.Args["sortOrder"].(*int))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Auth == nil {
+					var zeroVal *model.VariantImage
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.Directives.Auth(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Admin == nil {
+					var zeroVal *model.VariantImage
+					return zeroVal, errors.New("directive admin is not implemented")
+				}
+				return ec.Directives.Admin(ctx, nil, directive1)
+			}
+
+			next = directive2
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v *model.VariantImage) graphql.Marshaler {
+			return ec.marshalNVariantImage2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐVariantImage(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_addVariantImage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_VariantImage(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_addVariantImage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_removeVariantImage(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_removeVariantImage(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().RemoveVariantImage(ctx, fc.Args["id"].(string))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.Directives.Auth(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Admin == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive admin is not implemented")
+				}
+				return ec.Directives.Admin(ctx, nil, directive1)
+			}
+
+			next = directive2
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_removeVariantImage(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_removeVariantImage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_reorderVariantImages(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_reorderVariantImages(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().ReorderVariantImages(ctx, fc.Args["variantId"].(string), fc.Args["orders"].([]*model.ImageOrderInput))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.Directives.Auth(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Admin == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive admin is not implemented")
+				}
+				return ec.Directives.Admin(ctx, nil, directive1)
+			}
+
+			next = directive2
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_reorderVariantImages(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_reorderVariantImages_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *model.PageInfo) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -6600,6 +6999,176 @@ func (ec *executionContext) fieldContext_Variant_inventory(_ context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Variant_images(ctx context.Context, field graphql.CollectedField, obj *model.Variant) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Variant_images(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Images, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.VariantImage) graphql.Marshaler {
+			return ec.marshalNVariantImage2ᚕᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐVariantImageᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Variant_images(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Variant",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_VariantImage(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _VariantImage_id(ctx context.Context, field graphql.CollectedField, obj *model.VariantImage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VariantImage_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_VariantImage_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("VariantImage", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _VariantImage_variantId(ctx context.Context, field graphql.CollectedField, obj *model.VariantImage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VariantImage_variantId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.VariantID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_VariantImage_variantId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("VariantImage", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _VariantImage_url(ctx context.Context, field graphql.CollectedField, obj *model.VariantImage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VariantImage_url(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.URL, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_VariantImage_url(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("VariantImage", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _VariantImage_altText(ctx context.Context, field graphql.CollectedField, obj *model.VariantImage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VariantImage_altText(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.AltText, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_VariantImage_altText(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("VariantImage", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _VariantImage_sortOrder(ctx context.Context, field graphql.CollectedField, obj *model.VariantImage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VariantImage_sortOrder(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SortOrder, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_VariantImage_sortOrder(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("VariantImage", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _VariantImage_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.VariantImage) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_VariantImage_createdAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_VariantImage_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("VariantImage", field, false, false, errors.New("field of type Time does not have child fields"))
+}
+
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -7996,6 +8565,43 @@ func (ec *executionContext) unmarshalInputCreateVariantInput(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputImageOrderInput(ctx context.Context, obj any) (model.ImageOrderInput, error) {
+	var it model.ImageOrderInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "sortOrder"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "sortOrder":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sortOrder"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SortOrder = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPaginationInput(ctx context.Context, obj any) (model.PaginationInput, error) {
 	var it model.PaginationInput
 	if obj == nil {
@@ -8058,7 +8664,7 @@ func (ec *executionContext) unmarshalInputProductVariantInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "sku", "name", "options", "price", "compareAtPrice", "costPrice", "weightGrams", "image", "isActive"}
+	fieldsInOrder := [...]string{"id", "sku", "name", "options", "price", "compareAtPrice", "costPrice", "weightGrams", "images", "isActive"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -8121,13 +8727,13 @@ func (ec *executionContext) unmarshalInputProductVariantInput(ctx context.Contex
 				return it, err
 			}
 			it.WeightGrams = data
-		case "image":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
-			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+		case "images":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("images"))
+			data, err := ec.unmarshalOUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUploadᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Image = data
+			it.Images = data
 		case "isActive":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isActive"))
 			data, err := ec.unmarshalNBoolean2bool(ctx, v)
@@ -8582,6 +9188,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
+	case model.VariantImage:
+		return ec._VariantImage(ctx, sel, &obj)
+	case *model.VariantImage:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._VariantImage(ctx, sel, obj)
 	case model.Variant:
 		return ec._Variant(ctx, sel, &obj)
 	case *model.Variant:
@@ -9347,6 +9960,27 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updateInventory":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateInventory(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "addVariantImage":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_addVariantImage(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "removeVariantImage":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_removeVariantImage(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "reorderVariantImages":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_reorderVariantImages(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -10238,6 +10872,72 @@ func (ec *executionContext) _Variant(ctx context.Context, sel ast.SelectionSet, 
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "images":
+			out.Values[i] = ec._Variant_images(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var variantImageImplementors = []string{"VariantImage", "Node"}
+
+func (ec *executionContext) _VariantImage(ctx context.Context, sel ast.SelectionSet, obj *model.VariantImage) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, variantImageImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("VariantImage")
+		case "id":
+			out.Values[i] = ec._VariantImage_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "variantId":
+			out.Values[i] = ec._VariantImage_variantId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "url":
+			out.Values[i] = ec._VariantImage_url(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "altText":
+			out.Values[i] = ec._VariantImage_altText(ctx, field, obj)
+		case "sortOrder":
+			out.Values[i] = ec._VariantImage_sortOrder(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._VariantImage_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10792,6 +11492,26 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
+func (ec *executionContext) unmarshalNImageOrderInput2ᚕᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐImageOrderInputᚄ(ctx context.Context, v any) ([]*model.ImageOrderInput, error) {
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*model.ImageOrderInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNImageOrderInput2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐImageOrderInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNImageOrderInput2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐImageOrderInput(ctx context.Context, v any) (*model.ImageOrderInput, error) {
+	res, err := ec.unmarshalInputImageOrderInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v any) (int, error) {
 	res, err := graphql.UnmarshalInt(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -11050,6 +11770,28 @@ func (ec *executionContext) unmarshalNUpdateVariantInput2githubᚗcomᚋmanojneg
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v any) (*graphql.Upload, error) {
+	res, err := graphql.UnmarshalUpload(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, sel ast.SelectionSet, v *graphql.Upload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	_ = sel
+	res := graphql.MarshalUpload(*v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) marshalNUser2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {
 	return ec._User(ctx, sel, &v)
 }
@@ -11142,6 +11884,36 @@ func (ec *executionContext) marshalNVariant2ᚖgithubᚗcomᚋmanojnegiᚋecomme
 		return graphql.Null
 	}
 	return ec._Variant(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNVariantImage2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐVariantImage(ctx context.Context, sel ast.SelectionSet, v model.VariantImage) graphql.Marshaler {
+	return ec._VariantImage(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNVariantImage2ᚕᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐVariantImageᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.VariantImage) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNVariantImage2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐVariantImage(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNVariantImage2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐVariantImage(ctx context.Context, sel ast.SelectionSet, v *model.VariantImage) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._VariantImage(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -11467,6 +12239,42 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	_ = ctx
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUploadᚄ(ctx context.Context, v any) ([]*graphql.Upload, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*graphql.Upload, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUploadᚄ(ctx context.Context, sel ast.SelectionSet, v []*graphql.Upload) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx context.Context, v any) (*graphql.Upload, error) {

@@ -36,7 +36,7 @@ func (r *queryResolver) Inventories(ctx context.Context, first *int, after *stri
 	if first != nil {
 		limit = int32(*first)
 	}
-	
+
 	// simple offset pagination for now, parsing "after" as offset
 	offset := int32(0)
 	// (Normally after would be parsed from base64, but using simple default 0 for this exercise unless we parse cursor properly)
@@ -143,6 +143,9 @@ func (r *queryResolver) Product(ctx context.Context, id string) (*model.Product,
 		return nil, err
 	}
 	baseURL := r.S3Storage.GetBaseURL()
+	if len(resp.Product.Variants) > 0 {
+		println("API GATEWAY GetProduct received variants:", len(resp.Product.Variants), "images in V[0]:", len(resp.Product.Variants[0].Images))
+	}
 	return mapProductFromProto(resp.Product, baseURL), nil
 }
 

@@ -102,6 +102,11 @@ type HealthCheck struct {
 	Services  []*ServiceHealth `json:"services"`
 }
 
+type ImageOrderInput struct {
+	ID        string `json:"id"`
+	SortOrder int    `json:"sortOrder"`
+}
+
 type Inventory struct {
 	VariantID         string `json:"variantId"`
 	QuantityOnHand    int    `json:"quantityOnHand"`
@@ -149,16 +154,16 @@ type ProductEdge struct {
 }
 
 type ProductVariantInput struct {
-	ID             *string         `json:"id,omitempty"`
-	Sku            string          `json:"sku"`
-	Name           string          `json:"name"`
-	Options        *string         `json:"options,omitempty"`
-	Price          float64         `json:"price"`
-	CompareAtPrice *float64        `json:"compareAtPrice,omitempty"`
-	CostPrice      *float64        `json:"costPrice,omitempty"`
-	WeightGrams    int             `json:"weightGrams"`
-	Image          *graphql.Upload `json:"image,omitempty"`
-	IsActive       bool            `json:"isActive"`
+	ID             *string           `json:"id,omitempty"`
+	Sku            string            `json:"sku"`
+	Name           string            `json:"name"`
+	Options        *string           `json:"options,omitempty"`
+	Price          float64           `json:"price"`
+	CompareAtPrice *float64          `json:"compareAtPrice,omitempty"`
+	CostPrice      *float64          `json:"costPrice,omitempty"`
+	WeightGrams    int               `json:"weightGrams"`
+	Images         []*graphql.Upload `json:"images,omitempty"`
+	IsActive       bool              `json:"isActive"`
 }
 
 type Query struct {
@@ -241,24 +246,37 @@ type UserEdge struct {
 }
 
 type Variant struct {
-	ID             string     `json:"id"`
-	ProductID      string     `json:"productId"`
-	Sku            string     `json:"sku"`
-	Name           string     `json:"name"`
-	Options        *string    `json:"options,omitempty"`
-	Price          float64    `json:"price"`
-	CompareAtPrice *float64   `json:"compareAtPrice,omitempty"`
-	CostPrice      *float64   `json:"costPrice,omitempty"`
-	WeightGrams    int        `json:"weightGrams"`
-	ImageURL       *string    `json:"imageUrl,omitempty"`
-	IsActive       bool       `json:"isActive"`
-	CreatedAt      time.Time  `json:"createdAt"`
-	UpdatedAt      time.Time  `json:"updatedAt"`
-	Inventory      *Inventory `json:"inventory"`
+	ID             string          `json:"id"`
+	ProductID      string          `json:"productId"`
+	Sku            string          `json:"sku"`
+	Name           string          `json:"name"`
+	Options        *string         `json:"options,omitempty"`
+	Price          float64         `json:"price"`
+	CompareAtPrice *float64        `json:"compareAtPrice,omitempty"`
+	CostPrice      *float64        `json:"costPrice,omitempty"`
+	WeightGrams    int             `json:"weightGrams"`
+	ImageURL       *string         `json:"imageUrl,omitempty"`
+	IsActive       bool            `json:"isActive"`
+	CreatedAt      time.Time       `json:"createdAt"`
+	UpdatedAt      time.Time       `json:"updatedAt"`
+	Inventory      *Inventory      `json:"inventory"`
+	Images         []*VariantImage `json:"images"`
 }
 
 func (Variant) IsNode()            {}
 func (this Variant) GetID() string { return this.ID }
+
+type VariantImage struct {
+	ID        string    `json:"id"`
+	VariantID string    `json:"variantId"`
+	URL       string    `json:"url"`
+	AltText   *string   `json:"altText,omitempty"`
+	SortOrder int       `json:"sortOrder"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+func (VariantImage) IsNode()            {}
+func (this VariantImage) GetID() string { return this.ID }
 
 type Role string
 

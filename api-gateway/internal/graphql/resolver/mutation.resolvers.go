@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	productpb "github.com/manojnegi/ecomm-microservices/gen/go/product/v1"
@@ -227,6 +228,31 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.Create
 			if v.CostPrice != nil {
 				pbVariant.CostPrice = *v.CostPrice
 			}
+
+			if v.Images != nil {
+				var pbImages []*productpb.VariantImage
+				for i, imgUpload := range v.Images {
+					if imgUpload != nil {
+						content, err := io.ReadAll(imgUpload.File)
+						if err != nil {
+							return nil, fmt.Errorf("failed to read variant upload file: %w", err)
+						}
+
+						key := fmt.Sprintf("variants/%d-%s", time.Now().UnixNano(), imgUpload.Filename)
+						_, err = r.S3Storage.UploadFile(ctx, key, content, imgUpload.ContentType)
+						if err != nil {
+							return nil, fmt.Errorf("failed to upload variant image to S3: %w", err)
+						}
+						
+						pbImages = append(pbImages, &productpb.VariantImage{
+							Url:       key,
+							SortOrder: int32(i),
+						})
+					}
+				}
+				pbVariant.Images = pbImages
+			}
+
 			pbVariants = append(pbVariants, pbVariant)
 		}
 		req.Variants = pbVariants
@@ -276,7 +302,31 @@ func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, input m
 			if v.CostPrice != nil {
 				pbVariant.CostPrice = *v.CostPrice
 			}
-			// image uploading would be handled separately if provided
+
+			if v.Images != nil {
+				var pbImages []*productpb.VariantImage
+				for i, imgUpload := range v.Images {
+					if imgUpload != nil {
+						content, err := io.ReadAll(imgUpload.File)
+						if err != nil {
+							return nil, fmt.Errorf("failed to read variant upload file: %w", err)
+						}
+
+						key := fmt.Sprintf("variants/%d-%s", time.Now().UnixNano(), imgUpload.Filename)
+						_, err = r.S3Storage.UploadFile(ctx, key, content, imgUpload.ContentType)
+						if err != nil {
+							return nil, fmt.Errorf("failed to upload variant image to S3: %w", err)
+						}
+						
+						pbImages = append(pbImages, &productpb.VariantImage{
+							Url:       key,
+							SortOrder: int32(i),
+						})
+					}
+				}
+				pbVariant.Images = pbImages
+			}
+
 			pbVariants = append(pbVariants, pbVariant)
 		}
 		req.Variants = pbVariants
@@ -515,6 +565,80 @@ func (r *mutationResolver) UpdateInventory(ctx context.Context, variantID string
 		QuantityAvailable: int(resp.Inventory.QuantityAvailable),
 		ReorderPoint:      int(resp.Inventory.ReorderPoint),
 	}, nil
+}
+
+// AddVariantImage is the resolver for the addVariantImage field.
+func (r *mutationResolver) AddVariantImage(ctx context.Context, variantID string, url string, altText *string, sortOrder *int) (*model.VariantImage, error) {
+	altTxt := ""
+	if altText != nil {
+		altTxt = *altText
+	}
+	order := int32(0)
+	if sortOrder != nil {
+		order = int32(*sortOrder)
+	}
+
+	resp, err := r.ProductClient.Product.AddVariantImage(ctx, &productpb.AddVariantImageRequest{
+		VariantId: variantID,
+		Url:       url,
+		AltText:   altTxt,
+		SortOrder: order,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	createdAt, _ := time.Parse(time.RFC3339, resp.Image.CreatedAt)
+	imgUrl := resp.Image.Url
+	baseURL := r.S3Storage.GetBaseURL()
+	if imgUrl != "" && !strings.HasPrefix(imgUrl, "http") {
+		imgUrl = baseURL + imgUrl
+	}
+
+	var altTextPtr *string
+	if resp.Image.AltText != "" {
+		altTextPtr = &resp.Image.AltText
+	}
+
+	return &model.VariantImage{
+		ID:        resp.Image.Id,
+		VariantID: resp.Image.VariantId,
+		URL:       imgUrl,
+		AltText:   altTextPtr,
+		SortOrder: int(resp.Image.SortOrder),
+		CreatedAt: createdAt,
+	}, nil
+}
+
+// RemoveVariantImage is the resolver for the removeVariantImage field.
+func (r *mutationResolver) RemoveVariantImage(ctx context.Context, id string) (bool, error) {
+	resp, err := r.ProductClient.Product.RemoveVariantImage(ctx, &productpb.RemoveVariantImageRequest{
+		Id: id,
+	})
+	if err != nil {
+		return false, err
+	}
+	return resp.Success, nil
+}
+
+// ReorderVariantImages is the resolver for the reorderVariantImages field.
+func (r *mutationResolver) ReorderVariantImages(ctx context.Context, variantID string, orders []*model.ImageOrderInput) (bool, error) {
+	var pbOrders []*productpb.ImageOrder
+	for _, o := range orders {
+		pbOrders = append(pbOrders, &productpb.ImageOrder{
+			Id:        o.ID,
+			SortOrder: int32(o.SortOrder),
+		})
+	}
+
+	resp, err := r.ProductClient.Product.ReorderVariantImages(ctx, &productpb.ReorderVariantImagesRequest{
+		VariantId: variantID,
+		Images:    pbOrders,
+	})
+	if err != nil {
+		return false, err
+	}
+	return resp.Success, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

@@ -55,45 +55,7 @@ func mapProductFromProto(p *productpb.Product, baseURL string) *model.Product {
 
 	var variants []*model.Variant
 	for _, v := range p.Variants {
-		vImageUrl := v.ImageUrl
-		if vImageUrl != "" && !strings.HasPrefix(vImageUrl, "http") {
-			vImageUrl = baseURL + vImageUrl
-		}
-		var optionsPtr *string
-		if v.Options != "" {
-			opts := v.Options
-			optionsPtr = &opts
-		}
-		var cmpPricePtr *float64
-		if v.CompareAtPrice > 0 {
-			cmp := v.CompareAtPrice
-			cmpPricePtr = &cmp
-		}
-		var costPricePtr *float64
-		if v.CostPrice > 0 {
-			cst := v.CostPrice
-			costPricePtr = &cst
-		}
-		var vImageUrlPtr *string
-		if vImageUrl != "" {
-			vImageUrlPtr = &vImageUrl
-		}
-
-		variants = append(variants, &model.Variant{
-			ID:             v.Id,
-			ProductID:      v.ProductId,
-			Sku:            v.Sku,
-			Name:           v.Name,
-			Options:        optionsPtr,
-			Price:          v.Price,
-			CompareAtPrice: cmpPricePtr,
-			CostPrice:      costPricePtr,
-			WeightGrams:    int(v.WeightGrams),
-			ImageURL:       vImageUrlPtr,
-			IsActive:       v.IsActive,
-			CreatedAt:      time.Unix(v.CreatedAt, 0),
-			UpdatedAt:      time.Unix(v.UpdatedAt, 0),
-		})
+		variants = append(variants, mapVariantFromProto(v, baseURL))
 	}
 
 	return &model.Product{
@@ -113,10 +75,6 @@ func mapVariantFromProto(v *productpb.Variant, baseURL string) *model.Variant {
 		return nil
 	}
 
-	vImageUrl := v.ImageUrl
-	if vImageUrl != "" && !strings.HasPrefix(vImageUrl, "http") {
-		vImageUrl = baseURL + vImageUrl
-	}
 	var optionsPtr *string
 	if v.Options != "" {
 		opts := v.Options
@@ -132,9 +90,43 @@ func mapVariantFromProto(v *productpb.Variant, baseURL string) *model.Variant {
 		cst := v.CostPrice
 		costPricePtr = &cst
 	}
+
+	vImageUrl := v.ImageUrl
+	if vImageUrl != "" && !strings.HasPrefix(vImageUrl, "http") {
+		vImageUrl = baseURL + vImageUrl
+	}
 	var vImageUrlPtr *string
 	if vImageUrl != "" {
 		vImageUrlPtr = &vImageUrl
+	}
+
+	var images []*model.VariantImage
+	for _, img := range v.Images {
+		createdAt, _ := time.Parse(time.RFC3339, img.CreatedAt)
+		
+		imgUrl := img.Url
+		if imgUrl != "" && !strings.HasPrefix(imgUrl, "http") {
+			imgUrl = baseURL + imgUrl
+		}
+
+		altText := img.AltText
+		var altTextPtr *string
+		if altText != "" {
+			altTextPtr = &altText
+		}
+
+		images = append(images, &model.VariantImage{
+			ID:        img.Id,
+			VariantID: img.VariantId,
+			URL:       imgUrl,
+			AltText:   altTextPtr,
+			SortOrder: int(img.SortOrder),
+			CreatedAt: createdAt,
+		})
+	}
+
+	if len(images) > 0 {
+		println("API GATEWAY mapVariantFromProto mapped images:", len(images), "ID:", images[0].ID, "URL:", images[0].URL)
 	}
 
 	return &model.Variant{
@@ -151,6 +143,7 @@ func mapVariantFromProto(v *productpb.Variant, baseURL string) *model.Variant {
 		IsActive:       v.IsActive,
 		CreatedAt:      time.Unix(v.CreatedAt, 0),
 		UpdatedAt:      time.Unix(v.UpdatedAt, 0),
+		Images:         images,
 	}
 }
 

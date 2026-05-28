@@ -23,6 +23,16 @@ type Variant implements Node {
   createdAt: Time!
   updatedAt: Time!
   inventory: Inventory!
+  images: [VariantImage!]!
+}
+
+type VariantImage implements Node {
+  id: ID!
+  variantId: ID!
+  url: String!
+  altText: String
+  sortOrder: Int!
+  createdAt: Time!
 }
 
 type Inventory {
@@ -132,7 +142,7 @@ input ProductVariantInput {
   compareAtPrice: Float
   costPrice: Float
   weightGrams: Int!
-  image: Upload
+  images: [Upload!]
   isActive: Boolean!
 }
 

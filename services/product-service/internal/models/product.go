@@ -62,6 +62,16 @@ type Variant struct {
 	IsActive       bool            `db:"is_active"        json:"is_active"`
 	CreatedAt      time.Time       `db:"created_at"       json:"created_at"`
 	UpdatedAt      time.Time       `db:"updated_at"       json:"updated_at"`
+	Images         []VariantImage  `json:"images"`
+}
+
+type VariantImage struct {
+	ID        uuid.UUID `db:"id"         json:"id"`
+	VariantID uuid.UUID `db:"variant_id" json:"variant_id"`
+	URL       string    `db:"url"        json:"url"`
+	AltText   string    `db:"alt_text"   json:"alt_text"`
+	SortOrder int       `db:"sort_order" json:"sort_order"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
 }
 
 type Inventory struct {

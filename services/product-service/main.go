@@ -42,9 +42,10 @@ func main() {
 	varRepo := repository.NewVariantRepo(pool)
 	invRepo := repository.NewInventoryRepo(pool)
 	revRepo := repository.NewReviewRepo(pool)
+	imgRepo := repository.NewVariantImageRepo(pool)
 
 	// Service layer
-	prodSvc := service.NewProductService(prodRepo, varRepo, catRepo, invRepo)
+	prodSvc := service.NewProductService(prodRepo, varRepo, catRepo, invRepo, imgRepo)
 	invSvc := service.NewInventoryService(invRepo)
 	revSvc := service.NewReviewService(revRepo, prodRepo)
 	catSvc := service.NewCategoryService(prodRepo, varRepo, catRepo)
@@ -110,9 +111,11 @@ func runMigrations(pool *pgxpool.Pool) error {
 			updated_at TIMESTAMPTZ DEFAULT NOW()
 		);
 
-		CREATE TABLE IF NOT EXISTS product_images (
+		DROP TABLE IF EXISTS product_images CASCADE;
+
+		CREATE TABLE IF NOT EXISTS variant_images (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+			variant_id UUID REFERENCES variants(id) ON DELETE CASCADE,
 			url TEXT NOT NULL,
 			alt_text VARCHAR(300),
 			sort_order INTEGER DEFAULT 0,

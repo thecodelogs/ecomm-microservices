@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	productpb "github.com/manojnegi/ecomm-microservices/gen/go/product/v1"
 
@@ -84,6 +85,23 @@ func (h *ProductHandler) CreateProduct(ctx context.Context, req *productpb.Creat
 				options = json.RawMessage(v.Options)
 			}
 
+			var mImages []models.VariantImage
+			for _, pbImg := range v.Images {
+				var imgID uuid.UUID
+				if pbImg.Id != "" {
+					parsed, err := uuid.Parse(pbImg.Id)
+					if err == nil {
+						imgID = parsed
+					}
+				}
+				mImages = append(mImages, models.VariantImage{
+					ID:        imgID,
+					URL:       pbImg.Url,
+					AltText:   pbImg.AltText,
+					SortOrder: int(pbImg.SortOrder),
+				})
+			}
+
 			variantsToCreate = append(variantsToCreate, models.Variant{
 				ID:             vID,
 				SKU:            v.Sku,
@@ -94,6 +112,7 @@ func (h *ProductHandler) CreateProduct(ctx context.Context, req *productpb.Creat
 				CostPrice:      sql.NullInt64{Int64: int64(v.CostPrice * 100), Valid: v.CostPrice > 0},
 				WeightGrams:    int(v.WeightGrams),
 				IsActive:       v.IsActive,
+				Images:         mImages,
 			})
 		}
 	} else {
@@ -188,6 +207,23 @@ func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.Updat
 				options = json.RawMessage(v.Options)
 			}
 
+			var mImages []models.VariantImage
+			for _, pbImg := range v.Images {
+				var imgID uuid.UUID
+				if pbImg.Id != "" {
+					parsed, err := uuid.Parse(pbImg.Id)
+					if err == nil {
+						imgID = parsed
+					}
+				}
+				mImages = append(mImages, models.VariantImage{
+					ID:        imgID,
+					URL:       pbImg.Url,
+					AltText:   pbImg.AltText,
+					SortOrder: int(pbImg.SortOrder),
+				})
+			}
+
 			variantsToUpdate = append(variantsToUpdate, models.Variant{
 				ID:             vID,
 				ProductID:      id,
@@ -199,6 +235,7 @@ func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.Updat
 				CostPrice:      sql.NullInt64{Int64: int64(v.CostPrice * 100), Valid: v.CostPrice > 0},
 				WeightGrams:    int(v.WeightGrams),
 				IsActive:       v.IsActive,
+				Images:         mImages,
 			})
 		}
 	} else {
@@ -252,6 +289,10 @@ func (h *ProductHandler) ListProducts(ctx context.Context, req *productpb.ListPr
 	var pbProducts []*productpb.Product
 	for _, p := range products {
 		variants, _ := h.prodSvc.GetVariantsByProductID(ctx, p.ID)
+		fmt.Printf("DEBUG ListProducts product %s has %d variants\n", p.ID, len(variants))
+		if len(variants) > 0 {
+			fmt.Printf("DEBUG ListProducts product %s variant 0 has %d images\n", p.ID, len(variants[0].Images))
+		}
 		pbProducts = append(pbProducts, toProtoProduct(&p, variants))
 	}
 
@@ -361,6 +402,67 @@ func (h *ProductHandler) DeleteVariant(ctx context.Context, req *productpb.Delet
 	return &productpb.DeleteVariantResponse{Success: true}, nil
 }
 
+func (h *ProductHandler) AddVariantImage(ctx context.Context, req *productpb.AddVariantImageRequest) (*productpb.AddVariantImageResponse, error) {
+	_, err := h.checkAdminAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	variantID, err := uuid.Parse(req.VariantId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid variant id")
+	}
+
+	img, err := h.prodSvc.AddVariantImage(ctx, variantID, req.Url, req.AltText, req.SortOrder)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to add image: %v", err)
+	}
+
+	return &productpb.AddVariantImageResponse{
+		Image: toProtoVariantImage(img),
+	}, nil
+}
+
+func (h *ProductHandler) RemoveVariantImage(ctx context.Context, req *productpb.RemoveVariantImageRequest) (*productpb.RemoveVariantImageResponse, error) {
+	_, err := h.checkAdminAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid image id")
+	}
+
+	if err := h.prodSvc.RemoveVariantImage(ctx, id); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to remove image: %v", err)
+	}
+
+	return &productpb.RemoveVariantImageResponse{Success: true}, nil
+}
+
+func (h *ProductHandler) ReorderVariantImages(ctx context.Context, req *productpb.ReorderVariantImagesRequest) (*productpb.ReorderVariantImagesResponse, error) {
+	_, err := h.checkAdminAuth(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	orders := make(map[uuid.UUID]int32)
+	for _, order := range req.Images {
+		id, err := uuid.Parse(order.Id)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid image id: %s", order.Id)
+		}
+		orders[id] = order.SortOrder
+	}
+
+	if err := h.prodSvc.ReorderVariantImages(ctx, orders); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to reorder images: %v", err)
+	}
+
+	return &productpb.ReorderVariantImagesResponse{Success: true}, nil
+}
+
 func (h *ProductHandler) checkAdminAuth(ctx context.Context) (*auth.AccessTokenClaims, error) {
 	claims, err := auth.ExtractClaims(ctx, h.cfg.PasetoSecret)
 	if err != nil {
@@ -398,13 +500,21 @@ func toProtoVariants(vs []models.Variant) []*productpb.Variant {
 	var result []*productpb.Variant
 	for _, v := range vs {
 		optionsStr := ""
-		if v.Options != nil {
+		if len(v.Options) > 0 {
 			optionsStr = string(v.Options)
 		}
 
 		imageURL := ""
 		if v.ImageURL.Valid {
 			imageURL = v.ImageURL.String
+		}
+
+		var pbImages []*productpb.VariantImage
+		fmt.Printf("DEBUG toProtoVariants variant %s has %d images\n", v.ID, len(v.Images))
+		for i := range v.Images {
+			pbImg := toProtoVariantImage(&v.Images[i])
+			fmt.Printf("DEBUG toProtoVariantImage result: %+v\n", pbImg)
+			pbImages = append(pbImages, pbImg)
 		}
 
 		result = append(result, &productpb.Variant{
@@ -421,6 +531,7 @@ func toProtoVariants(vs []models.Variant) []*productpb.Variant {
 			IsActive:       v.IsActive,
 			CreatedAt:      v.CreatedAt.Unix(),
 			UpdatedAt:      v.UpdatedAt.Unix(),
+			Images:         pbImages,
 		})
 	}
 	return result
@@ -432,6 +543,17 @@ func toProtoInventory(i *models.Inventory) *productpb.Inventory {
 		QuantityOnHand:    int32(i.QuantityOnHand),
 		QuantityReserved:  int32(i.QuantityReserved),
 		QuantityAvailable: int32(i.QuantityAvailable),
+	}
+}
+
+func toProtoVariantImage(img *models.VariantImage) *productpb.VariantImage {
+	return &productpb.VariantImage{
+		Id:        img.ID.String(),
+		VariantId: img.VariantID.String(),
+		Url:       img.URL,
+		AltText:   img.AltText,
+		SortOrder: int32(img.SortOrder),
+		CreatedAt: img.CreatedAt.Format(time.RFC3339),
 	}
 }
 

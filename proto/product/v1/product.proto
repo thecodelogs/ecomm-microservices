@@ -14,6 +14,10 @@ service ProductService {
     rpc CreateVariant(CreateVariantRequest) returns (CreateVariantResponse);
     rpc UpdateVariant(UpdateVariantRequest) returns (UpdateVariantResponse);
     rpc DeleteVariant(DeleteVariantRequest) returns (DeleteVariantResponse);
+
+    rpc AddVariantImage(AddVariantImageRequest) returns (AddVariantImageResponse);
+    rpc RemoveVariantImage(RemoveVariantImageRequest) returns (RemoveVariantImageResponse);
+    rpc ReorderVariantImages(ReorderVariantImagesRequest) returns (ReorderVariantImagesResponse);
 }
 
 service CategoryService {
@@ -140,6 +144,16 @@ message Variant {
     bool is_active = 11;
     int64 created_at = 12;
     int64 updated_at = 13;
+    repeated VariantImage images = 14;
+}
+
+message VariantImage {
+    string id = 1;
+    string variant_id = 2;
+    string url = 3;
+    string alt_text = 4;
+    int32 sort_order = 5;
+    string created_at = 6;
 }
 
 message CreateVariantRequest {
@@ -182,6 +196,39 @@ message DeleteVariantRequest {
 }
 
 message DeleteVariantResponse {
+    bool success = 1;
+}
+
+message AddVariantImageRequest {
+    string variant_id = 1;
+    string url = 2;
+    string alt_text = 3;
+    int32 sort_order = 4;
+}
+
+message AddVariantImageResponse {
+    VariantImage image = 1;
+}
+
+message RemoveVariantImageRequest {
+    string id = 1;
+}
+
+message RemoveVariantImageResponse {
+    bool success = 1;
+}
+
+message ImageOrder {
+    string id = 1;
+    int32 sort_order = 2;
+}
+
+message ReorderVariantImagesRequest {
+    string variant_id = 1;
+    repeated ImageOrder images = 2;
+}
+
+message ReorderVariantImagesResponse {
     bool success = 1;
 }
 

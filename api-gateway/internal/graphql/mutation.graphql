@@ -33,6 +33,16 @@ type Mutation {
 
   # Admin - Inventory
   updateInventory(variantId: ID!, input: UpdateInventoryInput!): Inventory! @auth @admin
+
+  # Images
+  addVariantImage(variantId: ID!, url: String!, altText: String, sortOrder: Int): VariantImage! @auth @admin
+  removeVariantImage(id: ID!): Boolean! @auth @admin
+  reorderVariantImages(variantId: ID!, orders: [ImageOrderInput!]!): Boolean! @auth @admin
+}
+
+input ImageOrderInput {
+  id: ID!
+  sortOrder: Int!
 }
 
 input UpdateInventoryInput {
