@@ -1562,6 +1562,7 @@ input ProductVariantInput {
   compareAtPrice: Float
   costPrice: Float
   weightGrams: Int!
+  initialStock: Int
   images: [Upload!]
   isActive: Boolean!
 }
@@ -1575,6 +1576,7 @@ input CreateVariantInput {
   compareAtPrice: Float
   costPrice: Float
   weightGrams: Int!
+  initialStock: Int
   image: Upload
   isActive: Boolean!
 }
@@ -1588,6 +1590,7 @@ input UpdateVariantInput {
   compareAtPrice: Float
   costPrice: Float
   weightGrams: Int!
+  initialStock: Int
   image: Upload
   isActive: Boolean!
 }
@@ -8616,7 +8619,7 @@ func (ec *executionContext) unmarshalInputCreateVariantInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"productId", "sku", "name", "options", "price", "compareAtPrice", "costPrice", "weightGrams", "image", "isActive"}
+	fieldsInOrder := [...]string{"productId", "sku", "name", "options", "price", "compareAtPrice", "costPrice", "weightGrams", "initialStock", "image", "isActive"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -8679,6 +8682,13 @@ func (ec *executionContext) unmarshalInputCreateVariantInput(ctx context.Context
 				return it, err
 			}
 			it.WeightGrams = data
+		case "initialStock":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("initialStock"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InitialStock = data
 		case "image":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
 			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
@@ -8878,7 +8888,7 @@ func (ec *executionContext) unmarshalInputProductVariantInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"id", "sku", "name", "options", "price", "compareAtPrice", "costPrice", "weightGrams", "images", "isActive"}
+	fieldsInOrder := [...]string{"id", "sku", "name", "options", "price", "compareAtPrice", "costPrice", "weightGrams", "initialStock", "images", "isActive"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -8941,6 +8951,13 @@ func (ec *executionContext) unmarshalInputProductVariantInput(ctx context.Contex
 				return it, err
 			}
 			it.WeightGrams = data
+		case "initialStock":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("initialStock"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InitialStock = data
 		case "images":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("images"))
 			data, err := ec.unmarshalOUpload2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUploadᚄ(ctx, v)
@@ -9312,7 +9329,7 @@ func (ec *executionContext) unmarshalInputUpdateVariantInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"productId", "sku", "name", "options", "price", "compareAtPrice", "costPrice", "weightGrams", "image", "isActive"}
+	fieldsInOrder := [...]string{"productId", "sku", "name", "options", "price", "compareAtPrice", "costPrice", "weightGrams", "initialStock", "image", "isActive"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -9375,6 +9392,13 @@ func (ec *executionContext) unmarshalInputUpdateVariantInput(ctx context.Context
 				return it, err
 			}
 			it.WeightGrams = data
+		case "initialStock":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("initialStock"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.InitialStock = data
 		case "image":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
 			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)

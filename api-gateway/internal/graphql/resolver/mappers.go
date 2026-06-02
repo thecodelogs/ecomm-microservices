@@ -209,3 +209,10 @@ func floatValue(f *float64) float64 {
 	}
 	return 0
 }
+
+func intValue(i *int) int {
+	if i != nil {
+		return *i
+	}
+	return 0
+}

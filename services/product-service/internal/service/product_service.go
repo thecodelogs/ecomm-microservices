@@ -48,7 +48,7 @@ func (s *ProductService) CreateProduct(ctx context.Context, p *models.Product, v
 		inv := &models.Inventory{
 			ID:                uuid.New(),
 			VariantID:         variants[i].ID,
-			QuantityOnHand:    int(variants[i].WeightGrams), // Using weight_grams as placeholder for stock in req if needed, or better, pass stock
+			QuantityOnHand:    variants[i].InitialStock,
 			QuantityReserved:  0,
 			QuantityAvailable: 0,
 			ReorderPoint:      10,
@@ -72,65 +72,92 @@ func (s *ProductService) CreateProduct(ctx context.Context, p *models.Product, v
 	return nil
 }
 
-func (s *ProductService) UpdateProduct(ctx context.Context, p *models.Product, variants []models.Variant) error {
+func (s *ProductService) UpdateProduct(ctx context.Context, p *models.Product, updateVariants bool, variants []models.Variant) error {
 	p.UpdatedAt = time.Now().UTC()
 	if err := s.prodRepo.Update(ctx, p); err != nil {
 		return fmt.Errorf("update product: %w", err)
 	}
 
-	for i := range variants {
-		if variants[i].ID == uuid.Nil {
-			// Create new variant and inventory
-			variants[i].ID = uuid.New()
-			variants[i].ProductID = p.ID
-			variants[i].CreatedAt = time.Now().UTC()
-			if err := s.varRepo.Create(ctx, &variants[i]); err != nil {
-				return fmt.Errorf("create variant: %w", err)
-			}
-			inv := &models.Inventory{
-				ID:             uuid.New(),
-				VariantID:      variants[i].ID,
-				QuantityOnHand: int(variants[i].WeightGrams),
-			}
-			s.invRepo.Create(ctx, inv)
-		} else {
-			variants[i].ProductID = p.ID
-			variants[i].UpdatedAt = time.Now().UTC()
-			if err := s.varRepo.Update(ctx, &variants[i]); err != nil {
-				return fmt.Errorf("update variant: %w", err)
-			}
-			// Update inventory
-			inv, err := s.invRepo.GetByVariantID(ctx, variants[i].ID)
-			if err == nil {
-				inv.QuantityOnHand = int(variants[i].WeightGrams)
-				s.invRepo.Update(ctx, inv)
-			} else {
-				// If inventory didn't exist for some reason, create it
-				inv = &models.Inventory{
+	if updateVariants {
+		existingVariants, err := s.varRepo.GetByProductID(ctx, p.ID)
+		if err != nil && err.Error() != "no rows in result set" {
+			// ignore "no rows" error, but handle others if needed. The repo might just return an empty slice without an error.
+		}
+
+		existingMap := make(map[uuid.UUID]models.Variant)
+		for _, ev := range existingVariants {
+			existingMap[ev.ID] = ev
+		}
+
+		incomingMap := make(map[uuid.UUID]bool)
+
+		for i := range variants {
+			if variants[i].ID == uuid.Nil {
+				// Create new variant and inventory
+				variants[i].ID = uuid.New()
+				variants[i].ProductID = p.ID
+				variants[i].CreatedAt = time.Now().UTC()
+				if err := s.varRepo.Create(ctx, &variants[i]); err != nil {
+					return fmt.Errorf("create variant: %w", err)
+				}
+				inv := &models.Inventory{
 					ID:             uuid.New(),
 					VariantID:      variants[i].ID,
-					QuantityOnHand: int(variants[i].WeightGrams),
+					QuantityOnHand: variants[i].InitialStock,
 				}
 				s.invRepo.Create(ctx, inv)
+				incomingMap[variants[i].ID] = true
+			} else {
+				incomingMap[variants[i].ID] = true
+				variants[i].ProductID = p.ID
+				variants[i].UpdatedAt = time.Now().UTC()
+				if err := s.varRepo.Update(ctx, &variants[i]); err != nil {
+					return fmt.Errorf("update variant: %w", err)
+				}
+				// Update inventory
+				inv, err := s.invRepo.GetByVariantID(ctx, variants[i].ID)
+				if err == nil {
+					inv.QuantityOnHand = variants[i].InitialStock
+					s.invRepo.Update(ctx, inv)
+				} else {
+					// If inventory didn't exist for some reason, create it
+					inv = &models.Inventory{
+						ID:             uuid.New(),
+						VariantID:      variants[i].ID,
+						QuantityOnHand: variants[i].InitialStock,
+					}
+					s.invRepo.Create(ctx, inv)
+				}
+			}
+
+			if len(variants[i].Images) > 0 {
+				existingImages, _ := s.imgRepo.GetByVariantID(ctx, variants[i].ID)
+				maxSortOrder := -1
+				for _, img := range existingImages {
+					if img.SortOrder > maxSortOrder {
+						maxSortOrder = img.SortOrder
+					}
+				}
+
+				for j := range variants[i].Images {
+					if variants[i].Images[j].ID == uuid.Nil {
+						variants[i].Images[j].ID = uuid.New()
+					}
+					variants[i].Images[j].VariantID = variants[i].ID
+					variants[i].Images[j].SortOrder = maxSortOrder + 1 + j
+					variants[i].Images[j].CreatedAt = time.Now().UTC()
+					if err := s.imgRepo.Create(ctx, &variants[i].Images[j]); err != nil {
+						return fmt.Errorf("create variant image: %w", err)
+					}
+				}
 			}
 		}
 
-		if len(variants[i].Images) > 0 {
-			// Clear existing images for the updated variant
-			if variants[i].ID != uuid.Nil {
-				if err := s.imgRepo.DeleteByVariantID(ctx, variants[i].ID); err != nil {
-					return fmt.Errorf("delete old variant images: %w", err)
-				}
-			}
-
-			for j := range variants[i].Images {
-				if variants[i].Images[j].ID == uuid.Nil {
-					variants[i].Images[j].ID = uuid.New()
-				}
-				variants[i].Images[j].VariantID = variants[i].ID
-				variants[i].Images[j].CreatedAt = time.Now().UTC()
-				if err := s.imgRepo.Create(ctx, &variants[i].Images[j]); err != nil {
-					return fmt.Errorf("create variant image: %w", err)
+		// Delete variants not in the incoming list
+		for id := range existingMap {
+			if !incomingMap[id] {
+				if err := s.varRepo.Delete(ctx, id); err != nil {
+					return fmt.Errorf("delete missing variant: %w", err)
 				}
 			}
 		}
@@ -236,7 +263,7 @@ func (s *ProductService) CreateVariant(ctx context.Context, v *models.Variant) e
 	inv := &models.Inventory{
 		ID:                uuid.New(),
 		VariantID:         v.ID,
-		QuantityOnHand:    v.WeightGrams, // Using weight_grams as stock for now
+		QuantityOnHand:    v.InitialStock,
 		QuantityReserved:  0,
 		QuantityAvailable: 0,
 		ReorderPoint:      10,
@@ -257,7 +284,7 @@ func (s *ProductService) UpdateVariant(ctx context.Context, v *models.Variant) e
 	// Update inventory
 	inv, err := s.invRepo.GetByVariantID(ctx, v.ID)
 	if err == nil {
-		inv.QuantityOnHand = v.WeightGrams // Using weight_grams as stock
+		inv.QuantityOnHand = v.InitialStock
 		s.invRepo.Update(ctx, inv)
 	}
 

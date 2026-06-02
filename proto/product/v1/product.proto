@@ -158,6 +158,7 @@ message Variant {
     int64 created_at = 12;
     int64 updated_at = 13;
     repeated VariantImage images = 14;
+    int32 initial_stock = 15;
 }
 
 message VariantImage {
@@ -180,6 +181,7 @@ message CreateVariantRequest {
     int32 weight_grams = 8;
     string image_url = 9;
     bool is_active = 10;
+    int32 initial_stock = 11;
 }
 
 message CreateVariantResponse {
@@ -198,6 +200,7 @@ message UpdateVariantRequest {
     int32 weight_grams = 9;
     string image_url = 10;
     bool is_active = 11;
+    int32 initial_stock = 12;
 }
 
 message UpdateVariantResponse {
@@ -277,6 +280,7 @@ message UpdateProductRequest {
 	string status = 10;
     string vendor_id = 11;
     repeated Variant variants = 12;
+    bool update_variants = 13;
 }
 
 message UpdateProductResponse {

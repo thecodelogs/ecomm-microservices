@@ -92,6 +92,7 @@ type CreateVariantInput struct {
 	CompareAtPrice *float64        `json:"compareAtPrice,omitempty"`
 	CostPrice      *float64        `json:"costPrice,omitempty"`
 	WeightGrams    int             `json:"weightGrams"`
+	InitialStock   *int            `json:"initialStock,omitempty"`
 	Image          *graphql.Upload `json:"image,omitempty"`
 	IsActive       bool            `json:"isActive"`
 }
@@ -173,6 +174,7 @@ type ProductVariantInput struct {
 	CompareAtPrice *float64          `json:"compareAtPrice,omitempty"`
 	CostPrice      *float64          `json:"costPrice,omitempty"`
 	WeightGrams    int               `json:"weightGrams"`
+	InitialStock   *int              `json:"initialStock,omitempty"`
 	Images         []*graphql.Upload `json:"images,omitempty"`
 	IsActive       bool              `json:"isActive"`
 }
@@ -242,6 +244,7 @@ type UpdateVariantInput struct {
 	CompareAtPrice *float64        `json:"compareAtPrice,omitempty"`
 	CostPrice      *float64        `json:"costPrice,omitempty"`
 	WeightGrams    int             `json:"weightGrams"`
+	InitialStock   *int            `json:"initialStock,omitempty"`
 	Image          *graphql.Upload `json:"image,omitempty"`
 	IsActive       bool            `json:"isActive"`
 }

@@ -142,6 +142,7 @@ input ProductVariantInput {
   compareAtPrice: Float
   costPrice: Float
   weightGrams: Int!
+  initialStock: Int
   images: [Upload!]
   isActive: Boolean!
 }
@@ -155,6 +156,7 @@ input CreateVariantInput {
   compareAtPrice: Float
   costPrice: Float
   weightGrams: Int!
+  initialStock: Int
   image: Upload
   isActive: Boolean!
 }
@@ -168,6 +170,7 @@ input UpdateVariantInput {
   compareAtPrice: Float
   costPrice: Float
   weightGrams: Int!
+  initialStock: Int
   image: Upload
   isActive: Boolean!
 }

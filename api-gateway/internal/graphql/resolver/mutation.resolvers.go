@@ -219,6 +219,9 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.Create
 				WeightGrams: int32(v.WeightGrams),
 				IsActive:    v.IsActive,
 			}
+			if v.InitialStock != nil {
+				pbVariant.InitialStock = int32(*v.InitialStock)
+			}
 			if v.ID != nil {
 				pbVariant.Id = *v.ID
 			}
@@ -280,6 +283,7 @@ func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, input m
 		Tags:             input.Tags,
 		Attributes:       stringValue(input.Attributes),
 		Status:           stringValue(input.Status),
+		UpdateVariants:   input.Variants != nil,
 	}
 
 	if input.Variants != nil {
@@ -292,6 +296,9 @@ func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, input m
 				Price:       v.Price,
 				WeightGrams: int32(v.WeightGrams),
 				IsActive:    v.IsActive,
+			}
+			if v.InitialStock != nil {
+				pbVariant.InitialStock = int32(*v.InitialStock)
 			}
 			if v.ID != nil {
 				pbVariant.Id = *v.ID
@@ -489,6 +496,7 @@ func (r *mutationResolver) CreateVariant(ctx context.Context, input model.Create
 		CompareAtPrice: floatValue(input.CompareAtPrice),
 		CostPrice:      floatValue(input.CostPrice),
 		WeightGrams:    int32(input.WeightGrams),
+		InitialStock:   int32(intValue(input.InitialStock)),
 		ImageUrl:       imageURL,
 		IsActive:       input.IsActive,
 	})
@@ -526,6 +534,7 @@ func (r *mutationResolver) UpdateVariant(ctx context.Context, id string, input m
 		CompareAtPrice: floatValue(input.CompareAtPrice),
 		CostPrice:      floatValue(input.CostPrice),
 		WeightGrams:    int32(input.WeightGrams),
+		InitialStock:   int32(intValue(input.InitialStock)),
 		ImageUrl:       imageURL, // Missing logic to retain existing image if not provided, but simplified for now
 		IsActive:       input.IsActive,
 	})

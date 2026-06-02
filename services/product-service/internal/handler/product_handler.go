@@ -111,6 +111,7 @@ func (h *ProductHandler) CreateProduct(ctx context.Context, req *productpb.Creat
 				CompareAtPrice: sql.NullInt64{Int64: int64(v.CompareAtPrice * 100), Valid: v.CompareAtPrice > 0},
 				CostPrice:      sql.NullInt64{Int64: int64(v.CostPrice * 100), Valid: v.CostPrice > 0},
 				WeightGrams:    int(v.WeightGrams),
+				InitialStock:   int(v.InitialStock),
 				IsActive:       v.IsActive,
 				Images:         mImages,
 			})
@@ -194,7 +195,8 @@ func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.Updat
 	}
 
 	var variantsToUpdate []models.Variant
-	if len(req.Variants) > 0 {
+	if req.UpdateVariants {
+		variantsToUpdate = make([]models.Variant, 0)
 		for _, v := range req.Variants {
 			var vID uuid.UUID
 			if v.Id != "" {
@@ -240,23 +242,14 @@ func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.Updat
 				CompareAtPrice: sql.NullInt64{Int64: int64(v.CompareAtPrice * 100), Valid: v.CompareAtPrice > 0},
 				CostPrice:      sql.NullInt64{Int64: int64(v.CostPrice * 100), Valid: v.CostPrice > 0},
 				WeightGrams:    int(v.WeightGrams),
+				InitialStock:   int(v.InitialStock),
 				IsActive:       v.IsActive,
 				Images:         mImages,
 			})
 		}
-	} else {
-		// Fallback to updating default variant if no variants provided
-		variantsToUpdate = []models.Variant{
-			{
-				ProductID: id,
-				SKU:       req.Slug + "-default",
-				Name:      req.Name,
-				IsActive:  true,
-			},
-		}
 	}
 
-	if err := h.prodSvc.UpdateProduct(ctx, p, variantsToUpdate); err != nil {
+	if err := h.prodSvc.UpdateProduct(ctx, p, req.UpdateVariants, variantsToUpdate); err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to update product: %v", err)
 	}
 
@@ -359,6 +352,7 @@ func (h *ProductHandler) CreateVariant(ctx context.Context, req *productpb.Creat
 		CompareAtPrice: sql.NullInt64{Int64: int64(req.CompareAtPrice * 100), Valid: req.CompareAtPrice > 0},
 		CostPrice:      sql.NullInt64{Int64: int64(req.CostPrice * 100), Valid: req.CostPrice > 0},
 		WeightGrams:    int(req.WeightGrams),
+		InitialStock:   int(req.InitialStock),
 		ImageURL:       toNullString(req.ImageUrl),
 		IsActive:       req.IsActive,
 	}
@@ -402,6 +396,7 @@ func (h *ProductHandler) UpdateVariant(ctx context.Context, req *productpb.Updat
 		CompareAtPrice: sql.NullInt64{Int64: int64(req.CompareAtPrice * 100), Valid: req.CompareAtPrice > 0},
 		CostPrice:      sql.NullInt64{Int64: int64(req.CostPrice * 100), Valid: req.CostPrice > 0},
 		WeightGrams:    int(req.WeightGrams),
+		InitialStock:   int(req.InitialStock),
 		ImageURL:       toNullString(req.ImageUrl),
 		IsActive:       req.IsActive,
 	}
@@ -558,6 +553,7 @@ func toProtoVariants(vs []models.Variant) []*productpb.Variant {
 			CompareAtPrice: float64(v.CompareAtPrice.Int64) / 100.0,
 			CostPrice:      float64(v.CostPrice.Int64) / 100.0,
 			WeightGrams:    int32(v.WeightGrams),
+			InitialStock:   int32(v.InitialStock),
 			ImageUrl:       imageURL,
 			IsActive:       v.IsActive,
 			CreatedAt:      v.CreatedAt.Unix(),
