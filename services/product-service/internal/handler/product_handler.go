@@ -63,6 +63,14 @@ func (h *ProductHandler) CreateProduct(ctx context.Context, req *productpb.Creat
 			String: req.Brand,
 			Valid:  req.Brand != "",
 		},
+		BrandID: func() uuid.NullUUID {
+			if req.BrandId != "" {
+				if parsed, err := uuid.Parse(req.BrandId); err == nil {
+					return uuid.NullUUID{UUID: parsed, Valid: true}
+				}
+			}
+			return uuid.NullUUID{}
+		}(),
 		Tags:       req.Tags,
 		Attributes: attributes,
 		Status:     req.Status,
@@ -154,6 +162,22 @@ func (h *ProductHandler) GetProduct(ctx context.Context, req *productpb.GetProdu
 	}, nil
 }
 
+func (h *ProductHandler) GetProductBySlug(ctx context.Context, req *productpb.GetProductBySlugRequest) (*productpb.GetProductResponse, error) {
+	if req.Slug == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid product slug")
+	}
+
+	product, variants, err := h.prodSvc.GetProductBySlug(ctx, req.Slug)
+	fmt.Printf("GetProductBySlug slug=%s, variants=%+v, err=%v\n", req.Slug, variants, err)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "product not found")
+	}
+
+	return &productpb.GetProductResponse{
+		Product: toProtoProduct(product, variants),
+	}, nil
+}
+
 func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.UpdateProductRequest) (*productpb.UpdateProductResponse, error) {
 	// ── Auth Check ──
 	_, err := h.checkAdminAuth(ctx)
@@ -189,6 +213,14 @@ func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.Updat
 			String: req.Brand,
 			Valid:  req.Brand != "",
 		},
+		BrandID: func() uuid.NullUUID {
+			if req.BrandId != "" {
+				if parsed, err := uuid.Parse(req.BrandId); err == nil {
+					return uuid.NullUUID{UUID: parsed, Valid: true}
+				}
+			}
+			return uuid.NullUUID{}
+		}(),
 		Tags:       req.Tags,
 		Attributes: attributes,
 		Status:     req.Status,
@@ -509,6 +541,7 @@ func toProtoProduct(p *models.Product, variants []models.Variant) *productpb.Pro
 		Name:        p.Name,
 		Description: p.Description,
 		Brand:       p.Brand.String,
+		BrandId:     func() string { if p.BrandID.Valid { return p.BrandID.UUID.String() }; return "" }(),
 		Status:      p.Status,
 		VendorId:    p.VendorID.String(),
 		AvgRating:   float64(p.AvgRating),

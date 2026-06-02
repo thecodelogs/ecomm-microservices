@@ -93,6 +93,16 @@ func runMigrations(pool *pgxpool.Pool) error {
 			created_at TIMESTAMPTZ DEFAULT NOW()
 		);
 
+		CREATE TABLE IF NOT EXISTS brands (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name VARCHAR(255) NOT NULL,
+			description TEXT,
+			image_url VARCHAR(255),
+			is_active BOOLEAN DEFAULT true,
+			created_at TIMESTAMPTZ DEFAULT NOW(),
+			updated_at TIMESTAMPTZ DEFAULT NOW()
+		);
+
 		CREATE TABLE IF NOT EXISTS products (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			category_id UUID REFERENCES categories(id),
@@ -101,6 +111,7 @@ func runMigrations(pool *pgxpool.Pool) error {
 			description TEXT,
 			short_description TEXT,
 			brand VARCHAR(200),
+			brand_id UUID REFERENCES brands(id),
 			tags TEXT[],
 			attributes JSONB,
 			status VARCHAR(20) DEFAULT 'draft',
@@ -110,6 +121,8 @@ func runMigrations(pool *pgxpool.Pool) error {
 			created_at TIMESTAMPTZ DEFAULT NOW(),
 			updated_at TIMESTAMPTZ DEFAULT NOW()
 		);
+
+		ALTER TABLE products ADD COLUMN IF NOT EXISTS brand_id UUID REFERENCES brands(id);
 
 		DROP TABLE IF EXISTS product_images CASCADE;
 

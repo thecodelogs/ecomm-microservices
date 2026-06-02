@@ -76,6 +76,7 @@ type CreateProductInput struct {
 	Slug             string                 `json:"slug"`
 	ShortDescription *string                `json:"shortDescription,omitempty"`
 	Brand            *string                `json:"brand,omitempty"`
+	BrandID          *string                `json:"brandId,omitempty"`
 	Tags             []string               `json:"tags,omitempty"`
 	Attributes       *string                `json:"attributes,omitempty"`
 	Status           *string                `json:"status,omitempty"`
@@ -223,6 +224,7 @@ type UpdateProductInput struct {
 	Slug             string                 `json:"slug"`
 	ShortDescription *string                `json:"shortDescription,omitempty"`
 	Brand            *string                `json:"brand,omitempty"`
+	BrandID          *string                `json:"brandId,omitempty"`
 	Tags             []string               `json:"tags,omitempty"`
 	Attributes       *string                `json:"attributes,omitempty"`
 	Status           *string                `json:"status,omitempty"`

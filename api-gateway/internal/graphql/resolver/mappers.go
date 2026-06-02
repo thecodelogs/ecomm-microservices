@@ -58,10 +58,23 @@ func mapProductFromProto(p *productpb.Product, baseURL string) *model.Product {
 		variants = append(variants, mapVariantFromProto(v, baseURL))
 	}
 
+	var brandPtr *string
+	if p.Brand != "" {
+		b := p.Brand
+		brandPtr = &b
+	}
+	var brandIdPtr *string
+	if p.BrandId != "" {
+		bId := p.BrandId
+		brandIdPtr = &bId
+	}
+
 	return &model.Product{
 		ID:          p.Id,
 		Name:        p.Name,
 		Description: p.Description,
+		Brand:       brandPtr,
+		BrandID:     brandIdPtr,
 		Sku:         p.Slug,
 		CategoryID:  p.CategoryId,
 		Variants:    variants,

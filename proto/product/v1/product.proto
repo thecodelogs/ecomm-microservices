@@ -9,6 +9,7 @@ service ProductService {
     rpc UpdateProduct(UpdateProductRequest) returns (UpdateProductResponse);
     rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
     rpc GetProduct(GetProductRequest) returns (GetProductResponse);
+    rpc GetProductBySlug(GetProductBySlugRequest) returns (GetProductResponse);
     rpc ListProducts(ListProductsRequest) returns (ProductListResponse);
     rpc SearchProducts(SearchProductsRequest) returns (ProductListResponse);
 
@@ -141,6 +142,7 @@ message Product {
     int32 review_count = 10;
     int64 created_at = 11;
     repeated Variant variants = 12;
+    string brand_id = 13;
 }
 
 message Variant {
@@ -260,6 +262,7 @@ message CreateProductRequest {
 	string status = 9;
 	string vendor_id = 10;
     repeated Variant variants = 11;
+    string brand_id = 12;
 }
 
 message CreateProductResponse {
@@ -281,6 +284,7 @@ message UpdateProductRequest {
     string vendor_id = 11;
     repeated Variant variants = 12;
     bool update_variants = 13;
+    string brand_id = 14;
 }
 
 message UpdateProductResponse {
@@ -297,6 +301,10 @@ message DeleteProductResponse {
 
 message GetProductRequest {
     string id = 1;
+}
+
+message GetProductBySlugRequest {
+    string slug = 1;
 }
 
 message GetProductResponse {

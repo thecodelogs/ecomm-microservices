@@ -20,6 +20,16 @@ type Category struct {
 	CreatedAt   time.Time      `db:"created_at"   json:"created_at"`
 }
 
+type Brand struct {
+	ID          uuid.UUID      `db:"id"           json:"id"`
+	Name        string         `db:"name"         json:"name"`
+	Description sql.NullString `db:"description"  json:"description,omitempty"`
+	ImageURL    sql.NullString `db:"image_url"    json:"image_url,omitempty"`
+	IsActive    bool           `db:"is_active"    json:"is_active"`
+	CreatedAt   time.Time      `db:"created_at"   json:"created_at"`
+	UpdatedAt   time.Time      `db:"updated_at"   json:"updated_at"`
+}
+
 type Product struct {
 	ID               uuid.UUID       `db:"id"                json:"id"`
 	CategoryID       uuid.UUID       `db:"category_id"       json:"category_id"`
@@ -28,6 +38,7 @@ type Product struct {
 	Description      string          `db:"description"       json:"description"`
 	ShortDescription sql.NullString  `db:"short_description" json:"short_description,omitempty"`
 	Brand            sql.NullString  `db:"brand"             json:"brand,omitempty"`
+	BrandID          uuid.NullUUID   `db:"brand_id"          json:"brand_id,omitempty"`
 	Tags             []string        `db:"tags"              json:"tags,omitempty"`
 	Attributes       json.RawMessage `db:"attributes"        json:"attributes,omitempty"`
 	Status           string          `db:"status"            json:"status"`

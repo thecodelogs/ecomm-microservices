@@ -31,6 +31,19 @@ func (r *AddressRepo) Create(ctx context.Context, addr *models.Address) error {
 	return err
 }
 
+func (r *AddressRepo) Update(ctx context.Context, addr *models.Address) error {
+	query := `
+        UPDATE addresses 
+        SET label = $1, full_name = $2, phone = $3, line1 = $4, line2 = $5, city = $6, state = $7, postal_code = $8, country_code = $9, is_default = $10
+        WHERE id = $11 AND user_id = $12
+    `
+	_, err := r.db.Exec(ctx, query,
+		addr.Label, addr.FullName, addr.Phone, addr.Line1, addr.Line2, addr.City, addr.State, addr.PostalCode, addr.CountryCode, addr.IsDefault,
+		addr.ID, addr.UserID,
+	)
+	return err
+}
+
 func (r *AddressRepo) ListByUserID(ctx context.Context, userID uuid.UUID) ([]models.Address, error) {
 	query := `
         SELECT id, user_id, label, full_name, phone, line1, line2, city, state, postal_code, country_code, is_default, created_at

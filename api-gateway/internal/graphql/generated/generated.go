@@ -146,6 +146,8 @@ type ComplexityRoot struct {
 	}
 
 	Product struct {
+		Brand       func(childComplexity int) int
+		BrandID     func(childComplexity int) int
 		Category    func(childComplexity int) int
 		CreatedAt   func(childComplexity int) int
 		Description func(childComplexity int) int
@@ -172,6 +174,7 @@ type ComplexityRoot struct {
 		Inventories    func(childComplexity int, first *int, after *string) int
 		Me             func(childComplexity int) int
 		Product        func(childComplexity int, id string) int
+		ProductBySlug  func(childComplexity int, slug string) int
 		Products       func(childComplexity int, categoryID *string, filter *model.ProductFilterInput, sort *model.ProductSortInput, pagination *model.PaginationInput) int
 		SearchProducts func(childComplexity int, query string, pagination *model.PaginationInput) int
 		User           func(childComplexity int, id string) int
@@ -270,6 +273,8 @@ type MutationResolver interface {
 }
 type ProductResolver interface {
 	Category(ctx context.Context, obj *model.Product) (*model.Category, error)
+	Brand(ctx context.Context, obj *model.Product) (*string, error)
+	BrandID(ctx context.Context, obj *model.Product) (*string, error)
 }
 type QueryResolver interface {
 	Health(ctx context.Context) (*model.HealthCheck, error)
@@ -278,6 +283,7 @@ type QueryResolver interface {
 	User(ctx context.Context, id string) (*model.User, error)
 	Users(ctx context.Context, pagination *model.PaginationInput) (*model.UserConnection, error)
 	Product(ctx context.Context, id string) (*model.Product, error)
+	ProductBySlug(ctx context.Context, slug string) (*model.Product, error)
 	Products(ctx context.Context, categoryID *string, filter *model.ProductFilterInput, sort *model.ProductSortInput, pagination *model.PaginationInput) (*model.ProductConnection, error)
 	SearchProducts(ctx context.Context, query string, pagination *model.PaginationInput) (*model.ProductConnection, error)
 	Categories(ctx context.Context, pagination *model.PaginationInput) (*model.CategoryConnection, error)
@@ -850,6 +856,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.PageInfo.TotalCount(childComplexity), true
 
+	case "Product.brand":
+		if e.ComplexityRoot.Product.Brand == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Product.Brand(childComplexity), true
+	case "Product.brandId":
+		if e.ComplexityRoot.Product.BrandID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Product.BrandID(childComplexity), true
 	case "Product.category":
 		if e.ComplexityRoot.Product.Category == nil {
 			break
@@ -976,6 +994,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.Product(childComplexity, args["id"].(string)), true
+	case "Query.productBySlug":
+		if e.ComplexityRoot.Query.ProductBySlug == nil {
+			break
+		}
+
+		args, err := ec.field_Query_productBySlug_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.ProductBySlug(childComplexity, args["slug"].(string)), true
 	case "Query.products":
 		if e.ComplexityRoot.Query.Products == nil {
 			break
@@ -1423,6 +1452,8 @@ input UpdateInventoryInput {
   name: String!
   description: String!
   category: Category!
+  brand: String
+  brandId: ID
   variants: [Variant!]!
   createdAt: Time!
   updatedAt: Time!
@@ -1513,6 +1544,7 @@ input CreateProductInput {
   slug: String!
   shortDescription: String
   brand: String
+  brandId: ID
   tags: [String!]
   attributes: String
   status: String
@@ -1527,6 +1559,7 @@ input UpdateProductInput {
   slug: String!
   shortDescription: String
   brand: String
+  brandId: ID
   tags: [String!]
   attributes: String
   status: String
@@ -1631,6 +1664,7 @@ input ProductSortInput {
 
   # Products
   product(id: ID!): Product @auth
+  productBySlug(slug: String!): Product @auth
   products(categoryId: ID, filter: ProductFilterInput, sort: ProductSortInput, pagination: PaginationInput): ProductConnection! @auth
   searchProducts(query: String!, pagination: PaginationInput): ProductConnection! @auth
   categories(pagination: PaginationInput): CategoryConnection! @auth
@@ -1927,6 +1961,10 @@ func (ec *executionContext) childFields_Product(ctx context.Context, field graph
 		return ec.fieldContext_Product_description(ctx, field)
 	case "category":
 		return ec.fieldContext_Product_category(ctx, field)
+	case "brand":
+		return ec.fieldContext_Product_brand(ctx, field)
+	case "brandId":
+		return ec.fieldContext_Product_brandId(ctx, field)
 	case "variants":
 		return ec.fieldContext_Product_variants(ctx, field)
 	case "createdAt":
@@ -2666,6 +2704,20 @@ func (ec *executionContext) field_Query_inventories_args(ctx context.Context, ra
 		return nil, err
 	}
 	args["after"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_productBySlug_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "slug",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["slug"] = arg0
 	return args, nil
 }
 
@@ -5495,6 +5547,52 @@ func (ec *executionContext) fieldContext_Product_category(_ context.Context, fie
 	return fc, nil
 }
 
+func (ec *executionContext) _Product_brand(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Product_brand(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Product().Brand(ctx, obj)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Product_brand(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Product", field, true, true, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Product_brandId(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Product_brandId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Product().BrandID(ctx, obj)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOID2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Product_brandId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Product", field, true, true, errors.New("field of type ID does not have child fields"))
+}
+
 func (ec *executionContext) _Product_variants(ctx context.Context, field graphql.CollectedField, obj *model.Product) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -6012,6 +6110,63 @@ func (ec *executionContext) fieldContext_Query_product(ctx context.Context, fiel
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_product_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_productBySlug(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_productBySlug(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().ProductBySlug(ctx, fc.Args["slug"].(string))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Auth == nil {
+					var zeroVal *model.Product
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.Directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Product) graphql.Marshaler {
+			return ec.marshalOProduct2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐProduct(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Query_productBySlug(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Product(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_productBySlug_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -8519,7 +8674,7 @@ func (ec *executionContext) unmarshalInputCreateProductInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "description", "categoryId", "slug", "shortDescription", "brand", "tags", "attributes", "status", "vendorId", "variants"}
+	fieldsInOrder := [...]string{"name", "description", "categoryId", "slug", "shortDescription", "brand", "brandId", "tags", "attributes", "status", "vendorId", "variants"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -8568,6 +8723,13 @@ func (ec *executionContext) unmarshalInputCreateProductInput(ctx context.Context
 				return it, err
 			}
 			it.Brand = data
+		case "brandId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("brandId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BrandID = data
 		case "tags":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tags"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
@@ -9192,7 +9354,7 @@ func (ec *executionContext) unmarshalInputUpdateProductInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "description", "categoryId", "slug", "shortDescription", "brand", "tags", "attributes", "status", "variants"}
+	fieldsInOrder := [...]string{"name", "description", "categoryId", "slug", "shortDescription", "brand", "brandId", "tags", "attributes", "status", "variants"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -9241,6 +9403,13 @@ func (ec *executionContext) unmarshalInputUpdateProductInput(ctx context.Context
 				return it, err
 			}
 			it.Brand = data
+		case "brandId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("brandId"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BrandID = data
 		case "tags":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tags"))
 			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
@@ -10361,6 +10530,72 @@ func (ec *executionContext) _Product(ctx context.Context, sel ast.SelectionSet, 
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "brand":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Product_brand(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "brandId":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Product_brandId(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "variants":
 			out.Values[i] = ec._Product_variants(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -10623,6 +10858,25 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_product(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "productBySlug":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_productBySlug(ctx, field)
 				return res
 			}
 

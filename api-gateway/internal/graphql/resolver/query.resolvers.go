@@ -149,6 +149,16 @@ func (r *queryResolver) Product(ctx context.Context, id string) (*model.Product,
 	return mapProductFromProto(resp.Product, baseURL), nil
 }
 
+// ProductBySlug is the resolver for the productBySlug field.
+func (r *queryResolver) ProductBySlug(ctx context.Context, slug string) (*model.Product, error) {
+	resp, err := r.ProductClient.Product.GetProductBySlug(ctx, &productpb.GetProductBySlugRequest{Slug: slug})
+	if err != nil {
+		return nil, err
+	}
+	baseURL := r.S3Storage.GetBaseURL()
+	return mapProductFromProto(resp.Product, baseURL), nil
+}
+
 // Products is the resolver for the products field.
 func (r *queryResolver) Products(ctx context.Context, categoryID *string, filter *model.ProductFilterInput, sort *model.ProductSortInput, pagination *model.PaginationInput) (*model.ProductConnection, error) {
 	page := int32(1)

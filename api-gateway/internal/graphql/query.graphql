@@ -12,6 +12,7 @@ type Query {
 
   # Products
   product(id: ID!): Product @auth
+  productBySlug(slug: String!): Product @auth
   products(categoryId: ID, filter: ProductFilterInput, sort: ProductSortInput, pagination: PaginationInput): ProductConnection! @auth
   searchProducts(query: String!, pagination: PaginationInput): ProductConnection! @auth
   categories(pagination: PaginationInput): CategoryConnection! @auth

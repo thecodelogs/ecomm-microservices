@@ -21,9 +21,9 @@ func NewProductRepo(db *pgxpool.Pool) *ProductRepo {
 }
 
 func (r *ProductRepo) Create(ctx context.Context, p *models.Product) error {
-	query := `INSERT INTO products (id, category_id, slug, name, description, short_description, brand, tags, attributes, status, vendor_id)
-	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
-	_, err := r.db.Exec(ctx, query, p.ID, p.CategoryID, p.Slug, p.Name, p.Description, p.ShortDescription, p.Brand, p.Tags, p.Attributes, p.Status, p.VendorID)
+	query := `INSERT INTO products (id, category_id, slug, name, description, short_description, brand, brand_id, tags, attributes, status, vendor_id)
+	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
+	_, err := r.db.Exec(ctx, query, p.ID, p.CategoryID, p.Slug, p.Name, p.Description, p.ShortDescription, p.Brand, p.BrandID, p.Tags, p.Attributes, p.Status, p.VendorID)
 	return err
 }
 
@@ -35,12 +35,13 @@ func (r *ProductRepo) Update(ctx context.Context, p *models.Product) error {
 				description = $4, 
 				short_description = $5, 
 				brand = $6, 
-				tags = $7, 
-				attributes = $8, 
-				status = $9, 
+				brand_id = $7,
+				tags = $8, 
+				attributes = $9, 
+				status = $10, 
 				updated_at = NOW() 
-			  WHERE id = $10`
-	_, err := r.db.Exec(ctx, query, p.CategoryID, p.Slug, p.Name, p.Description, p.ShortDescription, p.Brand, p.Tags, p.Attributes, p.Status, p.ID)
+			  WHERE id = $11`
+	_, err := r.db.Exec(ctx, query, p.CategoryID, p.Slug, p.Name, p.Description, p.ShortDescription, p.Brand, p.BrandID, p.Tags, p.Attributes, p.Status, p.ID)
 	return err
 }
 
@@ -51,14 +52,14 @@ func (r *ProductRepo) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 func (r *ProductRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, error) {
-	query := `SELECT id, category_id, slug, name, description, short_description, brand, tags, attributes, status, vendor_id, avg_rating, review_count, created_at, updated_at
+	query := `SELECT id, category_id, slug, name, description, short_description, brand, brand_id, tags, attributes, status, vendor_id, avg_rating, review_count, created_at, updated_at
 	          FROM products WHERE id = $1`
 	row := r.db.QueryRow(ctx, query, id)
 	return r.scanProduct(row)
 }
 
 func (r *ProductRepo) GetBySlug(ctx context.Context, slug string) (*models.Product, error) {
-	query := `SELECT id, category_id, slug, name, description, short_description, brand, tags, attributes, status, vendor_id, avg_rating, review_count, created_at, updated_at
+	query := `SELECT id, category_id, slug, name, description, short_description, brand, brand_id, tags, attributes, status, vendor_id, avg_rating, review_count, created_at, updated_at
 	          FROM products WHERE slug = $1 AND status = 'active'`
 	row := r.db.QueryRow(ctx, query, slug)
 	return r.scanProduct(row)
@@ -127,7 +128,7 @@ func (r *ProductRepo) List(ctx context.Context, categoryID uuid.UUID, page, page
 		orderBy = fmt.Sprintf("ORDER BY p.avg_rating %s", dir)
 	}
 
-	query := fmt.Sprintf(`SELECT p.id, p.category_id, p.slug, p.name, p.description, p.short_description, p.brand, p.tags, p.attributes, p.status, p.vendor_id, p.avg_rating, p.review_count, p.created_at, p.updated_at
+	query := fmt.Sprintf(`SELECT p.id, p.category_id, p.slug, p.name, p.description, p.short_description, p.brand, p.brand_id, p.tags, p.attributes, p.status, p.vendor_id, p.avg_rating, p.review_count, p.created_at, p.updated_at
 	          FROM products p %s %s LIMIT $%d OFFSET $%d`, whereSQL, orderBy, argID, argID+1)
 	
 	args = append(args, pageSize, (page-1)*pageSize)
@@ -176,7 +177,7 @@ func (r *ProductRepo) Search(ctx context.Context, queryStr string, page, pageSiz
 		return nil, 0, err
 	}
 
-	query := fmt.Sprintf(`SELECT p.id, p.category_id, p.slug, p.name, p.description, p.short_description, p.brand, p.tags, p.attributes, p.status, p.vendor_id, p.avg_rating, p.review_count, p.created_at, p.updated_at
+	query := fmt.Sprintf(`SELECT p.id, p.category_id, p.slug, p.name, p.description, p.short_description, p.brand, p.brand_id, p.tags, p.attributes, p.status, p.vendor_id, p.avg_rating, p.review_count, p.created_at, p.updated_at
 	          FROM products p %s ORDER BY p.updated_at DESC LIMIT $%d OFFSET $%d`, whereSQL, argID, argID+1)
 	
 	args = append(args, pageSize, (page-1)*pageSize)
@@ -206,7 +207,7 @@ func (r *ProductRepo) UpdateRating(ctx context.Context, productID uuid.UUID, avg
 
 func (r *ProductRepo) scanProduct(row pgx.Row) (*models.Product, error) {
 	var p models.Product
-	err := row.Scan(&p.ID, &p.CategoryID, &p.Slug, &p.Name, &p.Description, &p.ShortDescription, &p.Brand, &p.Tags, &p.Attributes, &p.Status, &p.VendorID, &p.AvgRating, &p.ReviewCount, &p.CreatedAt, &p.UpdatedAt)
+	err := row.Scan(&p.ID, &p.CategoryID, &p.Slug, &p.Name, &p.Description, &p.ShortDescription, &p.Brand, &p.BrandID, &p.Tags, &p.Attributes, &p.Status, &p.VendorID, &p.AvgRating, &p.ReviewCount, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

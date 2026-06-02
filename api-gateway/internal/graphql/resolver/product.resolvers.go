@@ -7,6 +7,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	productpb "github.com/manojnegi/ecomm-microservices/gen/go/product/v1"
 	"github.com/manojnegi/ecommerce/api-gateway/internal/graphql/generated"
@@ -45,6 +46,16 @@ func (r *productResolver) Category(ctx context.Context, obj *model.Product) (*mo
 	}
 	baseURL := r.S3Storage.GetBaseURL()
 	return mapCategoryFromProto(resp.Category, baseURL), nil
+}
+
+// Brand is the resolver for the brand field.
+func (r *productResolver) Brand(ctx context.Context, obj *model.Product) (*string, error) {
+	panic(fmt.Errorf("not implemented: Brand - brand"))
+}
+
+// BrandID is the resolver for the brandId field.
+func (r *productResolver) BrandID(ctx context.Context, obj *model.Product) (*string, error) {
+	panic(fmt.Errorf("not implemented: BrandID - brandId"))
 }
 
 // Inventory is the resolver for the inventory field.

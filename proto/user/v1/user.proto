@@ -24,6 +24,7 @@ service UserService {
 
 service AddressService {
     rpc CreateAddress(CreateAddressRequest) returns (Address);
+    rpc UpdateAddress(UpdateAddressRequest) returns (Address);
     rpc ListAddresses(ListAddressesRequest) returns (AddressList);
     rpc GetAddress(GetAddressRequest) returns (Address);
     rpc SetDefaultAddress(SetDefaultAddressRequest) returns (Empty);
@@ -157,6 +158,21 @@ message CreateAddressRequest {
     string postal_code = 9;
     string country_code = 10;
     bool is_default = 11;
+}
+
+message UpdateAddressRequest {
+    string address_id = 1;
+    string user_id = 2;
+    string label = 3;
+    string full_name = 4;
+    string phone = 5;
+    string line1 = 6;
+    string line2 = 7;
+    string city = 8;
+    string state = 9;
+    string postal_code = 10;
+    string country_code = 11;
+    bool is_default = 12;
 }
 
 message ListAddressesRequest {

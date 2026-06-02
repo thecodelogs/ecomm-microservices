@@ -146,7 +146,27 @@ func (r *mutationResolver) CreateAddress(ctx context.Context, input model.Addres
 
 // UpdateAddress is the resolver for the updateAddress field.
 func (r *mutationResolver) UpdateAddress(ctx context.Context, id string, input model.AddressInput) (*model.Address, error) {
-	return nil, fmt.Errorf("UpdateAddress not implemented")
+	gc, err := GinContextFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	userID, _ := gc.Get("userID")
+
+	resp, err := r.UserClient.Addr.UpdateAddress(ctx, &userpb.UpdateAddressRequest{
+		AddressId:   id,
+		UserId:      userID.(string),
+		Label:       input.Label,
+		Line1:       input.Street,
+		City:        input.City,
+		State:       input.State,
+		PostalCode:  input.ZipCode,
+		CountryCode: input.Country,
+		IsDefault:   input.IsDefault != nil && *input.IsDefault,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return mapAddressFromProto(resp), nil
 }
 
 // DeleteAddress is the resolver for the deleteAddress field.
@@ -202,6 +222,7 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.Create
 		Slug:             input.Slug,
 		ShortDescription: stringValue(input.ShortDescription),
 		Brand:            stringValue(input.Brand),
+		BrandId:          stringValue(input.BrandID),
 		Tags:             input.Tags,
 		Attributes:       stringValue(input.Attributes),
 		Status:           stringValue(input.Status),
@@ -280,6 +301,7 @@ func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, input m
 		Slug:             input.Slug,
 		ShortDescription: stringValue(input.ShortDescription),
 		Brand:            stringValue(input.Brand),
+		BrandId:          stringValue(input.BrandID),
 		Tags:             input.Tags,
 		Attributes:       stringValue(input.Attributes),
 		Status:           stringValue(input.Status),

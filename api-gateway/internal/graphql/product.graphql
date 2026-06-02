@@ -3,6 +3,8 @@ type Product implements Node {
   name: String!
   description: String!
   category: Category!
+  brand: String
+  brandId: ID
   variants: [Variant!]!
   createdAt: Time!
   updatedAt: Time!
@@ -93,6 +95,7 @@ input CreateProductInput {
   slug: String!
   shortDescription: String
   brand: String
+  brandId: ID
   tags: [String!]
   attributes: String
   status: String
@@ -107,6 +110,7 @@ input UpdateProductInput {
   slug: String!
   shortDescription: String
   brand: String
+  brandId: ID
   tags: [String!]
   attributes: String
   status: String

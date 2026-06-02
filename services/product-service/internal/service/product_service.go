@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/models"
 	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/repository"
 
-	"github.com/manojnegi/ecomm-microservices/services/product-service/internal/models"
-
 	"github.com/google/uuid"
+	"github.com/gosimple/slug"
 )
 
 type ProductService struct {
@@ -208,8 +208,24 @@ func (s *ProductService) GetVariantsByProductID(ctx context.Context, productID u
 }
 
 func (s *ProductService) GetProductBySlug(ctx context.Context, slug string) (*models.Product, []models.Variant, error) {
-	// This would need a slug lookup in repo — simplified
-	return nil, nil, fmt.Errorf("not implemented")
+	product, err := s.prodRepo.GetBySlug(ctx, slug)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	variants, err := s.varRepo.GetByProductID(ctx, product.ID)
+	if err != nil {
+		return product, nil, nil
+	}
+
+	for i := range variants {
+		imgs, err := s.imgRepo.GetByVariantID(ctx, variants[i].ID)
+		if err == nil {
+			variants[i].Images = imgs
+		}
+	}
+
+	return product, variants, nil
 }
 
 func (s *ProductService) ListProducts(ctx context.Context, categoryID uuid.UUID, page, pageSize int32, isAdmin bool, minPrice, maxPrice float64, brands []string, sortField, sortDir string) ([]models.Product, int32, error) {
@@ -247,8 +263,8 @@ func (s *ProductService) GetVariantsBatch(ctx context.Context, ids []uuid.UUID) 
 }
 
 func generateSlug(name string) string {
-	// Simplified — use github.com/gosimple/slug in production
-	return fmt.Sprintf("%s-%s", name, uuid.New().String()[:8])
+	baseSlug := slug.Make(name)
+	return fmt.Sprintf("%s-%s", baseSlug, uuid.New().String()[:8])
 }
 
 func (s *ProductService) CreateVariant(ctx context.Context, v *models.Variant) error {
