@@ -105,6 +105,7 @@ func runMigrations(pool *pgxpool.Pool) error {
 
 		CREATE TABLE IF NOT EXISTS products (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			category_id UUID REFERENCES categories(id),
 			slug VARCHAR(300) UNIQUE NOT NULL,
 			name VARCHAR(500) NOT NULL,
 			description TEXT,
@@ -122,6 +123,7 @@ func runMigrations(pool *pgxpool.Pool) error {
 		);
 
 		ALTER TABLE products ADD COLUMN IF NOT EXISTS brand_id UUID REFERENCES brands(id);
+		ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id UUID REFERENCES categories(id);
 
 		CREATE TABLE IF NOT EXISTS product_categories (
 			product_id UUID REFERENCES products(id) ON DELETE CASCADE,
@@ -135,21 +137,10 @@ func runMigrations(pool *pgxpool.Pool) error {
 				INSERT INTO product_categories (product_id, category_id)
 				SELECT id, category_id FROM products WHERE category_id IS NOT NULL
 				ON CONFLICT DO NOTHING;
-				
-				ALTER TABLE products DROP COLUMN category_id;
 			END IF;
 		END $$;
 
 		DROP TABLE IF EXISTS product_images CASCADE;
-
-		CREATE TABLE IF NOT EXISTS variant_images (
-			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			variant_id UUID REFERENCES variants(id) ON DELETE CASCADE,
-			url TEXT NOT NULL,
-			alt_text VARCHAR(300),
-			sort_order INTEGER DEFAULT 0,
-			created_at TIMESTAMPTZ DEFAULT NOW()
-		);
 
 		CREATE TABLE IF NOT EXISTS variants (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -165,6 +156,15 @@ func runMigrations(pool *pgxpool.Pool) error {
 			is_active BOOLEAN DEFAULT true,
 			created_at TIMESTAMPTZ DEFAULT NOW(),
 			updated_at TIMESTAMPTZ DEFAULT NOW()
+		);
+
+		CREATE TABLE IF NOT EXISTS variant_images (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			variant_id UUID REFERENCES variants(id) ON DELETE CASCADE,
+			url TEXT NOT NULL,
+			alt_text VARCHAR(300),
+			sort_order INTEGER DEFAULT 0,
+			created_at TIMESTAMPTZ DEFAULT NOW()
 		);
 
 		CREATE TABLE IF NOT EXISTS inventory (
@@ -202,5 +202,15 @@ func runMigrations(pool *pgxpool.Pool) error {
 
 	// Run seed data
 	_, err = pool.Exec(context.Background(), seedSQL)
+	if err != nil {
+		return err
+	}
+
+	// Populate product_categories from seed data
+	_, err = pool.Exec(context.Background(), `
+		INSERT INTO product_categories (product_id, category_id)
+		SELECT id, category_id FROM products WHERE category_id IS NOT NULL
+		ON CONFLICT DO NOTHING;
+	`)
 	return err
 }
