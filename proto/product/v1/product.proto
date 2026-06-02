@@ -131,7 +131,7 @@ message ProductListResponse {
 
 message Product {
     string id = 1;
-    string category_id = 2;
+    repeated string category_ids = 2;
     string slug = 3;
     string name = 4;
     string description = 5;
@@ -251,7 +251,7 @@ message ReorderVariantImagesResponse {
 }
 
 message CreateProductRequest {
-    string category_id = 1;
+    repeated string category_ids = 1;
     string name = 2;
     string description = 3;
 	string slug = 4;
@@ -272,7 +272,7 @@ message CreateProductResponse {
 
 message UpdateProductRequest {
     string id = 1;
-    string category_id = 2;
+    repeated string category_ids = 2;
     string name = 3;
     string description = 4;
 	string slug = 5;

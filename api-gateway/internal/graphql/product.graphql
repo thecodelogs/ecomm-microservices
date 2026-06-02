@@ -2,7 +2,7 @@ type Product implements Node {
   id: ID!
   name: String!
   description: String!
-  category: Category!
+  categories: [Category!]!
   brand: String
   brandId: ID
   variants: [Variant!]!
@@ -91,7 +91,7 @@ type ProductEdge {
 input CreateProductInput {
   name: String!
   description: String!
-  categoryId: ID!
+  categoryIds: [ID!]!
   slug: String!
   shortDescription: String
   brand: String
@@ -106,7 +106,7 @@ input CreateProductInput {
 input UpdateProductInput {
   name: String!
   description: String!
-  categoryId: ID!
+  categoryIds: [ID!]!
   slug: String!
   shortDescription: String
   brand: String

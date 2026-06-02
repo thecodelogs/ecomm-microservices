@@ -105,7 +105,6 @@ func runMigrations(pool *pgxpool.Pool) error {
 
 		CREATE TABLE IF NOT EXISTS products (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			category_id UUID REFERENCES categories(id),
 			slug VARCHAR(300) UNIQUE NOT NULL,
 			name VARCHAR(500) NOT NULL,
 			description TEXT,
@@ -123,6 +122,23 @@ func runMigrations(pool *pgxpool.Pool) error {
 		);
 
 		ALTER TABLE products ADD COLUMN IF NOT EXISTS brand_id UUID REFERENCES brands(id);
+
+		CREATE TABLE IF NOT EXISTS product_categories (
+			product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+			category_id UUID REFERENCES categories(id) ON DELETE CASCADE,
+			PRIMARY KEY (product_id, category_id)
+		);
+
+		DO $$
+		BEGIN
+			IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='products' AND column_name='category_id') THEN
+				INSERT INTO product_categories (product_id, category_id)
+				SELECT id, category_id FROM products WHERE category_id IS NOT NULL
+				ON CONFLICT DO NOTHING;
+				
+				ALTER TABLE products DROP COLUMN category_id;
+			END IF;
+		END $$;
 
 		DROP TABLE IF EXISTS product_images CASCADE;
 
@@ -173,7 +189,7 @@ func runMigrations(pool *pgxpool.Pool) error {
 			created_at TIMESTAMPTZ DEFAULT NOW()
 		);
 
-		CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
+		CREATE INDEX IF NOT EXISTS idx_product_categories_category ON product_categories(category_id);
 		CREATE INDEX IF NOT EXISTS idx_products_status ON products(status);
 		CREATE INDEX IF NOT EXISTS idx_products_vendor ON products(vendor_id);
 		CREATE INDEX IF NOT EXISTS idx_variants_product ON variants(product_id);

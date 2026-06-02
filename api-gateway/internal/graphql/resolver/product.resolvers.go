@@ -36,26 +36,50 @@ func (r *categoryResolver) Products(ctx context.Context, obj *model.Category) ([
 	return products, nil
 }
 
-// Category is the resolver for the category field.
-func (r *productResolver) Category(ctx context.Context, obj *model.Product) (*model.Category, error) {
-	resp, err := r.ProductClient.Category.GetCategory(ctx, &productpb.GetCategoryRequest{
-		Id: obj.CategoryID,
-	})
-	if err != nil {
-		return nil, err
+// Categories is the resolver for the categories field.
+func (r *productResolver) Categories(ctx context.Context, obj *model.Product) ([]*model.Category, error) {
+	var categories []*model.Category
+	if len(obj.CategoryIDs) == 0 {
+		return categories, nil
 	}
-	baseURL := r.S3Storage.GetBaseURL()
-	return mapCategoryFromProto(resp.Category, baseURL), nil
-}
 
-// Brand is the resolver for the brand field.
-func (r *productResolver) Brand(ctx context.Context, obj *model.Product) (*string, error) {
-	panic(fmt.Errorf("not implemented: Brand - brand"))
-}
+	for _, catID := range obj.CategoryIDs {
+		resp, err := r.ProductClient.Category.GetCategory(ctx, &productpb.GetCategoryRequest{
+			Id: catID,
+		})
+		if err != nil {
+			// Skip or log error, but for now we continue
+			fmt.Printf("Failed to get category %s: %v\n", catID, err)
+			continue
+		}
+		
+		var description, imageUrl, parentId *string
+		if resp.Category.Description != "" {
+			d := resp.Category.Description
+			description = &d
+		}
+		if resp.Category.ImageUrl != "" {
+			i := resp.Category.ImageUrl
+			imageUrl = &i
+		}
+		if resp.Category.ParentId != "" {
+			p := resp.Category.ParentId
+			parentId = &p
+		}
 
-// BrandID is the resolver for the brandId field.
-func (r *productResolver) BrandID(ctx context.Context, obj *model.Product) (*string, error) {
-	panic(fmt.Errorf("not implemented: BrandID - brandId"))
+		categories = append(categories, &model.Category{
+			ID:          resp.Category.Id,
+			Name:        resp.Category.Name,
+			Slug:        resp.Category.Slug,
+			Description: description,
+			ImageURL:    imageUrl,
+			SortOrder:   int(resp.Category.SortOrder),
+			IsActive:    resp.Category.IsActive,
+			ParentID:    parentId,
+		})
+	}
+
+	return categories, nil
 }
 
 // Inventory is the resolver for the inventory field.

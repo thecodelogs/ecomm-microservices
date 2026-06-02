@@ -42,7 +42,12 @@ func (h *ProductHandler) CreateProduct(ctx context.Context, req *productpb.Creat
 		return nil, err
 	}
 
-	categoryID, _ := uuid.Parse(req.CategoryId)
+	var categoryIDs []uuid.UUID
+	for _, idStr := range req.CategoryIds {
+		if parsed, err := uuid.Parse(idStr); err == nil {
+			categoryIDs = append(categoryIDs, parsed)
+		}
+	}
 	vendorID, _ := uuid.Parse(req.VendorId)
 
 	var attributes json.RawMessage
@@ -51,7 +56,7 @@ func (h *ProductHandler) CreateProduct(ctx context.Context, req *productpb.Creat
 	}
 
 	p := &models.Product{
-		CategoryID:  categoryID,
+		CategoryIDs: categoryIDs,
 		Name:        req.Name,
 		Description: req.Description,
 		Slug:        req.Slug,
@@ -190,7 +195,12 @@ func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.Updat
 		return nil, status.Error(codes.InvalidArgument, "invalid product id")
 	}
 
-	categoryID, _ := uuid.Parse(req.CategoryId)
+	var categoryIDs []uuid.UUID
+	for _, idStr := range req.CategoryIds {
+		if parsed, err := uuid.Parse(idStr); err == nil {
+			categoryIDs = append(categoryIDs, parsed)
+		}
+	}
 
 	fmt.Printf("DEBUG UpdateProduct request for product ID: %s, Variants count: %d\n", id, len(req.Variants))
 
@@ -201,7 +211,7 @@ func (h *ProductHandler) UpdateProduct(ctx context.Context, req *productpb.Updat
 
 	p := &models.Product{
 		ID:          id,
-		CategoryID:  categoryID,
+		CategoryIDs: categoryIDs,
 		Name:        req.Name,
 		Description: req.Description,
 		Slug:        req.Slug,
@@ -534,9 +544,14 @@ func (h *ProductHandler) checkAdminAuth(ctx context.Context) (*auth.AccessTokenC
 }
 
 func toProtoProduct(p *models.Product, variants []models.Variant) *productpb.Product {
+	var catIDs []string
+	for _, id := range p.CategoryIDs {
+		catIDs = append(catIDs, id.String())
+	}
+
 	pb := &productpb.Product{
 		Id:          p.ID.String(),
-		CategoryId:  p.CategoryID.String(),
+		CategoryIds: catIDs,
 		Slug:        p.Slug,
 		Name:        p.Name,
 		Description: p.Description,

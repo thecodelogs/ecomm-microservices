@@ -24,7 +24,7 @@ type Product struct {
 	Brand       *string    `json:"brand,omitempty"`
 	BrandID     *string    `json:"brandId,omitempty"`
 	Stock       int        `json:"stock"`
-	CategoryID  string     `json:"categoryId"`
+	CategoryIDs []string   `json:"categoryIds"`
 	Images      []string   `json:"images"`
 	Variants    []*Variant `json:"variants"`
 	CreatedAt   time.Time  `json:"createdAt"`

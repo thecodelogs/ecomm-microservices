@@ -72,7 +72,7 @@ type CreateCategoryInput struct {
 type CreateProductInput struct {
 	Name             string                 `json:"name"`
 	Description      string                 `json:"description"`
-	CategoryID       string                 `json:"categoryId"`
+	CategoryIds      []string               `json:"categoryIds"`
 	Slug             string                 `json:"slug"`
 	ShortDescription *string                `json:"shortDescription,omitempty"`
 	Brand            *string                `json:"brand,omitempty"`
@@ -220,7 +220,7 @@ type UpdateInventoryInput struct {
 type UpdateProductInput struct {
 	Name             string                 `json:"name"`
 	Description      string                 `json:"description"`
-	CategoryID       string                 `json:"categoryId"`
+	CategoryIds      []string               `json:"categoryIds"`
 	Slug             string                 `json:"slug"`
 	ShortDescription *string                `json:"shortDescription,omitempty"`
 	Brand            *string                `json:"brand,omitempty"`

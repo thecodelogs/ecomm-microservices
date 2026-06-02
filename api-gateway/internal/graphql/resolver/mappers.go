@@ -76,7 +76,7 @@ func mapProductFromProto(p *productpb.Product, baseURL string) *model.Product {
 		Brand:       brandPtr,
 		BrandID:     brandIdPtr,
 		Sku:         p.Slug,
-		CategoryID:  p.CategoryId,
+		CategoryIDs: p.CategoryIds,
 		Variants:    variants,
 		CreatedAt:   time.Unix(p.CreatedAt, 0),
 		UpdatedAt:   time.Unix(p.CreatedAt, 0),

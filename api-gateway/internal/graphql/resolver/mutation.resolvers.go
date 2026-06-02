@@ -216,7 +216,7 @@ func (r *mutationResolver) DeleteUser(ctx context.Context, id string) (bool, err
 // Admin - Products mutations
 func (r *mutationResolver) CreateProduct(ctx context.Context, input model.CreateProductInput) (*model.Product, error) {
 	req := &productpb.CreateProductRequest{
-		CategoryId:       input.CategoryID,
+		CategoryIds:      input.CategoryIds,
 		Name:             input.Name,
 		Description:      input.Description,
 		Slug:             input.Slug,
@@ -295,7 +295,7 @@ func (r *mutationResolver) CreateProduct(ctx context.Context, input model.Create
 func (r *mutationResolver) UpdateProduct(ctx context.Context, id string, input model.UpdateProductInput) (*model.Product, error) {
 	req := &productpb.UpdateProductRequest{
 		Id:               id,
-		CategoryId:       input.CategoryID,
+		CategoryIds:      input.CategoryIds,
 		Name:             input.Name,
 		Description:      input.Description,
 		Slug:             input.Slug,

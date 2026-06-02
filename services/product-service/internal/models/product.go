@@ -32,7 +32,7 @@ type Brand struct {
 
 type Product struct {
 	ID               uuid.UUID       `db:"id"                json:"id"`
-	CategoryID       uuid.UUID       `db:"category_id"       json:"category_id"`
+	CategoryIDs      []uuid.UUID     `db:"-"                 json:"category_ids"`
 	Slug             string          `db:"slug"              json:"slug"`
 	Name             string          `db:"name"              json:"name"`
 	Description      string          `db:"description"       json:"description"`
