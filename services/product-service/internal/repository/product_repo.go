@@ -93,6 +93,12 @@ func (r *ProductRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+func (r *ProductRepo) HardDelete(ctx context.Context, id uuid.UUID) error {
+	query := `DELETE FROM products WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, id)
+	return err
+}
+
 func (r *ProductRepo) GetByID(ctx context.Context, id uuid.UUID) (*models.Product, error) {
 	query := `SELECT id, COALESCE((SELECT ARRAY_AGG(category_id) FROM product_categories WHERE product_id = products.id), '{}'), slug, name, description, short_description, brand, brand_id, tags, attributes, status, vendor_id, avg_rating, review_count, created_at, updated_at
 	          FROM products WHERE id = $1`

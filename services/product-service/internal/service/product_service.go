@@ -41,6 +41,8 @@ func (s *ProductService) CreateProduct(ctx context.Context, p *models.Product, v
 		variants[i].ProductID = p.ID
 		variants[i].CreatedAt = time.Now().UTC()
 		if err := s.varRepo.Create(ctx, &variants[i]); err != nil {
+			// Rollback product creation
+			s.prodRepo.HardDelete(ctx, p.ID)
 			return fmt.Errorf("create variant: %w", err)
 		}
 
@@ -54,6 +56,8 @@ func (s *ProductService) CreateProduct(ctx context.Context, p *models.Product, v
 			ReorderPoint:      10,
 		}
 		if err := s.invRepo.Create(ctx, inv); err != nil {
+			// Rollback product creation
+			s.prodRepo.HardDelete(ctx, p.ID)
 			return fmt.Errorf("create inventory: %w", err)
 		}
 
@@ -64,6 +68,8 @@ func (s *ProductService) CreateProduct(ctx context.Context, p *models.Product, v
 			variants[i].Images[j].VariantID = variants[i].ID
 			variants[i].Images[j].CreatedAt = time.Now().UTC()
 			if err := s.imgRepo.Create(ctx, &variants[i].Images[j]); err != nil {
+				// Rollback product creation
+				s.prodRepo.HardDelete(ctx, p.ID)
 				return fmt.Errorf("create variant image: %w", err)
 			}
 		}
