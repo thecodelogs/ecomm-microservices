@@ -36,6 +36,14 @@ service InventoryService {
     rpc ListInventory(ListInventoryRequest) returns (ListInventoryResponse);
 }
 
+service BrandService {
+    rpc CreateBrand(CreateBrandRequest) returns (CreateBrandResponse);
+    rpc UpdateBrand(UpdateBrandRequest) returns (UpdateBrandResponse);
+    rpc DeleteBrand(DeleteBrandRequest) returns (DeleteBrandResponse);
+    rpc GetBrand(GetBrandRequest) returns (GetBrandResponse);
+    rpc ListBrands(ListBrandsRequest) returns (BrandListResponse);
+}
+
 message Category {
     string id = 1;
     string name = 2;
@@ -95,6 +103,67 @@ message DeleteCategoryResponse {
 message ListCategoryRequest {
     int32 page = 1;
     int32 page_size = 2;
+}
+
+message Brand {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    string image_url = 4;
+    bool is_active = 5;
+    int64 created_at = 6;
+    int64 updated_at = 7;
+}
+
+message CreateBrandRequest {
+    string name = 1;
+    string description = 2;
+    string image_url = 3;
+    bool is_active = 4;
+}
+
+message CreateBrandResponse {
+    string id = 1;
+    Brand brand = 2;
+}
+
+message UpdateBrandRequest {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+    string image_url = 4;
+    bool is_active = 5;
+}
+
+message UpdateBrandResponse {
+    Brand brand = 1;
+}
+
+message DeleteBrandRequest {
+    string id = 1;
+}
+
+message DeleteBrandResponse {
+    bool success = 1;
+}
+
+message GetBrandRequest {
+    string id = 1;
+}
+
+message GetBrandResponse {
+    Brand brand = 1;
+}
+
+message ListBrandsRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+}
+
+message BrandListResponse {
+    repeated Brand brands = 1;
+    int32 total = 2;
+    int32 page = 3;
 }
 
 message ListProductsRequest {

@@ -49,6 +49,29 @@ type AuthPayload struct {
 	ExpiresIn    *int   `json:"expiresIn,omitempty"`
 }
 
+type Brand struct {
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description,omitempty"`
+	ImageURL    *string   `json:"imageUrl,omitempty"`
+	IsActive    bool      `json:"isActive"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+func (Brand) IsNode()            {}
+func (this Brand) GetID() string { return this.ID }
+
+type BrandConnection struct {
+	Edges    []*BrandEdge `json:"edges"`
+	PageInfo *PageInfo    `json:"pageInfo"`
+}
+
+type BrandEdge struct {
+	Node   *Brand `json:"node"`
+	Cursor string `json:"cursor"`
+}
+
 type CategoryConnection struct {
 	Edges    []*CategoryEdge `json:"edges"`
 	PageInfo *PageInfo       `json:"pageInfo"`
@@ -57,6 +80,13 @@ type CategoryConnection struct {
 type CategoryEdge struct {
 	Node   *Category `json:"node"`
 	Cursor string    `json:"cursor"`
+}
+
+type CreateBrandInput struct {
+	Name        string          `json:"name"`
+	Description *string         `json:"description,omitempty"`
+	Image       *graphql.Upload `json:"image,omitempty"`
+	IsActive    bool            `json:"isActive"`
 }
 
 type CreateCategoryInput struct {
@@ -200,6 +230,13 @@ type ServiceHealth struct {
 type SigninInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type UpdateBrandInput struct {
+	Name        string          `json:"name"`
+	Description *string         `json:"description,omitempty"`
+	Image       *graphql.Upload `json:"image,omitempty"`
+	IsActive    bool            `json:"isActive"`
 }
 
 type UpdateCategoryInput struct {

@@ -52,7 +52,7 @@ func (r *productResolver) Categories(ctx context.Context, obj *model.Product) ([
 			fmt.Printf("Failed to get category %s: %v\n", catID, err)
 			continue
 		}
-		
+
 		var description, imageUrl, parentId *string
 		if resp.Category.Description != "" {
 			d := resp.Category.Description

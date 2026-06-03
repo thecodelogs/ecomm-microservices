@@ -62,6 +62,26 @@ type ComplexityRoot struct {
 		User         func(childComplexity int) int
 	}
 
+	Brand struct {
+		CreatedAt   func(childComplexity int) int
+		Description func(childComplexity int) int
+		ID          func(childComplexity int) int
+		ImageURL    func(childComplexity int) int
+		IsActive    func(childComplexity int) int
+		Name        func(childComplexity int) int
+		UpdatedAt   func(childComplexity int) int
+	}
+
+	BrandConnection struct {
+		Edges    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
+	}
+
+	BrandEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
 	Category struct {
 		Children    func(childComplexity int) int
 		Description func(childComplexity int) int
@@ -113,10 +133,12 @@ type ComplexityRoot struct {
 		AddVariantImage      func(childComplexity int, variantID string, url string, altText *string, sortOrder *int) int
 		AdminLogin           func(childComplexity int, input model.SigninInput) int
 		CreateAddress        func(childComplexity int, input model.AddressInput) int
+		CreateBrand          func(childComplexity int, input model.CreateBrandInput) int
 		CreateCategory       func(childComplexity int, input model.CreateCategoryInput) int
 		CreateProduct        func(childComplexity int, input model.CreateProductInput) int
 		CreateVariant        func(childComplexity int, input model.CreateVariantInput) int
 		DeleteAddress        func(childComplexity int, id string) int
+		DeleteBrand          func(childComplexity int, id string) int
 		DeleteCategory       func(childComplexity int, id string) int
 		DeleteProduct        func(childComplexity int, id string) int
 		DeleteUser           func(childComplexity int, id string) int
@@ -129,6 +151,7 @@ type ComplexityRoot struct {
 		SetDefaultAddress    func(childComplexity int, id string) int
 		Signin               func(childComplexity int, input model.SigninInput) int
 		UpdateAddress        func(childComplexity int, id string, input model.AddressInput) int
+		UpdateBrand          func(childComplexity int, id string, input model.UpdateBrandInput) int
 		UpdateCategory       func(childComplexity int, id string, input model.UpdateCategoryInput) int
 		UpdateInventory      func(childComplexity int, variantID string, input model.UpdateInventoryInput) int
 		UpdateProduct        func(childComplexity int, id string, input model.UpdateProductInput) int
@@ -168,6 +191,8 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		Brand          func(childComplexity int, id string) int
+		Brands         func(childComplexity int, pagination *model.PaginationInput) int
 		Categories     func(childComplexity int, pagination *model.PaginationInput) int
 		Category       func(childComplexity int, id string) int
 		Health         func(childComplexity int) int
@@ -263,6 +288,9 @@ type MutationResolver interface {
 	CreateCategory(ctx context.Context, input model.CreateCategoryInput) (*model.Category, error)
 	UpdateCategory(ctx context.Context, id string, input model.UpdateCategoryInput) (*model.Category, error)
 	DeleteCategory(ctx context.Context, id string) (bool, error)
+	CreateBrand(ctx context.Context, input model.CreateBrandInput) (*model.Brand, error)
+	UpdateBrand(ctx context.Context, id string, input model.UpdateBrandInput) (*model.Brand, error)
+	DeleteBrand(ctx context.Context, id string) (bool, error)
 	CreateVariant(ctx context.Context, input model.CreateVariantInput) (*model.Variant, error)
 	UpdateVariant(ctx context.Context, id string, input model.UpdateVariantInput) (*model.Variant, error)
 	DeleteVariant(ctx context.Context, id string) (bool, error)
@@ -286,6 +314,8 @@ type QueryResolver interface {
 	SearchProducts(ctx context.Context, query string, pagination *model.PaginationInput) (*model.ProductConnection, error)
 	Categories(ctx context.Context, pagination *model.PaginationInput) (*model.CategoryConnection, error)
 	Category(ctx context.Context, id string) (*model.Category, error)
+	Brands(ctx context.Context, pagination *model.PaginationInput) (*model.BrandConnection, error)
+	Brand(ctx context.Context, id string) (*model.Brand, error)
 }
 type UserResolver interface {
 	Addresses(ctx context.Context, obj *model.User) ([]*model.Address, error)
@@ -388,6 +418,75 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.AuthPayload.User(childComplexity), true
+
+	case "Brand.createdAt":
+		if e.ComplexityRoot.Brand.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Brand.CreatedAt(childComplexity), true
+	case "Brand.description":
+		if e.ComplexityRoot.Brand.Description == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Brand.Description(childComplexity), true
+	case "Brand.id":
+		if e.ComplexityRoot.Brand.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Brand.ID(childComplexity), true
+	case "Brand.imageUrl":
+		if e.ComplexityRoot.Brand.ImageURL == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Brand.ImageURL(childComplexity), true
+	case "Brand.isActive":
+		if e.ComplexityRoot.Brand.IsActive == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Brand.IsActive(childComplexity), true
+	case "Brand.name":
+		if e.ComplexityRoot.Brand.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Brand.Name(childComplexity), true
+	case "Brand.updatedAt":
+		if e.ComplexityRoot.Brand.UpdatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Brand.UpdatedAt(childComplexity), true
+
+	case "BrandConnection.edges":
+		if e.ComplexityRoot.BrandConnection.Edges == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BrandConnection.Edges(childComplexity), true
+	case "BrandConnection.pageInfo":
+		if e.ComplexityRoot.BrandConnection.PageInfo == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BrandConnection.PageInfo(childComplexity), true
+
+	case "BrandEdge.cursor":
+		if e.ComplexityRoot.BrandEdge.Cursor == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BrandEdge.Cursor(childComplexity), true
+	case "BrandEdge.node":
+		if e.ComplexityRoot.BrandEdge.Node == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BrandEdge.Node(childComplexity), true
 
 	case "Category.children":
 		if e.ComplexityRoot.Category.Children == nil {
@@ -585,6 +684,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CreateAddress(childComplexity, args["input"].(model.AddressInput)), true
+	case "Mutation.createBrand":
+		if e.ComplexityRoot.Mutation.CreateBrand == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createBrand_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreateBrand(childComplexity, args["input"].(model.CreateBrandInput)), true
 	case "Mutation.createCategory":
 		if e.ComplexityRoot.Mutation.CreateCategory == nil {
 			break
@@ -629,6 +739,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeleteAddress(childComplexity, args["id"].(string)), true
+	case "Mutation.deleteBrand":
+		if e.ComplexityRoot.Mutation.DeleteBrand == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteBrand_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.DeleteBrand(childComplexity, args["id"].(string)), true
 	case "Mutation.deleteCategory":
 		if e.ComplexityRoot.Mutation.DeleteCategory == nil {
 			break
@@ -756,6 +877,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.UpdateAddress(childComplexity, args["id"].(string), args["input"].(model.AddressInput)), true
+	case "Mutation.updateBrand":
+		if e.ComplexityRoot.Mutation.UpdateBrand == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateBrand_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.UpdateBrand(childComplexity, args["id"].(string), args["input"].(model.UpdateBrandInput)), true
 	case "Mutation.updateCategory":
 		if e.ComplexityRoot.Mutation.UpdateCategory == nil {
 			break
@@ -935,6 +1067,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.ProductEdge.Node(childComplexity), true
 
+	case "Query.brand":
+		if e.ComplexityRoot.Query.Brand == nil {
+			break
+		}
+
+		args, err := ec.field_Query_brand_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Brand(childComplexity, args["id"].(string)), true
+	case "Query.brands":
+		if e.ComplexityRoot.Query.Brands == nil {
+			break
+		}
+
+		args, err := ec.field_Query_brands_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Brands(childComplexity, args["pagination"].(*model.PaginationInput)), true
 	case "Query.categories":
 		if e.ComplexityRoot.Query.Categories == nil {
 			break
@@ -1303,6 +1457,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAddressInput,
+		ec.unmarshalInputCreateBrandInput,
 		ec.unmarshalInputCreateCategoryInput,
 		ec.unmarshalInputCreateProductInput,
 		ec.unmarshalInputCreateVariantInput,
@@ -1313,6 +1468,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputProductVariantInput,
 		ec.unmarshalInputRegisterInput,
 		ec.unmarshalInputSigninInput,
+		ec.unmarshalInputUpdateBrandInput,
 		ec.unmarshalInputUpdateCategoryInput,
 		ec.unmarshalInputUpdateInventoryInput,
 		ec.unmarshalInputUpdateProductInput,
@@ -1421,6 +1577,10 @@ var sources = []*ast.Source{
   createCategory(input: CreateCategoryInput!): Category! @auth @admin
   updateCategory(id: ID!, input: UpdateCategoryInput!): Category! @auth @admin
   deleteCategory(id: ID!): Boolean! @auth @admin
+  createBrand(input: CreateBrandInput!): Brand! @auth @admin
+  updateBrand(id: ID!, input: UpdateBrandInput!): Brand! @auth @admin
+  deleteBrand(id: ID!): Boolean! @auth @admin
+
 
   createVariant(input: CreateVariantInput!): Variant! @auth @admin
   updateVariant(id: ID!, input: UpdateVariantInput!): Variant! @auth @admin
@@ -1525,6 +1685,27 @@ type CategoryEdge {
   cursor: String!
 }
 
+type Brand implements Node {
+  id: ID!
+  name: String!
+  description: String
+  imageUrl: String
+  isActive: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type BrandConnection {
+  edges: [BrandEdge!]!
+  pageInfo: PageInfo!
+}
+
+type BrandEdge {
+  node: Brand!
+  cursor: String!
+}
+
+
 type ProductConnection {
   edges: [ProductEdge!]!
   pageInfo: PageInfo!
@@ -1583,6 +1764,21 @@ input UpdateCategoryInput {
   isActive: Boolean!
   image: Upload
 }
+
+input CreateBrandInput {
+  name: String!
+  description: String
+  image: Upload
+  isActive: Boolean!
+}
+
+input UpdateBrandInput {
+  name: String!
+  description: String
+  image: Upload
+  isActive: Boolean!
+}
+
 
 input ProductVariantInput {
   id: ID
@@ -1667,6 +1863,8 @@ input ProductSortInput {
   searchProducts(query: String!, pagination: PaginationInput): ProductConnection! @auth
   categories(pagination: PaginationInput): CategoryConnection! @auth
   category(id: ID!): Category @auth
+  brands(pagination: PaginationInput): BrandConnection! @auth
+  brand(id: ID!): Brand @auth
 }
 `, BuiltIn: false},
 	{Name: "../schema.graphql", Input: `scalar Upload
@@ -1837,6 +2035,46 @@ func (ec *executionContext) childFields_AuthPayload(ctx context.Context, field g
 		return ec.fieldContext_AuthPayload_expiresIn(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type AuthPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_Brand(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_Brand_id(ctx, field)
+	case "name":
+		return ec.fieldContext_Brand_name(ctx, field)
+	case "description":
+		return ec.fieldContext_Brand_description(ctx, field)
+	case "imageUrl":
+		return ec.fieldContext_Brand_imageUrl(ctx, field)
+	case "isActive":
+		return ec.fieldContext_Brand_isActive(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_Brand_createdAt(ctx, field)
+	case "updatedAt":
+		return ec.fieldContext_Brand_updatedAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Brand", field.Name)
+}
+
+func (ec *executionContext) childFields_BrandConnection(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "edges":
+		return ec.fieldContext_BrandConnection_edges(ctx, field)
+	case "pageInfo":
+		return ec.fieldContext_BrandConnection_pageInfo(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type BrandConnection", field.Name)
+}
+
+func (ec *executionContext) childFields_BrandEdge(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "node":
+		return ec.fieldContext_BrandEdge_node(ctx, field)
+	case "cursor":
+		return ec.fieldContext_BrandEdge_cursor(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type BrandEdge", field.Name)
 }
 
 func (ec *executionContext) childFields_Category(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -2291,6 +2529,20 @@ func (ec *executionContext) field_Mutation_createAddress_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createBrand_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.CreateBrandInput, error) {
+			return ec.unmarshalNCreateBrandInput2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐCreateBrandInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createCategory_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2334,6 +2586,20 @@ func (ec *executionContext) field_Mutation_createVariant_args(ctx context.Contex
 }
 
 func (ec *executionContext) field_Mutation_deleteAddress_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteBrand_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
@@ -2517,6 +2783,28 @@ func (ec *executionContext) field_Mutation_updateAddress_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_updateBrand_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.UpdateBrandInput, error) {
+			return ec.unmarshalNUpdateBrandInput2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐUpdateBrandInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_updateCategory_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2652,6 +2940,34 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		return nil, err
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_brand_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_brands_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "pagination",
+		func(ctx context.Context, v any) (*model.PaginationInput, error) {
+			return ec.unmarshalOPaginationInput2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐPaginationInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["pagination"] = arg0
 	return args, nil
 }
 
@@ -3191,6 +3507,286 @@ func (ec *executionContext) _AuthPayload_expiresIn(ctx context.Context, field gr
 }
 func (ec *executionContext) fieldContext_AuthPayload_expiresIn(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("AuthPayload", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _Brand_id(ctx context.Context, field graphql.CollectedField, obj *model.Brand) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Brand_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Brand_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Brand", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _Brand_name(ctx context.Context, field graphql.CollectedField, obj *model.Brand) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Brand_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Brand_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Brand", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Brand_description(ctx context.Context, field graphql.CollectedField, obj *model.Brand) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Brand_description(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Description, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Brand_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Brand", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Brand_imageUrl(ctx context.Context, field graphql.CollectedField, obj *model.Brand) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Brand_imageUrl(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ImageURL, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Brand_imageUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Brand", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Brand_isActive(ctx context.Context, field graphql.CollectedField, obj *model.Brand) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Brand_isActive(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsActive, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Brand_isActive(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Brand", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _Brand_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Brand) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Brand_createdAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Brand_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Brand", field, false, false, errors.New("field of type Time does not have child fields"))
+}
+
+func (ec *executionContext) _Brand_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.Brand) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Brand_updatedAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v time.Time) graphql.Marshaler {
+			return ec.marshalNTime2timeᚐTime(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Brand_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Brand", field, false, false, errors.New("field of type Time does not have child fields"))
+}
+
+func (ec *executionContext) _BrandConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.BrandConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BrandConnection_edges(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Edges, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.BrandEdge) graphql.Marshaler {
+			return ec.marshalNBrandEdge2ᚕᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐBrandEdgeᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BrandConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BrandConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_BrandEdge(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BrandConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.BrandConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BrandConnection_pageInfo(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PageInfo, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.PageInfo) graphql.Marshaler {
+			return ec.marshalNPageInfo2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐPageInfo(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BrandConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BrandConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_PageInfo(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BrandEdge_node(ctx context.Context, field graphql.CollectedField, obj *model.BrandEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BrandEdge_node(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Node, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Brand) graphql.Marshaler {
+			return ec.marshalNBrand2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐBrand(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BrandEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BrandEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Brand(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BrandEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model.BrandEdge) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BrandEdge_cursor(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Cursor, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BrandEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BrandEdge", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Category_id(ctx context.Context, field graphql.CollectedField, obj *model.Category) (ret graphql.Marshaler) {
@@ -4881,6 +5477,198 @@ func (ec *executionContext) fieldContext_Mutation_deleteCategory(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createBrand(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_createBrand(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateBrand(ctx, fc.Args["input"].(model.CreateBrandInput))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Auth == nil {
+					var zeroVal *model.Brand
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.Directives.Auth(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Admin == nil {
+					var zeroVal *model.Brand
+					return zeroVal, errors.New("directive admin is not implemented")
+				}
+				return ec.Directives.Admin(ctx, nil, directive1)
+			}
+
+			next = directive2
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Brand) graphql.Marshaler {
+			return ec.marshalNBrand2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐBrand(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_createBrand(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Brand(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createBrand_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateBrand(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_updateBrand(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().UpdateBrand(ctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateBrandInput))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Auth == nil {
+					var zeroVal *model.Brand
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.Directives.Auth(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Admin == nil {
+					var zeroVal *model.Brand
+					return zeroVal, errors.New("directive admin is not implemented")
+				}
+				return ec.Directives.Admin(ctx, nil, directive1)
+			}
+
+			next = directive2
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Brand) graphql.Marshaler {
+			return ec.marshalNBrand2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐBrand(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_updateBrand(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Brand(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateBrand_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteBrand(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_deleteBrand(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().DeleteBrand(ctx, fc.Args["id"].(string))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Auth == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.Directives.Auth(ctx, nil, directive0)
+			}
+			directive2 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Admin == nil {
+					var zeroVal bool
+					return zeroVal, errors.New("directive admin is not implemented")
+				}
+				return ec.Directives.Admin(ctx, nil, directive1)
+			}
+
+			next = directive2
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_deleteBrand(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteBrand_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createVariant(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -6393,6 +7181,120 @@ func (ec *executionContext) fieldContext_Query_category(ctx context.Context, fie
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_category_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_brands(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_brands(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Brands(ctx, fc.Args["pagination"].(*model.PaginationInput))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Auth == nil {
+					var zeroVal *model.BrandConnection
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.Directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v *model.BrandConnection) graphql.Marshaler {
+			return ec.marshalNBrandConnection2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐBrandConnection(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_brands(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_BrandConnection(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_brands_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_brand(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_brand(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Brand(ctx, fc.Args["id"].(string))
+		},
+		func(ctx context.Context, next graphql.Resolver) graphql.Resolver {
+			directive0 := next
+
+			directive1 := func(ctx context.Context) (any, error) {
+				if ec.Directives.Auth == nil {
+					var zeroVal *model.Brand
+					return zeroVal, errors.New("directive auth is not implemented")
+				}
+				return ec.Directives.Auth(ctx, nil, directive0)
+			}
+
+			next = directive1
+			return next
+		},
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Brand) graphql.Marshaler {
+			return ec.marshalOBrand2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐBrand(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Query_brand(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Brand(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_brand_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -8589,6 +9491,57 @@ func (ec *executionContext) unmarshalInputAddressInput(ctx context.Context, obj 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateBrandInput(ctx context.Context, obj any) (model.CreateBrandInput, error) {
+	var it model.CreateBrandInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "description", "image", "isActive"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
+		case "image":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
+			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Image = data
+		case "isActive":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isActive"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsActive = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateCategoryInput(ctx context.Context, obj any) (model.CreateCategoryInput, error) {
 	var it model.CreateCategoryInput
 	if obj == nil {
@@ -9232,6 +10185,57 @@ func (ec *executionContext) unmarshalInputSigninInput(ctx context.Context, obj a
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateBrandInput(ctx context.Context, obj any) (model.UpdateBrandInput, error) {
+	var it model.UpdateBrandInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "description", "image", "isActive"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
+		case "image":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("image"))
+			data, err := ec.unmarshalOUpload2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Image = data
+		case "isActive":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isActive"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsActive = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateCategoryInput(ctx context.Context, obj any) (model.UpdateCategoryInput, error) {
 	var it model.UpdateCategoryInput
 	if obj == nil {
@@ -9628,6 +10632,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Category(ctx, sel, obj)
+	case model.Brand:
+		return ec._Brand(ctx, sel, &obj)
+	case *model.Brand:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Brand(ctx, sel, obj)
 	case model.Address:
 		return ec._Address(ctx, sel, &obj)
 	case *model.Address:
@@ -9752,6 +10763,157 @@ func (ec *executionContext) _AuthPayload(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._AuthPayload_user(ctx, field, obj)
 		case "expiresIn":
 			out.Values[i] = ec._AuthPayload_expiresIn(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var brandImplementors = []string{"Brand", "Node"}
+
+func (ec *executionContext) _Brand(ctx context.Context, sel ast.SelectionSet, obj *model.Brand) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, brandImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Brand")
+		case "id":
+			out.Values[i] = ec._Brand_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Brand_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "description":
+			out.Values[i] = ec._Brand_description(ctx, field, obj)
+		case "imageUrl":
+			out.Values[i] = ec._Brand_imageUrl(ctx, field, obj)
+		case "isActive":
+			out.Values[i] = ec._Brand_isActive(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._Brand_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._Brand_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var brandConnectionImplementors = []string{"BrandConnection"}
+
+func (ec *executionContext) _BrandConnection(ctx context.Context, sel ast.SelectionSet, obj *model.BrandConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, brandConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BrandConnection")
+		case "edges":
+			out.Values[i] = ec._BrandConnection_edges(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pageInfo":
+			out.Values[i] = ec._BrandConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferred), math.MaxInt32)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var brandEdgeImplementors = []string{"BrandEdge"}
+
+func (ec *executionContext) _BrandEdge(ctx context.Context, sel ast.SelectionSet, obj *model.BrandEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, brandEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BrandEdge")
+		case "node":
+			out.Values[i] = ec._BrandEdge_node(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cursor":
+			out.Values[i] = ec._BrandEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10341,6 +11503,27 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "createBrand":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createBrand(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateBrand":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateBrand(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteBrand":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteBrand(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createVariant":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createVariant(ctx, field)
@@ -10898,6 +12081,47 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_category(ctx, field)
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "brands":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_brands(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "brand":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_brand(ctx, field)
 				return res
 			}
 
@@ -11811,6 +13035,60 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) marshalNBrand2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐBrand(ctx context.Context, sel ast.SelectionSet, v model.Brand) graphql.Marshaler {
+	return ec._Brand(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBrand2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐBrand(ctx context.Context, sel ast.SelectionSet, v *model.Brand) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Brand(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNBrandConnection2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐBrandConnection(ctx context.Context, sel ast.SelectionSet, v model.BrandConnection) graphql.Marshaler {
+	return ec._BrandConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNBrandConnection2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐBrandConnection(ctx context.Context, sel ast.SelectionSet, v *model.BrandConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BrandConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNBrandEdge2ᚕᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐBrandEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.BrandEdge) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNBrandEdge2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐBrandEdge(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNBrandEdge2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐBrandEdge(ctx context.Context, sel ast.SelectionSet, v *model.BrandEdge) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BrandEdge(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNCategory2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v model.Category) graphql.Marshaler {
 	return ec._Category(ctx, sel, &v)
 }
@@ -11879,6 +13157,11 @@ func (ec *executionContext) marshalNCategoryEdge2ᚖgithubᚗcomᚋmanojnegiᚋe
 		return graphql.Null
 	}
 	return ec._CategoryEdge(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNCreateBrandInput2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐCreateBrandInput(ctx context.Context, v any) (model.CreateBrandInput, error) {
+	res, err := ec.unmarshalInputCreateBrandInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNCreateCategoryInput2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐCreateCategoryInput(ctx context.Context, v any) (model.CreateCategoryInput, error) {
@@ -12245,6 +13528,11 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
+func (ec *executionContext) unmarshalNUpdateBrandInput2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐUpdateBrandInput(ctx context.Context, v any) (model.UpdateBrandInput, error) {
+	res, err := ec.unmarshalInputUpdateBrandInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNUpdateCategoryInput2githubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐUpdateCategoryInput(ctx context.Context, v any) (model.UpdateCategoryInput, error) {
 	res, err := ec.unmarshalInputUpdateCategoryInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -12592,6 +13880,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	_ = ctx
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOBrand2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐBrand(ctx context.Context, sel ast.SelectionSet, v *model.Brand) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Brand(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOCategory2ᚖgithubᚗcomᚋmanojnegiᚋecommerceᚋapiᚑgatewayᚋinternalᚋgraphqlᚋmodelᚐCategory(ctx context.Context, sel ast.SelectionSet, v *model.Category) graphql.Marshaler {

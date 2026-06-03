@@ -15,6 +15,7 @@ type ProductClient struct {
 	Category  productpb.CategoryServiceClient
 	Product   productpb.ProductServiceClient
 	Inventory productpb.InventoryServiceClient
+	Brand     productpb.BrandServiceClient
 }
 
 func NewProductClient(addr string) (*ProductClient, error) {
@@ -34,6 +35,7 @@ func NewProductClient(addr string) (*ProductClient, error) {
 		Product:   productpb.NewProductServiceClient(conn),
 		Category:  productpb.NewCategoryServiceClient(conn),
 		Inventory: productpb.NewInventoryServiceClient(conn),
+		Brand:     productpb.NewBrandServiceClient(conn),
 	}, nil
 }
 

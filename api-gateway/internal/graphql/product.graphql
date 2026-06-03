@@ -78,6 +78,27 @@ type CategoryEdge {
   cursor: String!
 }
 
+type Brand implements Node {
+  id: ID!
+  name: String!
+  description: String
+  imageUrl: String
+  isActive: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type BrandConnection {
+  edges: [BrandEdge!]!
+  pageInfo: PageInfo!
+}
+
+type BrandEdge {
+  node: Brand!
+  cursor: String!
+}
+
+
 type ProductConnection {
   edges: [ProductEdge!]!
   pageInfo: PageInfo!
@@ -136,6 +157,21 @@ input UpdateCategoryInput {
   isActive: Boolean!
   image: Upload
 }
+
+input CreateBrandInput {
+  name: String!
+  description: String
+  image: Upload
+  isActive: Boolean!
+}
+
+input UpdateBrandInput {
+  name: String!
+  description: String
+  image: Upload
+  isActive: Boolean!
+}
+
 
 input ProductVariantInput {
   id: ID

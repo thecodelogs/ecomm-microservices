@@ -17,4 +17,6 @@ type Query {
   searchProducts(query: String!, pagination: PaginationInput): ProductConnection! @auth
   categories(pagination: PaginationInput): CategoryConnection! @auth
   category(id: ID!): Category @auth
+  brands(pagination: PaginationInput): BrandConnection! @auth
+  brand(id: ID!): Brand @auth
 }

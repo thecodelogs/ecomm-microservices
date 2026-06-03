@@ -43,17 +43,20 @@ func main() {
 	invRepo := repository.NewInventoryRepo(pool)
 	revRepo := repository.NewReviewRepo(pool)
 	imgRepo := repository.NewVariantImageRepo(pool)
+	brandRepo := repository.NewBrandRepo(pool)
 
 	// Service layer
 	prodSvc := service.NewProductService(prodRepo, varRepo, catRepo, invRepo, imgRepo)
 	invSvc := service.NewInventoryService(invRepo)
 	revSvc := service.NewReviewService(revRepo, prodRepo)
 	catSvc := service.NewCategoryService(prodRepo, varRepo, catRepo)
+	brandSvc := service.NewBrandService(brandRepo)
 
 	// Handler layer
 	prodHandler := handler.NewProductHandler(prodSvc, invSvc, revSvc, cfg)
 	catHandler := handler.NewCategoryHandler(catSvc, cfg)
 	invHandler := handler.NewInventoryHandler(invSvc, cfg)
+	brandHandler := handler.NewBrandHandler(brandSvc, cfg)
 
 	// gRPC server
 	lis, err := net.Listen("tcp", ":"+cfg.Port)
@@ -67,6 +70,7 @@ func main() {
 	productpb.RegisterProductServiceServer(srv, prodHandler)
 	productpb.RegisterCategoryServiceServer(srv, catHandler)
 	productpb.RegisterInventoryServiceServer(srv, invHandler)
+	productpb.RegisterBrandServiceServer(srv, brandHandler)
 
 	reflection.Register(srv)
 

@@ -318,6 +318,50 @@ func (r *queryResolver) Category(ctx context.Context, id string) (*model.Categor
 	return mapCategoryFromProto(resp.Category, baseURL), nil
 }
 
+// Brands is the resolver for the brands field.
+func (r *queryResolver) Brands(ctx context.Context, pagination *model.PaginationInput) (*model.BrandConnection, error) {
+	page := int32(1)
+	pageSize := int32(20)
+	if pagination != nil && pagination.First != nil {
+		pageSize = int32(*pagination.First)
+	}
+
+	resp, err := r.ProductClient.Brand.ListBrands(ctx, &productpb.ListBrandsRequest{
+		Page:     page,
+		PageSize: pageSize,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	baseURL := r.S3Storage.GetBaseURL()
+	edges := make([]*model.BrandEdge, len(resp.Brands))
+	for i, b := range resp.Brands {
+		edges[i] = &model.BrandEdge{
+			Node:   mapBrandFromProto(b, baseURL),
+			Cursor: encodeCursor(b.Id),
+		}
+	}
+
+	return &model.BrandConnection{
+		Edges: edges,
+		PageInfo: &model.PageInfo{
+			HasNextPage: false,
+			TotalCount:  int(resp.Total),
+		},
+	}, nil
+}
+
+// Brand is the resolver for the brand field.
+func (r *queryResolver) Brand(ctx context.Context, id string) (*model.Brand, error) {
+	resp, err := r.ProductClient.Brand.GetBrand(ctx, &productpb.GetBrandRequest{Id: id})
+	if err != nil {
+		return nil, err
+	}
+	baseURL := r.S3Storage.GetBaseURL()
+	return mapBrandFromProto(resp.Brand, baseURL), nil
+}
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 

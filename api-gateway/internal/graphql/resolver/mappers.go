@@ -188,6 +188,37 @@ func mapCategoryFromProto(c *productpb.Category, baseURL string) *model.Category
 	}
 }
 
+func mapBrandFromProto(b *productpb.Brand, baseURL string) *model.Brand {
+	if b == nil {
+		return nil
+	}
+
+	imageUrl := b.ImageUrl
+	if imageUrl != "" && !strings.HasPrefix(imageUrl, "http") {
+		imageUrl = baseURL + imageUrl
+	}
+
+	var descPtr *string
+	if b.Description != "" {
+		descPtr = &b.Description
+	}
+
+	var imgPtr *string
+	if imageUrl != "" {
+		imgPtr = &imageUrl
+	}
+
+	return &model.Brand{
+		ID:          b.Id,
+		Name:        b.Name,
+		Description: descPtr,
+		ImageURL:    imgPtr,
+		IsActive:    b.IsActive,
+		CreatedAt:   time.Unix(b.CreatedAt, 0),
+		UpdatedAt:   time.Unix(b.UpdatedAt, 0),
+	}
+}
+
 func mapRoleFromProto(r string) model.Role {
 	switch r {
 	case "admin":
