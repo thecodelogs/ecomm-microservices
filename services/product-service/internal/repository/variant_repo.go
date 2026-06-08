@@ -19,9 +19,10 @@ func NewVariantRepo(db *pgxpool.Pool) *VariantRepo {
 }
 
 func (r *VariantRepo) Create(ctx context.Context, v *models.Variant) error {
+	db := getDb(ctx, r.db)
 	query := `INSERT INTO variants (id, product_id, sku, name, options, price, compare_at_price, cost_price, weight_grams, image_url, is_active)
 	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
-	_, err := r.db.Exec(ctx, query, v.ID, v.ProductID, v.SKU, v.Name, v.Options, v.Price, v.CompareAtPrice, v.CostPrice, v.WeightGrams, v.ImageURL, v.IsActive)
+	_, err := db.Exec(ctx, query, v.ID, v.ProductID, v.SKU, v.Name, v.Options, v.Price, v.CompareAtPrice, v.CostPrice, v.WeightGrams, v.ImageURL, v.IsActive)
 	return err
 }
 
@@ -73,6 +74,7 @@ func (r *VariantRepo) GetByIDs(ctx context.Context, ids []uuid.UUID) ([]models.V
 }
 
 func (r *VariantRepo) Update(ctx context.Context, v *models.Variant) error {
+	db := getDb(ctx, r.db)
 	query := `UPDATE variants SET 
 				sku = $1, 
 				name = $2, 
@@ -85,19 +87,21 @@ func (r *VariantRepo) Update(ctx context.Context, v *models.Variant) error {
 				is_active = $9, 
 				updated_at = NOW() 
 			  WHERE id = $10`
-	_, err := r.db.Exec(ctx, query, v.SKU, v.Name, v.Options, v.Price, v.CompareAtPrice, v.CostPrice, v.WeightGrams, v.ImageURL, v.IsActive, v.ID)
+	_, err := db.Exec(ctx, query, v.SKU, v.Name, v.Options, v.Price, v.CompareAtPrice, v.CostPrice, v.WeightGrams, v.ImageURL, v.IsActive, v.ID)
 	return err
 }
 
 func (r *VariantRepo) DeleteByProductID(ctx context.Context, productID uuid.UUID) error {
+	db := getDb(ctx, r.db)
 	query := `UPDATE variants SET is_active = false, updated_at = NOW() WHERE product_id = $1`
-	_, err := r.db.Exec(ctx, query, productID)
+	_, err := db.Exec(ctx, query, productID)
 	return err
 }
 
 func (r *VariantRepo) Delete(ctx context.Context, id uuid.UUID) error {
+	db := getDb(ctx, r.db)
 	query := `UPDATE variants SET is_active = false, updated_at = NOW() WHERE id = $1`
-	_, err := r.db.Exec(ctx, query, id)
+	_, err := db.Exec(ctx, query, id)
 	return err
 }
 

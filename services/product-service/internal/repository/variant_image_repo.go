@@ -18,29 +18,32 @@ func NewVariantImageRepo(db *pgxpool.Pool) *VariantImageRepo {
 }
 
 func (r *VariantImageRepo) Create(ctx context.Context, img *models.VariantImage) error {
+	db := getDb(ctx, r.db)
 	query := `INSERT INTO variant_images (id, variant_id, url, alt_text, sort_order)
 	          VALUES ($1, $2, $3, $4, $5)`
-	_, err := r.db.Exec(ctx, query, img.ID, img.VariantID, img.URL, img.AltText, img.SortOrder)
+	_, err := db.Exec(ctx, query, img.ID, img.VariantID, img.URL, img.AltText, img.SortOrder)
 	return err
 }
 
 func (r *VariantImageRepo) Delete(ctx context.Context, id uuid.UUID) error {
+	db := getDb(ctx, r.db)
 	query := `DELETE FROM variant_images WHERE id = $1`
-	_, err := r.db.Exec(ctx, query, id)
+	_, err := db.Exec(ctx, query, id)
 	return err
 }
 
 func (r *VariantImageRepo) DeleteByVariantID(ctx context.Context, variantID uuid.UUID) error {
+	db := getDb(ctx, r.db)
 	query := `DELETE FROM variant_images WHERE variant_id = $1`
-	_, err := r.db.Exec(ctx, query, variantID)
+	_, err := db.Exec(ctx, query, variantID)
 	return err
 }
 
-
 func (r *VariantImageRepo) GetByVariantID(ctx context.Context, variantID uuid.UUID) ([]models.VariantImage, error) {
+	db := getDb(ctx, r.db)
 	query := `SELECT id, variant_id, url, alt_text, sort_order, created_at
 	          FROM variant_images WHERE variant_id = $1 ORDER BY sort_order ASC`
-	rows, err := r.db.Query(ctx, query, variantID)
+	rows, err := db.Query(ctx, query, variantID)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +62,8 @@ func (r *VariantImageRepo) GetByVariantID(ctx context.Context, variantID uuid.UU
 }
 
 func (r *VariantImageRepo) UpdateSortOrder(ctx context.Context, id uuid.UUID, sortOrder int32) error {
+	db := getDb(ctx, r.db)
 	query := `UPDATE variant_images SET sort_order = $1 WHERE id = $2`
-	_, err := r.db.Exec(ctx, query, sortOrder, id)
+	_, err := db.Exec(ctx, query, sortOrder, id)
 	return err
 }

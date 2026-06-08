@@ -20,16 +20,18 @@ func NewInventoryRepo(db *pgxpool.Pool) *InventoryRepo {
 }
 
 func (r *InventoryRepo) Create(ctx context.Context, inv *models.Inventory) error {
+	db := getDb(ctx, r.db)
 	query := `INSERT INTO inventory (id, variant_id, quantity_on_hand, quantity_reserved, reorder_point)
 	          VALUES ($1, $2, $3, $4, $5)`
-	_, err := r.db.Exec(ctx, query, inv.ID, inv.VariantID, inv.QuantityOnHand, inv.QuantityReserved, inv.ReorderPoint)
+	_, err := db.Exec(ctx, query, inv.ID, inv.VariantID, inv.QuantityOnHand, inv.QuantityReserved, inv.ReorderPoint)
 	return err
 }
 
 func (r *InventoryRepo) GetByVariantID(ctx context.Context, variantID uuid.UUID) (*models.Inventory, error) {
+	db := getDb(ctx, r.db)
 	query := `SELECT id, variant_id, quantity_on_hand, quantity_reserved, quantity_available, reorder_point, updated_at
 	          FROM inventory WHERE variant_id = $1`
-	row := r.db.QueryRow(ctx, query, variantID)
+	row := db.QueryRow(ctx, query, variantID)
 	var i models.Inventory
 	err := row.Scan(&i.ID, &i.VariantID, &i.QuantityOnHand, &i.QuantityReserved, &i.QuantityAvailable, &i.ReorderPoint, &i.UpdatedAt)
 	if err != nil {
@@ -120,17 +122,19 @@ func (r *InventoryRepo) ReleaseStock(ctx context.Context, variantID uuid.UUID, q
 	return err
 }
 func (r *InventoryRepo) Update(ctx context.Context, inv *models.Inventory) error {
+	db := getDb(ctx, r.db)
 	query := `UPDATE inventory SET 
 				quantity_on_hand = $1, 
 				reorder_point = $2, 
 				updated_at = NOW() 
 			  WHERE variant_id = $3`
-	_, err := r.db.Exec(ctx, query, inv.QuantityOnHand, inv.ReorderPoint, inv.VariantID)
+	_, err := db.Exec(ctx, query, inv.QuantityOnHand, inv.ReorderPoint, inv.VariantID)
 	return err
 }
 
 func (r *InventoryRepo) DeleteByVariantID(ctx context.Context, variantID uuid.UUID) error {
+	db := getDb(ctx, r.db)
 	query := `DELETE FROM inventory WHERE variant_id = $1`
-	_, err := r.db.Exec(ctx, query, variantID)
+	_, err := db.Exec(ctx, query, variantID)
 	return err
 }

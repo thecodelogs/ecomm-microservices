@@ -20,39 +20,83 @@ func NewProductRepo(db *pgxpool.Pool) *ProductRepo {
 	return &ProductRepo{db: db}
 }
 
-func (r *ProductRepo) Create(ctx context.Context, p *models.Product) error {
+// RunInTx runs the given function in a transaction.
+func (r *ProductRepo) RunInTx(ctx context.Context, fn func(ctx context.Context) error) error {
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback(ctx)
 
+	ctxWithTx := WithTx(ctx, tx)
+	if err := fn(ctxWithTx); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
+func (r *ProductRepo) Create(ctx context.Context, p *models.Product) error {
+	tx := GetTx(ctx)
+	if tx != nil {
+		return r.createWithDB(ctx, tx, p)
+	}
+
+	// Local transaction
+	txLocal, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer txLocal.Rollback(ctx)
+
+	if err := r.createWithDB(ctx, txLocal, p); err != nil {
+		return err
+	}
+
+	return txLocal.Commit(ctx)
+}
+
+func (r *ProductRepo) createWithDB(ctx context.Context, db DBExecutor, p *models.Product) error {
 	query := `INSERT INTO products (id, slug, name, description, short_description, brand, brand_id, tags, attributes, status, vendor_id)
 	          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
-	_, err = tx.Exec(ctx, query, p.ID, p.Slug, p.Name, p.Description, p.ShortDescription, p.Brand, p.BrandID, p.Tags, p.Attributes, p.Status, p.VendorID)
+	_, err := db.Exec(ctx, query, p.ID, p.Slug, p.Name, p.Description, p.ShortDescription, p.Brand, p.BrandID, p.Tags, p.Attributes, p.Status, p.VendorID)
 	if err != nil {
 		return err
 	}
 
 	if len(p.CategoryIDs) > 0 {
 		for _, catID := range p.CategoryIDs {
-			_, err = tx.Exec(ctx, `INSERT INTO product_categories (product_id, category_id) VALUES ($1, $2)`, p.ID, catID)
+			_, err = db.Exec(ctx, `INSERT INTO product_categories (product_id, category_id) VALUES ($1, $2)`, p.ID, catID)
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	return tx.Commit(ctx)
+	return nil
 }
 
 func (r *ProductRepo) Update(ctx context.Context, p *models.Product) error {
-	tx, err := r.db.Begin(ctx)
+	tx := GetTx(ctx)
+	if tx != nil {
+		return r.updateWithDB(ctx, tx, p)
+	}
+
+	// Local transaction
+	txLocal, err := r.db.Begin(ctx)
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer txLocal.Rollback(ctx)
 
+	if err := r.updateWithDB(ctx, txLocal, p); err != nil {
+		return err
+	}
+
+	return txLocal.Commit(ctx)
+}
+
+func (r *ProductRepo) updateWithDB(ctx context.Context, db DBExecutor, p *models.Product) error {
 	query := `UPDATE products SET 
 				slug = $1, 
 				name = $2, 
@@ -65,26 +109,26 @@ func (r *ProductRepo) Update(ctx context.Context, p *models.Product) error {
 				status = $9, 
 				updated_at = NOW() 
 			  WHERE id = $10`
-	_, err = tx.Exec(ctx, query, p.Slug, p.Name, p.Description, p.ShortDescription, p.Brand, p.BrandID, p.Tags, p.Attributes, p.Status, p.ID)
+	_, err := db.Exec(ctx, query, p.Slug, p.Name, p.Description, p.ShortDescription, p.Brand, p.BrandID, p.Tags, p.Attributes, p.Status, p.ID)
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(ctx, `DELETE FROM product_categories WHERE product_id = $1`, p.ID)
+	_, err = db.Exec(ctx, `DELETE FROM product_categories WHERE product_id = $1`, p.ID)
 	if err != nil {
 		return err
 	}
 
 	if len(p.CategoryIDs) > 0 {
 		for _, catID := range p.CategoryIDs {
-			_, err = tx.Exec(ctx, `INSERT INTO product_categories (product_id, category_id) VALUES ($1, $2)`, p.ID, catID)
+			_, err = db.Exec(ctx, `INSERT INTO product_categories (product_id, category_id) VALUES ($1, $2)`, p.ID, catID)
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	return tx.Commit(ctx)
+	return nil
 }
 
 func (r *ProductRepo) Delete(ctx context.Context, id uuid.UUID) error {
