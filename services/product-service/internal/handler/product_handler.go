@@ -561,6 +561,7 @@ func toProtoProduct(p *models.Product, variants []models.Variant) *productpb.Pro
 		VendorId:    p.VendorID.String(),
 		AvgRating:   float64(p.AvgRating),
 		ReviewCount: int32(p.ReviewCount),
+		CreatedAt:   p.CreatedAt.Unix(),
 	}
 
 	if len(variants) > 0 {
