@@ -1,0 +1,8 @@
+.git
+.gitignore
+.env
+data/
+**/data/
+services/payment-service/target
+**/*.log
+**/bin/

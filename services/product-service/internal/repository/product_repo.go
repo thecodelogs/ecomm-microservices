@@ -122,6 +122,10 @@ func (r *ProductRepo) List(ctx context.Context, categoryID uuid.UUID, page, page
 		whereClauses = append(whereClauses, fmt.Sprintf("p.status = $%d", argID))
 		args = append(args, "active")
 		argID++
+	} else {
+		whereClauses = append(whereClauses, fmt.Sprintf("p.status != $%d", argID))
+		args = append(args, "deleted")
+		argID++
 	}
 
 	if categoryID != uuid.Nil {
@@ -206,6 +210,10 @@ func (r *ProductRepo) Search(ctx context.Context, queryStr string, page, pageSiz
 	if !isAdmin {
 		whereClauses = append(whereClauses, fmt.Sprintf("p.status = $%d", argID))
 		args = append(args, "active")
+		argID++
+	} else {
+		whereClauses = append(whereClauses, fmt.Sprintf("p.status != $%d", argID))
+		args = append(args, "deleted")
 		argID++
 	}
 
