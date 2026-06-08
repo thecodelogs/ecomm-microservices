@@ -120,16 +120,11 @@ func (s *ProductService) UpdateProduct(ctx context.Context, p *models.Product, u
 					if err := s.varRepo.Update(ctx, &variants[i]); err != nil {
 						return fmt.Errorf("update variant: %w", err)
 					}
-					// Update inventory
-					inv, err := s.invRepo.GetByVariantID(ctx, variants[i].ID)
-					if err == nil {
-						inv.QuantityOnHand = variants[i].InitialStock
-						if err := s.invRepo.Update(ctx, inv); err != nil {
-							return fmt.Errorf("update inventory: %w", err)
-						}
-					} else {
+					// Ensure inventory exists, but do NOT overwrite QuantityOnHand
+					_, err := s.invRepo.GetByVariantID(ctx, variants[i].ID)
+					if err != nil {
 						// If inventory didn't exist for some reason, create it
-						inv = &models.Inventory{
+						inv := &models.Inventory{
 							ID:             uuid.New(),
 							VariantID:      variants[i].ID,
 							QuantityOnHand: variants[i].InitialStock,
@@ -313,16 +308,6 @@ func (s *ProductService) UpdateVariant(ctx context.Context, v *models.Variant) e
 		if err := s.varRepo.Update(ctx, v); err != nil {
 			return fmt.Errorf("update variant: %w", err)
 		}
-
-		// Update inventory
-		inv, err := s.invRepo.GetByVariantID(ctx, v.ID)
-		if err == nil {
-			inv.QuantityOnHand = v.InitialStock
-			if err := s.invRepo.Update(ctx, inv); err != nil {
-				return fmt.Errorf("update inventory: %w", err)
-			}
-		}
-
 		return nil
 	})
 }
