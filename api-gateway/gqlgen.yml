@@ -1,0 +1,36 @@
+schema:
+  - internal/graphql/*.graphql
+exec:
+  filename: internal/graphql/generated/generated.go
+  package: generated
+model:
+  filename: internal/graphql/model/models_gen.go
+  package: model
+resolver:
+  layout: follow-schema
+  dir: internal/graphql/resolver
+  package: resolver
+  filename_template: "{name}.resolvers.go"
+  
+autobind:
+  - "github.com/manojnegi/ecommerce/api-gateway/internal/graphql/model"
+
+models:
+  ID:
+    model:
+      - github.com/99designs/gqlgen/graphql.ID
+      - github.com/99designs/gqlgen/graphql.Int
+      - github.com/99designs/gqlgen/graphql.Int64
+      - github.com/99designs/gqlgen/graphql.Int32
+  Upload:
+    model: github.com/99designs/gqlgen/graphql.Upload
+  Time:
+    model: github.com/99designs/gqlgen/graphql.Time
+  Variant:
+    fields:
+      inventory:
+        resolver: true
+
+directives:
+  auth:
+  admin:

@@ -38,6 +38,25 @@ func (h *AddressHandler) CreateAddress(ctx context.Context, req *userpb.CreateAd
 	return toProtoAddress(addr), nil
 }
 
+func (h *AddressHandler) UpdateAddress(ctx context.Context, req *userpb.UpdateAddressRequest) (*userpb.Address, error) {
+	addressID, err := uuid.Parse(req.AddressId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid address id")
+	}
+	userID, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid user id")
+	}
+
+	addr, err := h.addrSvc.UpdateAddress(ctx, addressID, userID, req.Label, req.FullName, req.Phone,
+		req.Line1, req.Line2, req.City, req.State, req.PostalCode, req.CountryCode, req.IsDefault)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return toProtoAddress(addr), nil
+}
+
 func (h *AddressHandler) ListAddresses(ctx context.Context, req *userpb.ListAddressesRequest) (*userpb.AddressList, error) {
 	userID, err := uuid.Parse(req.UserId)
 	if err != nil {

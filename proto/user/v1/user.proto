@@ -1,87 +1,202 @@
 syntax = "proto3";
 
-package user;
+package userpb;
 
 option go_package = "github.com/manojnegi/ecomm-microservices/gen/go/user/v1;userpb";
 
-service UserService {
-  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
-  rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
-  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {}
-  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {}
-  rpc AuthenticateUser(LoginRequest) returns (LoginResponse) {}
+service AuthService {
+    rpc Register(RegisterRequest) returns (AuthResponse);
+    rpc Login(LoginRequest) returns (AuthResponse);
+    rpc AdminLogin(AdminLoginRequest) returns (AuthResponse);
+    rpc RefreshToken(RefreshTokenRequest) returns (TokenResponse);
+    rpc Logout(LogoutRequest) returns (Empty);
 }
+
+service UserService {
+    rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+    rpc GetProfile(GetProfileRequest) returns (User);
+    rpc UpdateProfile(UpdateProfileRequest) returns (User);
+    rpc ListUsers(ListUsersRequest) returns (UserList);
+    rpc GetUser(GetUserRequest) returns (User);
+    rpc UpdateUserStatus(UpdateUserStatusRequest) returns (User);
+    rpc DeleteUser(DeleteUserRequest) returns (Empty);
+}
+
+service AddressService {
+    rpc CreateAddress(CreateAddressRequest) returns (Address);
+    rpc UpdateAddress(UpdateAddressRequest) returns (Address);
+    rpc ListAddresses(ListAddressesRequest) returns (AddressList);
+    rpc GetAddress(GetAddressRequest) returns (Address);
+    rpc SetDefaultAddress(SetDefaultAddressRequest) returns (Empty);
+    rpc DeleteAddress(DeleteAddressRequest) returns (Empty);
+}
+
+// ── Messages ──
+
+message Empty {}
 
 message User {
-  string id = 1;
-  string name = 2;
-  string email = 3;
-  Role role = 4;
-  string phone = 5;
-  string avatar_url = 6;
-  bool email_verified = 7;
-  bool phone_verified = 8;
-  bool is_active = 9;
-  string last_login_at = 10;
-  string created_at = 11;
-  string updated_at = 12;
+    string id = 1;
+    string email = 2;
+    string first_name = 3;
+    string last_name = 4;
+    string phone = 5;
+    string avatar_url = 6;
+    string status = 7;
+    bool is_email_verified = 8;
+    string role = 9;
+    int64 created_at = 10;
 }
 
-message Role {
-  int32 id = 1;
-  string name = 2;
-  string description = 3;
-  bool is_default = 4;
-  string created_at = 5;
-  string updated_at = 6;
+message AdminLoginRequest{
+    string email = 1;
+    string password = 2;
 }
 
-message LoginRequest {
-  string email = 1;
-  string password = 2;
+message ListUsersRequest {
+    int32 page = 1;
+    int32 page_size = 2;
+    string status = 3;
+    string search = 4;
 }
 
-message LoginResponse {
-  string access_token = 1;
-  string refresh_token = 2;
-  User user = 3;
-}
-
-message CreateUserRequest {
-  string fname = 1;
-  string lname = 2;
-  string email = 3;
-  string password = 4;
-  int32 role_id = 5;
-  string phone = 6;
-}
-
-message CreateUserResponse {
-  User user = 1;
+message UserList {
+    repeated User users = 1;
+    int32 total = 2;
+    int32 page = 3;
 }
 
 message GetUserRequest {
-  string id = 1;
+    string user_id = 1;
 }
 
-message GetUserResponse {
-  User user = 1;
+message Address {
+    string id = 1;
+    string user_id = 2;
+    string label = 3;
+    string full_name = 4;
+    string phone = 5;
+    string line1 = 6;
+    string line2 = 7;
+    string city = 8;
+    string state = 9;
+    string postal_code = 10;
+    string country_code = 11;
+    bool is_default = 12;
+    int64 created_at = 13;
 }
 
-message UpdateUserRequest {
-  string id = 1;
-  string name = 2;
-  string email = 3;
+message AddressList {
+    repeated Address addresses = 1;
 }
 
-message UpdateUserResponse {
-  User user = 1;
+// Auth messages
+message RegisterRequest {
+    string email = 1;
+    string password = 2;
+    string first_name = 3;
+    string last_name = 4;
+}
+
+message LoginRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message AuthResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+    int64 expires_at = 3;
+    User user = 4;
+}
+
+message TokenResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+    int64 expires_at = 3;
+}
+
+message RefreshTokenRequest {
+    string refresh_token = 1;
+}
+
+message LogoutRequest {
+    string refresh_token = 1;
+}
+
+message ValidateTokenRequest {
+    string token = 1;
+}
+
+message ValidateTokenResponse {
+    bool valid = 1;
+    string user_id = 2;
+    string role = 3;
+}
+
+message GetProfileRequest {
+    string user_id = 1;
+}
+
+message UpdateProfileRequest {
+    string user_id = 1;
+    string first_name = 2;
+    string last_name = 3;
+    string phone = 4;
+}
+
+// Address messages
+message CreateAddressRequest {
+    string user_id = 1;
+    string label = 2;
+    string full_name = 3;
+    string phone = 4;
+    string line1 = 5;
+    string line2 = 6;
+    string city = 7;
+    string state = 8;
+    string postal_code = 9;
+    string country_code = 10;
+    bool is_default = 11;
+}
+
+message UpdateAddressRequest {
+    string address_id = 1;
+    string user_id = 2;
+    string label = 3;
+    string full_name = 4;
+    string phone = 5;
+    string line1 = 6;
+    string line2 = 7;
+    string city = 8;
+    string state = 9;
+    string postal_code = 10;
+    string country_code = 11;
+    bool is_default = 12;
+}
+
+message ListAddressesRequest {
+    string user_id = 1;
+}
+
+message GetAddressRequest {
+    string address_id = 1;
+}
+
+message SetDefaultAddressRequest {
+    string user_id = 1;
+    string address_id = 2;
+}
+
+message DeleteAddressRequest {
+    string address_id = 1;
+}
+
+message UpdateUserStatusRequest {
+    string user_id = 1;
+    string status = 2;
 }
 
 message DeleteUserRequest {
-  string id = 1;
-}
-
-message DeleteUserResponse {
-  bool success = 1;
+    string user_id = 1;
 }

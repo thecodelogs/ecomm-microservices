@@ -1,0 +1,83 @@
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum Role {
+  customer
+  admin
+}
+
+type User implements Node {
+  id: ID!
+  email: String!
+  firstName: String!
+  lastName: String!
+  username: String!
+  phone: String
+  role: Role!
+  status: UserStatus!
+  addresses: [Address!]!
+  defaultAddress: Address
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type Address implements Node {
+  id: ID!
+  userId: ID!
+  label: String!
+  street: String!
+  city: String!
+  state: String!
+  zipCode: String!
+  country: String!
+  isDefault: Boolean!
+}
+
+type AuthPayload {
+  accessToken: String!
+  refreshToken: String!
+  user: User
+  expiresIn: Int
+}
+
+type UserConnection {
+  edges: [UserEdge!]!
+  pageInfo: PageInfo!
+}
+
+type UserEdge {
+  node: User!
+  cursor: String!
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+  firstName: String!
+  lastName: String!
+  phone: String
+}
+
+input SigninInput {
+  email: String!
+  password: String!
+}
+
+input UpdateProfileInput {
+  firstName: String
+  lastName: String
+  phone: String
+}
+
+input AddressInput {
+  label: String!
+  street: String!
+  city: String!
+  state: String!
+  zipCode: String!
+  country: String!
+  isDefault: Boolean
+}

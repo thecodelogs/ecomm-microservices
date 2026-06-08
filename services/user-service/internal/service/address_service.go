@@ -46,6 +46,39 @@ func (s *AddressService) CreateAddress(ctx context.Context, userID uuid.UUID, la
 	return addr, nil
 }
 
+func (s *AddressService) UpdateAddress(ctx context.Context, addressID, userID uuid.UUID, label, fullName, phone, line1, line2, city, state, postalCode, countryCode string, isDefault bool) (*models.Address, error) {
+	addr, err := s.addrRepo.GetByID(ctx, addressID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Ensure the user owns this address
+	if addr.UserID != userID {
+		return nil, sql.ErrNoRows // or a custom permission denied error
+	}
+
+	addr.Label = label
+	addr.FullName = fullName
+	addr.Phone = phone
+	addr.Line1 = line1
+	addr.Line2 = sql.NullString{String: line2, Valid: line2 != ""}
+	addr.City = city
+	addr.State = state
+	addr.PostalCode = postalCode
+	addr.CountryCode = countryCode
+	addr.IsDefault = isDefault
+
+	if err := s.addrRepo.Update(ctx, addr); err != nil {
+		return nil, err
+	}
+
+	if isDefault {
+		_ = s.addrRepo.SetDefault(ctx, userID, addr.ID)
+	}
+
+	return addr, nil
+}
+
 func (s *AddressService) ListAddresses(ctx context.Context, userID uuid.UUID) ([]models.Address, error) {
 	return s.addrRepo.ListByUserID(ctx, userID)
 }

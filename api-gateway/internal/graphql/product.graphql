@@ -1,0 +1,238 @@
+type Product implements Node {
+  id: ID!
+  name: String!
+  description: String!
+  categories: [Category!]!
+  brand: String
+  brandId: ID
+  variants: [Variant!]!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type Variant implements Node {
+  id: ID!
+  productId: ID!
+  sku: String!
+  name: String!
+  options: String
+  price: Float!
+  compareAtPrice: Float
+  costPrice: Float
+  weightGrams: Int!
+  imageUrl: String
+  isActive: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+  inventory: Inventory!
+  images: [VariantImage!]!
+}
+
+type VariantImage implements Node {
+  id: ID!
+  variantId: ID!
+  url: String!
+  altText: String
+  sortOrder: Int!
+  createdAt: Time!
+}
+
+type Inventory {
+  variantId: ID!
+  quantityOnHand: Int!
+  quantityReserved: Int!
+  quantityAvailable: Int!
+  reorderPoint: Int!
+}
+
+type InventoryConnection {
+  edges: [InventoryEdge!]!
+  pageInfo: PageInfo!
+}
+
+type InventoryEdge {
+  node: Inventory!
+  cursor: String!
+}
+
+type Category implements Node {
+  id: ID!
+  name: String!
+  slug: String!
+  description: String
+  imageUrl: String
+  sortOrder: Int!
+  isActive: Boolean!
+  parentId: ID
+  children: [Category!]!
+  products: [Product!]!
+}
+
+type CategoryConnection {
+  edges: [CategoryEdge!]!
+  pageInfo: PageInfo!
+}
+
+type CategoryEdge {
+  node: Category!
+  cursor: String!
+}
+
+type Brand implements Node {
+  id: ID!
+  name: String!
+  description: String
+  imageUrl: String
+  isActive: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type BrandConnection {
+  edges: [BrandEdge!]!
+  pageInfo: PageInfo!
+}
+
+type BrandEdge {
+  node: Brand!
+  cursor: String!
+}
+
+
+type ProductConnection {
+  edges: [ProductEdge!]!
+  pageInfo: PageInfo!
+}
+
+type ProductEdge {
+  node: Product!
+  cursor: String!
+}
+
+input CreateProductInput {
+  name: String!
+  description: String!
+  categoryIds: [ID!]!
+  slug: String!
+  shortDescription: String
+  brand: String
+  brandId: ID
+  tags: [String!]
+  attributes: String
+  status: String
+  vendorId: ID
+  variants: [ProductVariantInput!]
+}
+
+input UpdateProductInput {
+  name: String!
+  description: String!
+  categoryIds: [ID!]!
+  slug: String!
+  shortDescription: String
+  brand: String
+  brandId: ID
+  tags: [String!]
+  attributes: String
+  status: String
+  variants: [ProductVariantInput!]
+}
+
+input CreateCategoryInput {
+  name: String!
+  slug: String!
+  description: String
+  parentId: ID
+  SortOrder: Int!
+  IsActive: Boolean!
+  image: Upload
+}
+
+input UpdateCategoryInput {
+  name: String!
+  slug: String!
+  description: String
+  parentId: ID
+  sortOrder: Int!
+  isActive: Boolean!
+  image: Upload
+}
+
+input CreateBrandInput {
+  name: String!
+  description: String
+  image: Upload
+  isActive: Boolean!
+}
+
+input UpdateBrandInput {
+  name: String!
+  description: String
+  image: Upload
+  isActive: Boolean!
+}
+
+
+input ProductVariantInput {
+  id: ID
+  sku: String!
+  name: String!
+  options: String
+  price: Float!
+  compareAtPrice: Float
+  costPrice: Float
+  weightGrams: Int!
+  initialStock: Int
+  images: [Upload!]
+  isActive: Boolean!
+}
+
+input CreateVariantInput {
+  productId: ID!
+  sku: String!
+  name: String!
+  options: String
+  price: Float!
+  compareAtPrice: Float
+  costPrice: Float
+  weightGrams: Int!
+  initialStock: Int
+  image: Upload
+  isActive: Boolean!
+}
+
+input UpdateVariantInput {
+  productId: ID!
+  sku: String!
+  name: String!
+  options: String
+  price: Float!
+  compareAtPrice: Float
+  costPrice: Float
+  weightGrams: Int!
+  initialStock: Int
+  image: Upload
+  isActive: Boolean!
+}
+
+input ProductFilterInput {
+  minPrice: Float
+  maxPrice: Float
+  brands: [String!]
+}
+
+enum ProductSortField {
+  PRICE
+  CREATED_AT
+  RATING
+}
+
+enum SortDirection {
+  ASC
+  DESC
+}
+
+input ProductSortInput {
+  field: ProductSortField!
+  direction: SortDirection!
+}

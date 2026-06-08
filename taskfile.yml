@@ -125,19 +125,19 @@ tasks:
     desc: Run user-service locally
     dir: services/user-service
     cmds:
-      - go run ./src/...
+      - go run .
 
   run:product:
     desc: Run product-service locally
     dir: services/product-service
     cmds:
-      - go run ./src/...
+      - go run .
 
   run:order:
     desc: Run order-service locally
     dir: services/order-service
     cmds:
-      - go run ./src/...
+      - go run .
 
   run:payment:
     desc: Run payment-service locally (Rust)
@@ -152,19 +152,19 @@ tasks:
     desc: Build user-service binary
     dir: services/user-service
     cmds:
-      - go build -o bin/user-service ./src/...
+      - go build -o bin/user-service .
 
   build:product:
     desc: Build product-service binary
     dir: services/product-service
     cmds:
-      - go build -o bin/product-service ./src/...
+      - go build -o bin/product-service .
 
   build:order:
     desc: Build order-service binary
     dir: services/order-service
     cmds:
-      - go build -o bin/order-service ./src/...
+      - go build -o bin/order-service .
 
   build:payment:
     desc: Build payment-service binary (Rust)
