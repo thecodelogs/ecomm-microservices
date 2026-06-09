@@ -141,3 +141,24 @@ func (p *ProductHandler) CreateCategory(c *gin.Context) {
 		"id": resp.Id,
 	})
 }
+
+func (p *ProductHandler) ListCategories(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	resp, err := p.categoryclient.ListCategories(ctx, &productpb.ListCategoryRequest{
+		Page:     int32(page),
+		PageSize: int32(pageSize),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
+}

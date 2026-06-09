@@ -40,5 +40,61 @@ func SetupGraphQL(
 		r.GET("/playground", gqlServer.PlaygroundHandler())
 	}
 
+	// REST Handlers
+	authHandler := handler.NewAuthHandler(userClient.Auth)
+	userHandler := handler.NewUserHandler(userClient.User, userClient.Addr)
+	productHandler := handler.NewProductHandler(productClient.Product, productClient.Category, s3Storage)
+	adminHandler := handler.NewAdminHandler(userClient.User)
+
+	// API Group
+	api := r.Group("/api")
+	{
+		// Public Auth Routes
+		auth := api.Group("/auth")
+		{
+			auth.POST("/register", authHandler.Register)
+			auth.POST("/login", authHandler.Login)
+			auth.POST("/admin/login", authHandler.AdminLogin)
+			auth.POST("/refresh", authHandler.RefreshToken)
+			auth.POST("/logout", authMiddleware.RequireAuth(), authHandler.Logout)
+		}
+
+		// User Panel / Customer Routes
+		users := api.Group("/users")
+		users.Use(authMiddleware.RequireAuth())
+		{
+			users.GET("/me", userHandler.GetProfile)
+			users.PUT("/me", userHandler.UpdateProfile)
+
+			// Addresses
+			users.GET("/me/addresses", userHandler.ListAddresses)
+			users.POST("/me/addresses", userHandler.CreateAddress)
+			users.GET("/me/addresses/:id", userHandler.GetAddress)
+			users.PUT("/me/addresses/:id/default", userHandler.SetDefaultAddress)
+			users.DELETE("/me/addresses/:id", userHandler.DeleteAddress)
+		}
+
+		// Public Catalog Endpoints (User Panel API)
+		api.GET("/products", productHandler.ListProducts)
+		api.GET("/categories", productHandler.ListCategories)
+
+		// Admin Catalog Endpoints
+		catalogAdmin := api.Group("/categories")
+		catalogAdmin.Use(authMiddleware.RequireAuth(), middleware.AdminOnly())
+		{
+			catalogAdmin.POST("", productHandler.CreateCategory)
+		}
+
+		// Admin User Management Group
+		adminUsers := api.Group("/admin/users")
+		adminUsers.Use(authMiddleware.RequireAuth(), middleware.AdminOnly())
+		{
+			adminUsers.GET("", adminHandler.ListUsers)
+			adminUsers.GET("/:id", adminHandler.GetUser)
+			adminUsers.PUT("/:id/status", adminHandler.UpdateUserStatus)
+			adminUsers.DELETE("/:id", adminHandler.DeleteUser)
+		}
+	}
+
 	return r
 }
